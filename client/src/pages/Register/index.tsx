@@ -1,52 +1,55 @@
-// pages/Login/index.tsx - Login page.
-// Handles two sign-in methods:
-//   1. Email + password via Firebase signInWithEmailAndPassword
-//   2. Google Sign-In via Firebase signInWithPopup
+// pages/Register/index.tsx - Register page.
+// Very similar to the Login page but also collects a display name.
 //
-// After a successful sign-in:
-//   - Calls the backend /api/v1/auth/register to ensure a User doc exists in MongoDB
-//   - If firstLogin is true  → redirect to /payslip-setup
-//   - If firstLogin is false → redirect to /dashboard
+// Flow:
+//   1. User fills in display name, email, and password
+//   2. Firebase createUserWithEmailAndPassword creates the account
+//   3. We update the Firebase profile with the display name
+//   4. Call the backend /api/v1/auth/register to create a User doc in MongoDB
+//   5. Redirect to /payslip-setup since this is always a first login
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
 
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Shared post-login logic - called after either sign-in method succeeds.
-  // Gets the ID token, registers the user with the backend,
-  // then redirects based on whether it is their first login.
-  const handlePostLogin = async (user: any) => {
-    const token = await user.getIdToken();
-    const data = await registerUser(token);
-    if (data.firstLogin) {
-      navigate("/payslip-setup");
-    } else {
-      navigate("/dashboard");
-    }
-  };
-
-  // Email + password sign-in
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // Email + password registration
+  const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await handlePostLogin(result.user);
+      // Create the Firebase account
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
+      // Save the display name to the Firebase user profile
+      await updateProfile(result.user, { displayName });
+
+      // Tell the backend to create a User document in MongoDB
+      const token = await result.user.getIdToken();
+      await registerUser(token);
+
+      // Always a first login from Register - go to payslip setup
+      navigate("/payslip-setup");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,14 +57,18 @@ const Login = () => {
     }
   };
 
-  // Google Sign-In
-  const handleGoogleLogin = async () => {
+  // Google Sign-In - display name comes from the Google account
+  const handleGoogleRegister = async () => {
     setError("");
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await handlePostLogin(result.user);
+
+      const token = await result.user.getIdToken();
+      await registerUser(token);
+
+      navigate("/payslip-setup");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -75,11 +82,21 @@ const Login = () => {
         className="card p-4 shadow"
         style={{ width: "100%", maxWidth: "420px" }}
       >
-        <h2 className="text-center mb-4">Login</h2>
+        <h2 className="text-center mb-4">Create Account</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
-        <form onSubmit={handleEmailLogin}>
+        <form onSubmit={handleEmailRegister}>
+          <div className="mb-3">
+            <label className="form-label">Display Name</label>
+            <input
+              type="text"
+              className="form-control"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              required
+            />
+          </div>
           <div className="mb-3">
             <label className="form-label">Email</label>
             <input
@@ -105,7 +122,7 @@ const Login = () => {
             className="btn btn-primary w-100"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Creating account..." : "Register"}
           </button>
         </form>
 
@@ -113,18 +130,18 @@ const Login = () => {
 
         <button
           className="btn btn-outline-danger w-100"
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleRegister}
           disabled={loading}
         >
-          Sign in with Google
+          Sign up with Google
         </button>
 
         <p className="text-center mt-3 mb-0">
-          Don't have an account? <Link to="/register">Register</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Register;

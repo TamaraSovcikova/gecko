@@ -9,8 +9,9 @@ const connectDB = async () => {
     console.log('MongoDB connected');
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    // Exit the process so the server doesn't silently run without a database
-    process.exit(1);
+    // This lets the server keep running without a database
+    // so Firebase auth and other non-DB routes still work
+    console.warn('Warning: Running without MongoDB — database features will not work');
   }
 };
 
