@@ -1,34 +1,40 @@
-// routes/auth.js - Authentication routes.
+// routes/auth.js — Authentication routes.
 //
-// This file handles the server-side of the registration flow.
-// Firebase should handle the actual sign-in/sign-up on the frontend 
+// Firebase handles sign-in on the frontend our backend just needs to
+// know about the user so we can store app-specific data in MongoDB.
 
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
+const User = require('../models/User');
 
 // POST /api/v1/auth/register
-// Checks if a user document already exists in MongoDB if not, creates one and returns the user document and a firstLogin flag 
-// to redirect either to /payslip-setup or /dashboard
+// Protected - requires a valid Firebase token in the Authorization header.
 router.post('/register', authMiddleware, async (req, res) => {
-  try {   
+  try {
     const { uid, email, name } = req.user;
 
-    // TODO: import User model once it is created (models/ folder)
-    // const User = require('../models/User');
+    // Check if this user already exists in MongoDB
+    const existingUser = await User.findById(uid);
 
-    // const existingUser = await User.findOne({ uid });
-    // if (existingUser) {
-    //   return res.json({ user: existingUser, firstLogin: false });
-    // }
-    // const newUser = await User.create({ uid, email, displayName: name });
-    // return res.status(201).json({ user: newUser, firstLogin: true });
+    if (existingUser) {
+      // Returning user - send them to the dashboard
+      return res.json({
+        user: existingUser,
+        firstLogin: !existingUser.hasCompletedOnboarding,
+      });
+    }
 
-    // Stub response until User model is created
-    res.status(201).json({
-      message: 'Register endpoint reached - User model not yet implemented',
-      uid,
-      email,
+    // New user - create a document in MongoDB
+    const newUser = await User.create({
+      _id: uid,
+      email: email,
+      displayName: name || email.split('@')[0], // fallback if no display name
+    });
+
+    // First login - send them to payslip setup
+    return res.status(201).json({
+      user: newUser,
       firstLogin: true,
     });
 
