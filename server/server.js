@@ -6,7 +6,7 @@
 //   4. Attach Socket.io to the HTTP server for real-time features
 //   5. Start listening on the configured port
 
-require('dotenv/config');
+require('dotenv').config();
 
 const http = require('http');
 const { Server } = require('socket.io');
