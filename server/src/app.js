@@ -11,10 +11,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 
 const router = require('./routes/index');
+const dashboardRouter = require('./routes/dashboard');
 
 const app = express();
 
 app.use(helmet());
+app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use(
   cors({

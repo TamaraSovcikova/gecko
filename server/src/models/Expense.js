@@ -3,7 +3,7 @@
 
 const mongoose = require('mongoose');
 
-const ExpenseSchema = new mongoose.schema({
+const ExpenseSchema = new mongoose.Schema({
     user_id: {
         type: String,
         required: true,
