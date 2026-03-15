@@ -1,21 +1,21 @@
-// routes/index.js - Root router
-// All feature routers are mounted here so app.js stays clean.
+// routes/index.js - Root router for the Zoar API
 //
 // How to add a new feature:
 //   1. Create src/routes/featureName.js with its own express.Router()
-//   2. Uncomment the template line below and point it at your file
+//   2. Add router.use('/api/v1/feature', require('./featureName')) below
 
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middleware/auth');
 
-// Add all routes here
-router.get('/', (req, res) => {
-  res.send('<h1>Login</h1>');
-});
+// ---- Public routes (no token required) ----
+router.get('/', (req, res) => res.send('<h1>Login</h1>'));
 
-// Template: router.use('/feature', require('./feature'))
-// Examples:
-//   router.use('/auth',     require('./auth'));
-//   router.use('/payslips', require('./payslips'));
+// Auth routes — register/login handling (token verified inside these routes)
+router.use('/api/v1/auth', require('./auth'));
+
+// ---- Protected routes (token required) ----
+// All routes below this line require a valid Firebase token.
+
 
 module.exports = router;

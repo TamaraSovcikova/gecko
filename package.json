@@ -1,0 +1,24 @@
+{
+  "name": "team-zoar",
+  "version": "1.0.0",
+  "description": "A university project - a full-stack personal finance web application built with Node.js, Express, MongoDB, Firebase, React 18, and TypeScript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client"
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.surrey.ac.uk/csee/com2042/2025-26-groups/team-zoar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
