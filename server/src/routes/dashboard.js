@@ -35,3 +35,6 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+//as far as I can go for time being - no payslipn data.
+//this is basic, I am learning stuff as I go
