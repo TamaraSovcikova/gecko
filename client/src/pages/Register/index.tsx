@@ -6,7 +6,7 @@
 //   2. Firebase createUserWithEmailAndPassword creates the account
 //   3. We update the Firebase profile with the display name
 //   4. Call the backend /api/v1/auth/register to create a User doc in MongoDB
-//   5. Redirect to /payslip-setup since this is always a first login
+//   5. Redirect to /payslip since this is always a first login
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -49,7 +49,7 @@ const Register = () => {
       await registerUser(token);
 
       // Always a first login from Register - go to payslip setup
-      navigate("/payslip-setup");
+      navigate("/payslip");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -68,7 +68,7 @@ const Register = () => {
       const token = await result.user.getIdToken();
       await registerUser(token);
 
-      navigate("/payslip-setup");
+      navigate("/payslip");
     } catch (err: any) {
       setError(err.message);
     } finally {

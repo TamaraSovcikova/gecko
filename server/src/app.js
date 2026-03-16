@@ -14,7 +14,12 @@ const router = require('./routes/index');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    // Firebase popup auth can be noisy or blocked with strict COOP in some flows.
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  })
+);
 
 app.use(
   cors({
