@@ -1,36 +1,38 @@
-//models.Expense - called it this as suggested in MVP work distribution.
-//this is basic - mongoose new to me so based off documentaton and User.js
+// models/Expense.js - called it this as suggested in MVP work distribution.
 
 const mongoose = require('mongoose');
 
 const ExpenseSchema = new mongoose.Schema({
+    //ID of Firebase owner
     user_id: {
         type: String,
         required: true,
     },
-    month: {
-        type: String,  //could alternatively be a number?
+    month: { //respective month the expense belongs too...
+        type: String,  //...could alternatively be a number for easy reference?
         required: true,
     },
-    year: {
+    year: { //year of expense
         type: Number,
         required: true,
     },
-    category: {
-        type: String, //this could also be a number? if easier
+    category: { //category of the expense, this gonna be like: travel, food, etc so figured string was best but...
+        type: String, //...this could also be a number? if easier
         required: true,
     },
-    amount: {
+    amount: { //this doesn't really need a comment...
         type: Number,
         required: true,
     },
-    date: {
+    date: { //this also doesn't really need a comment...
         type: Date,
         required: true,
     },
-    note: {
+    note: { //allows user to put a note for specific expense
         type: String,
     }
+    //was looking at 'User.js' - wondering if 'timestamps' include dates?
 })
 
+//model exported to allow other files to query
 module.exports = mongoose.model('Expense', ExpenseSchema);
