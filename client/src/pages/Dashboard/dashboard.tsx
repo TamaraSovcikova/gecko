@@ -1,0 +1,150 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+
+const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+
+//defined exact data as expected from backend endpoint...
+type DashboardData = {
+    healthScore: number;
+    takeHome: number;
+    budgetLeft: number;
+    actualSpending: { name: string; value: number }[];
+    budgetAllocation: { name: string; value: number }[];
+};
+
+const Dashboard = () => {
+    //react state which stores dadhboard data, intially null
+    const [data, setData] = useState<DashboardData | null>(null);
+
+    //useEffect runs once - triggers loading data from backens
+    useEffect(() => {
+        //fetchDashboard responsible fofr fetching dashboard data from abckend
+        const fetchDashboard = async () => {
+            try {
+                const res = await axios.get( //data requested from backend
+                    "http://localhost:3001/api/v1/dashboard" //backend returns data in one response as efined in MVP
+                );
+                setData(res.data); //store returned data
+            } catch (error) {
+                //catch is used for testing at the moment, because I do not know how to access Mongo
+                console.log("Error when fetching dashboard:", error);
+                setData({
+                    healthScore: 90,
+                    takeHome: 2985,
+                    budgetLeft: 2705,
+                    budgetAllocation: [
+                        {name: "Food", value: 375},
+                        {name: "Travel", value: 150},
+                        {name: "Rent", value: 1000},
+                        {name: "Other", value: 410}
+                    ],
+                    actualSpending: [
+                        {name: "Food", value: 200},
+                        {name: "Travel", value: 80}
+                    ]
+                    //... random data values not based off my own finances, I swear - I am not this rich
+                });
+            }
+        };
+        //immediately execute fetch when the component loads
+        fetchDashboard();
+    }, []);
+    if (!data) return <div>Loading...</div>; //whi;e request is still running,
+
+    return (
+        <div
+            style={{
+                maxWidth: "1000px",
+                margin: "30px auto",
+                fontFamily: "Arial, sans-serif"
+            }}
+        >
+            <h2 style={{ marginBottom: "20px" }}>Dashboard</h2>
+
+            <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
+
+                <div>
+                    <h4>Budget Allocation</h4>
+
+                    <PieChart width={300} height={220}>
+                        <Pie
+                            data={data.budgetAllocation || []} //fallback to empty array prevents runtime
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                        >
+                            {/* different colours for each slice*/}
+                            {(data.budgetAllocation || []).map((_, index) => (
+                                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                            ))}
+                        </Pie>
+                        {/*tooltps and labels allow cool breakdowns when hoevering*/}
+                        <Tooltip />
+                        <Legend />
+                    </PieChart>
+                </div>
+
+                <div>
+                    <h4>Actual Spending</h4>
+
+                    <PieChart width={300} height={220}>
+                        <Pie
+                            data={data.actualSpending || []}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                        >
+                            {(data.actualSpending || []).map((_, index) => (
+                                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                            ))}
+                        </Pie>
+
+                        <Tooltip />
+                        <Legend />
+                    </PieChart>
+                </div>
+
+            </div>
+
+            <div style={{ display: "flex", gap: "60px" }}>
+
+                <div>
+                    <h4>Health Score</h4>
+                    <p style={{ fontSize: "20px" }}>{data.healthScore}</p>
+                </div>
+
+                <div>
+                    <h4>Take Home</h4>
+                    <p style={{ fontSize: "20px" }}>£{data.takeHome}</p>
+                </div>
+
+                <div>
+                    <h4>Budget Left</h4>
+                    <p style={{ fontSize: "20px" }}>£{data.budgetLeft}</p>
+                </div>
+
+                <div>
+                    <h4>Budget vs Actual</h4>
+
+                    {data.budgetLeft >= 0 ? (
+                        <p>
+                            Under budget by £{data.budgetLeft}
+                        </p>
+                    ) : (
+                        <p>
+                            {/*math.abs ensures displayed numebr is positive wen showing overbudget*/}
+                            Over budget by £{Math.abs(data.budgetLeft)}
+                        </p>
+                    )}
+                </div>
+
+            </div>
+        </div>
+    );
+}
+export default Dashboard;

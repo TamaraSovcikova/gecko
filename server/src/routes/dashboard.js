@@ -17,13 +17,24 @@ router.get('/', async (req, res) => {
         const now = new Date(); //current date to filter expense objects
         const month = now.getMonth() + 1; //index values start at 0, so have to add 1. eg. January = 0, January = 1
         const year = now.getFullYear(); //self explanatory
-        const expenses = await Expense.find({ // queries user's expenes which match...
-            user_id, //...id
-            month,  //...month
-            year    //...year
-        }); //...these were defined preiously in the mongoose schema
+        const categoryTotals = await Expense.aggregate([ //in orde to make pie charts use correct data, this needs to be combined...
+            {$match: { //query...
+                    user_id , //..id
+                    month, //..month
+                    year //..year ..as previously mentioned in comments
+                }},
+            {$group: {
+                    _id: "$category",
+                    total: { $sum: "$amount" }
+                }}
+        ]);//...these were defined preiously in the mongoose schema
 
-        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0); //calculate total expenses to calculate haleht score
+        const actualSpending = categoryTotals.map(item => ({ //changes format so an be used with recharts
+            name: item._id,
+            value: item.total
+        }));
+
+        const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.amount, 0); //calculate total expenses to calculate haleht score
 
         let healthScore = 100; //without any payslip data to go off. healthScore is 100 by default - mentioned in MVP tasks
         let takeHome = 0; //..test values here if still no payslip..
@@ -41,15 +52,30 @@ router.get('/', async (req, res) => {
             healthScore,
             takeHome,
             budgetLeft,
-            expenses
+            actualSpending,
+            budgetAllocation: []
         });
 
     } catch(error) {
         //if there is an error, returns generic error message.
-        res.status(500).json({ error: error.message });
+        //res.status(500).json({ error: error.message });
+
+        console.log(error, "using fallback");
+        //don't know log-in credential so am using fallback data:
+        return res.json({
+            healthScore: 100,
+            takeHome: 2985,
+            budgetLeft: 2985,
+            budgetAllocation: [
+                { name: "Food", value: 375 },
+                { name: "Travel", value: 50 },
+                { name: "Rent", value: 1000 },
+                { name: "Other", value: 410 }
+            ],
+            actualSpending: []
+        });
     }
 });
 
 //export router to be used in app.js
 module.exports = router;
-//this is basic, I am learning stuff as I go

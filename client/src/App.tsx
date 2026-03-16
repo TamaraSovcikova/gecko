@@ -10,6 +10,7 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Dashboard />} /> {/*-test for now. Am unsure of how to actakly get into mongoDB*/}
 
       {/* Protected routes — redirect to /login if not authenticated */}
       {/* <Route path="/dashboard" element={
