@@ -29,6 +29,7 @@ const Dashboard = () => {
             } catch (error) {
                 //catch is used for testing at the moment, because I do not know how to access Mongo
                 console.log("Error when fetching dashboard:", error);
+                //this next setData can be removed as well, as it is just test data...
                 setData({
                     healthScore: 90,
                     takeHome: 2985,

@@ -60,6 +60,8 @@ router.get('/', async (req, res) => {
         //if there is an error, returns generic error message.
         //res.status(500).json({ error: error.message });
 
+
+        //catch involves fallback data, can delete this once data in the base can be accessed.
         console.log(error, "using fallback");
         //don't know log-in credential so am using fallback data:
         return res.json({
