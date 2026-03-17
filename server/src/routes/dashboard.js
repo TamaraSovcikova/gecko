@@ -4,6 +4,7 @@
 const express = require("express");
 const router = express.Router();
 const Expense = require("../models/Expense"); //import Expense model
+const Payslip = require("../models/MonthlyBudget"); //import MonthlyBudget (this if fro payslip)
 const authMiddleware = require("../middleware/auth"); //import middleware - this verifies token before (!!) the route runs - if not authenticated, can't use
 
 
@@ -12,11 +13,20 @@ const authMiddleware = require("../middleware/auth"); //import middleware - this
 //authMiddleware should be here I have removed it for front end testing purposes...
 router.get('/', async (req, res) => {
     try {
-        const user_id = "test-user";
+        const user_id = "test-user"; //test for now to bypass token require
         //const user_id = req.user.uid; //auth middleware attaches uid to request object
+
+        //provisional implementation of getting payslip data because this is difficult to test given import of a model that does not exist without merge
+        const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 }); //locate most recent payslip
+        const takeHome = payslip?.takeHomePay || 0; //if no data, dfaults zero as fallback
+        const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //hopefully converts to format that recharts requires
+        const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0); //adds all categories for total budget
+        //the [] defaults to empty array if no data
+
         const now = new Date(); //current date to filter expense objects
         const month = now.getMonth() + 1; //index values start at 0, so have to add 1. eg. January = 0, January = 1
         const year = now.getFullYear(); //self explanatory
+
         const categoryTotals = await Expense.aggregate([ //in orde to make pie charts use correct data, this needs to be combined...
             {$match: { //query...
                     user_id , //..id
@@ -37,44 +47,24 @@ router.get('/', async (req, res) => {
         const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.amount, 0); //calculate total expenses to calculate haleht score
 
         let healthScore = 100; //without any payslip data to go off. healthScore is 100 by default - mentioned in MVP tasks
-        let takeHome = 0; //..test values here if still no payslip..
-        let budgetLeft = takeHome - totalExpenses;
-
-        if (takeHome > 0) { //prevents Zero division error
-            const Score = (1 - totalExpenses / takeHome) * 100; //percentage of income not spent
-            healthScore = Math.round(
-                Math.min(100, Math.max(0, Score)) //effectively clamp. between 100 and 0
-            );
+        if (totalBudget > 0) { //prevents Zero division error
+            const Score = (1 - totalExpenses / totalBudget) * 100; //percentage of income not spent
+            healthScore = Math.round(Math.min(100, Math.max(0, Score))); //effectively clamp. between 100 and 0);
         }
+        const budgetLeft = totalBudget - totalExpenses;
 
         //data returned to fonrt end in one JSON repnse - requested n MVP
         res.json({
             healthScore,
             takeHome,
             budgetLeft,
+            totalBudget,
             actualSpending,
-            budgetAllocation: []
+            budgetAllocation
         });
 
     } catch(error) {
-        //if there is an error, returns generic error message.
-        //res.status(500).json({ error: error.message }); //once I understand mongoDB and test crednetials - this should be all that is needed
-
-        //catch involves fallback data, can delete this once data in the base can be accessed.
-        console.log(error, "using fallback");
-        //don't know log-in credential so am using fallback data:
-        return res.json({
-            healthScore: 100,
-            takeHome: 2985,
-            budgetLeft: 2705,
-            budgetAllocation: [
-                { name: "Food", value: 375 },
-                { name: "Travel", value: 50 },
-                { name: "Rent", value: 1000 },
-                { name: "Other", value: 410 }
-            ],
-            actualSpending: []
-        });
+        res.status(500).json({ error: error.message });
     }
 });
 
