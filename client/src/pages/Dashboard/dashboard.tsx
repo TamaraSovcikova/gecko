@@ -10,6 +10,7 @@ type DashboardData = {
     healthScore: number;
     takeHome: number;
     budgetLeft: number;
+    totalBudget: number;
     actualSpending: { name: string; value: number }[];
     budgetAllocation: { name: string; value: number }[];
 };
@@ -32,23 +33,6 @@ const Dashboard = () => {
                 //catch is used for testing at the moment, because I do not know how to access Mongo
                 console.log("Error when fetching dashboard:", error);
                 //this next setData can be removed as well, as it is just test data...
-                setData({
-                    healthScore: 90, //does not automatically update because healthScore logic is in backend - couldn't be asked for just test data
-                    takeHome: 2985,
-                    budgetLeft: 2705,
-                    budgetAllocation: [
-                        {name: "Food", value: 375},
-                        {name: "Travel", value: 150},
-                        {name: "Rent", value: 1000},
-                        {name: "Other", value: 410}
-                    ],
-                    actualSpending: [
-                        {name: "Food", value: 200},
-                        {name: "Travel", value: 80},
-                        {name: "test", value:300}
-                    ]
-                    //... random data values not based off my own finances, I swear - I am not this rich
-                });
             }
         };
         //immediately execute fetch when the component loads
@@ -70,7 +54,15 @@ const Dashboard = () => {
                     <button onClick={() => navigate("/quiz")}>
                         Quiz
                     </button>
+                    {/* redirects to expense - may need to be renamed*/}
+                    <button onClick={() => navigate("/expenses")}>
+                        Log Expense
+                    </button>
                 </div>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+                <h3>Take-home: £{data.takeHome} | Budget: £{data.totalBudget}</h3>
             </div>
 
             <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
@@ -118,10 +110,14 @@ const Dashboard = () => {
             </div>
 
             <div style={{ display: "flex", gap: "60px" }}>
-                <div>
-                    <h4>Health Score</h4>
-                    <p style={{ fontSize: "20px" }}>{data.healthScore}</p>
-                </div>
+                <p style={{fontSize: "28px", fontWeight: "bold",
+                    color:
+                        data.healthScore < 40 ? "red" :
+                        data.healthScore < 70 ? "orange" :
+                        "green"
+                }}>
+                    {data.healthScore}
+                </p>
 
                 <div>
                     <h4>Take Home</h4>
