@@ -20,7 +20,7 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} /> {/*-test for now. Am unsure of how to actakly get into mongoDB*/}
+      <Route path="/dashboard" element={<Dashboard />} /> {/*-test for now. Am unsure of how to actakly get into mongoDB - test credentials?*/}
 
       {/* Protected routes — redirect to /login if not authenticated */}
       {/* <Route path="/dashboard" element={

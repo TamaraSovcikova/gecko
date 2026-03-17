@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -14,6 +15,7 @@ type DashboardData = {
 };
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     //react state which stores dadhboard data, intially null
     const [data, setData] = useState<DashboardData | null>(null);
 
@@ -31,7 +33,7 @@ const Dashboard = () => {
                 console.log("Error when fetching dashboard:", error);
                 //this next setData can be removed as well, as it is just test data...
                 setData({
-                    healthScore: 90,
+                    healthScore: 90, //does not automatically update because healthScore logic is in backend - couldn't be asked for just test data
                     takeHome: 2985,
                     budgetLeft: 2705,
                     budgetAllocation: [
@@ -42,7 +44,8 @@ const Dashboard = () => {
                     ],
                     actualSpending: [
                         {name: "Food", value: 200},
-                        {name: "Travel", value: 80}
+                        {name: "Travel", value: 80},
+                        {name: "test", value:300}
                     ]
                     //... random data values not based off my own finances, I swear - I am not this rich
                 });
@@ -54,20 +57,25 @@ const Dashboard = () => {
     if (!data) return <div>Loading...</div>; //whi;e request is still running,
 
     return (
-        <div
-            style={{
-                maxWidth: "1000px",
-                margin: "30px auto",
-                fontFamily: "Arial, sans-serif"
-            }}
-        >
-            <h2 style={{ marginBottom: "20px" }}>Dashboard</h2>
+        <div style={{maxWidth: "1000px", margin: "30px auto", fontFamily: "Arial, sans-serif"}}>
+            {/* simple navbar with navigation buttons */}
+            <div style={{display: "flex", justifyContent: "space-between", marginBottom: "20px", padding: "10px 0", borderBottom: "1px solid #ccc"}}>
+                <h2>Dashboard</h2>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    {/* redirects user to profile page */}
+                    <button onClick={() => navigate("/profile")}>
+                        Profile
+                    </button>
+                    {/* redirects user to quiz page */}
+                    <button onClick={() => navigate("/quiz")}>
+                        Quiz
+                    </button>
+                </div>
+            </div>
 
             <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
-
                 <div>
                     <h4>Budget Allocation</h4>
-
                     <PieChart width={300} height={220}>
                         <Pie
                             data={data.budgetAllocation || []} //fallback to empty array prevents runtime
@@ -90,7 +98,6 @@ const Dashboard = () => {
 
                 <div>
                     <h4>Actual Spending</h4>
-
                     <PieChart width={300} height={220}>
                         <Pie
                             data={data.actualSpending || []}
@@ -104,16 +111,13 @@ const Dashboard = () => {
                                 <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
                             ))}
                         </Pie>
-
                         <Tooltip />
                         <Legend />
                     </PieChart>
                 </div>
-
             </div>
 
             <div style={{ display: "flex", gap: "60px" }}>
-
                 <div>
                     <h4>Health Score</h4>
                     <p style={{ fontSize: "20px" }}>{data.healthScore}</p>
@@ -131,7 +135,6 @@ const Dashboard = () => {
 
                 <div>
                     <h4>Budget vs Actual</h4>
-
                     {data.budgetLeft >= 0 ? (
                         <p>
                             Under budget by £{data.budgetLeft}
@@ -143,7 +146,6 @@ const Dashboard = () => {
                         </p>
                     )}
                 </div>
-
             </div>
         </div>
     );

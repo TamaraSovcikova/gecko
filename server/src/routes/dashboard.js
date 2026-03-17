@@ -58,8 +58,7 @@ router.get('/', async (req, res) => {
 
     } catch(error) {
         //if there is an error, returns generic error message.
-        //res.status(500).json({ error: error.message });
-
+        //res.status(500).json({ error: error.message }); //once I understand mongoDB and test crednetials - this should be all that is needed
 
         //catch involves fallback data, can delete this once data in the base can be accessed.
         console.log(error, "using fallback");
@@ -67,7 +66,7 @@ router.get('/', async (req, res) => {
         return res.json({
             healthScore: 100,
             takeHome: 2985,
-            budgetLeft: 2985,
+            budgetLeft: 2705,
             budgetAllocation: [
                 { name: "Food", value: 375 },
                 { name: "Travel", value: 50 },
