@@ -1,7 +1,9 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { auth } from "../../firebase/config";
+import { registerUser } from "../../api/authApi";
 import CategoryBuilder from "../../components/CategoryBuilder.jsx";
 import PayslipBreakdown from "../../components/PayslipBreakdown.jsx";
 
@@ -32,31 +34,20 @@ const PayslipSetup = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [result, setResult] = useState<PayslipResponse | null>(null);
 
-  // Load existing payslip on mount so returning users see their saved data
-  useEffect(() => {
-    if (!token) return;
-    axios
-      .get<PayslipResponse>(`${API_URL}/api/v1/payslip`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setResult(res.data);
-        setGrossSalary(String(res.data.grossSalary));
-        if (res.data.categories && res.data.categories.length > 0) {
-          setCategories(
-            res.data.categories.map((c) => ({
-              name: c.name,
-              amount: String(c.budget),
-            }))
-          );
-        }
-      })
-      .catch(() => {
-        // 404 = no payslip yet, ignore silently
-      });
-  }, [token]);
+  const handleLogout = async () => {
+    try {
+      setLogoutLoading(true);
+      await auth.signOut();
+      navigate("/login", { replace: true });
+    } catch {
+      setApiError("Unable to log out right now. Please try again.");
+    } finally {
+      setLogoutLoading(false);
+    }
+  };
 
   const totalCategoryAmount = useMemo(() => {
     return categories.reduce((sum, category) => {
@@ -130,6 +121,31 @@ const PayslipSetup = () => {
 
     try {
       setLoading(true);
+
+      const fetchExistingPayslip = async () => {
+        return axios.get<PayslipResponse>(
+          `${API_URL}/api/v1/payslip`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+      };
+
+      // Avoid creating duplicates when a payslip already exists.
+      try {
+        const existing = await fetchExistingPayslip();
+        if (existing.data) {
+          setResult(existing.data);
+          setApiError("A payslip already exists for this account.");
+          return;
+        }
+      } catch (existingError: unknown) {
+        if (
+          !axios.isAxiosError(existingError) ||
+          existingError.response?.status !== 404
+        ) {
+          throw existingError;
+        }
+      }
+
       const payload = {
         grossSalary: Number(grossSalary),
         // Send `budget` to match the CategorySchema field name
@@ -139,13 +155,54 @@ const PayslipSetup = () => {
         })),
       };
 
-      const response = await axios.post<PayslipResponse>(
-        `${API_URL}/api/v1/payslip`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const submitPayslip = () =>
+        axios.post<PayslipResponse>(
+          `${API_URL}/api/v1/payslip`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
 
-      setResult(response.data);
+      try {
+        const response = await submitPayslip();
+        setResult(response.data);
+      } catch (firstError: unknown) {
+        if (!axios.isAxiosError(firstError)) {
+          throw firstError;
+        }
+
+        const message =
+          firstError.response?.data?.error ||
+          firstError.response?.data?.message ||
+          "";
+
+        // Client-side fallback only: ensure a User document exists, then retry once.
+        if (firstError.response?.status === 500) {
+          // If backend saved payslip but failed after write, recover via GET.
+          try {
+            const existingAfterFailure = await fetchExistingPayslip();
+            if (existingAfterFailure.data) {
+              setResult(existingAfterFailure.data);
+              setApiError("Payslip appears saved. Refresh or continue to dashboard.");
+              return;
+            }
+          } catch {
+            // Ignore and continue fallback path.
+          }
+
+          await registerUser(token);
+          const retryResponse = await submitPayslip();
+          setResult(retryResponse.data);
+          return;
+        }
+
+        // If payslip already exists and backend enforces uniqueness, show a friendly message.
+        if (/duplicate|E11000|already exists/i.test(message)) {
+          setApiError("A payslip already exists for this account. Use the dashboard to continue.");
+          return;
+        }
+
+        throw firstError;
+      }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         setApiError(
@@ -163,6 +220,17 @@ const PayslipSetup = () => {
 
   return (
     <div className="container py-4 py-md-5">
+      <nav className="navbar justify-content-end bg-white border rounded-3 shadow-sm mb-3 px-3">
+        <button
+          type="button"
+          className="btn btn-outline-danger btn-sm"
+          onClick={handleLogout}
+          disabled={logoutLoading}
+        >
+          {logoutLoading ? "Logging out..." : "Logout"}
+        </button>
+      </nav>
+
       <div className="row justify-content-center">
         <div className="col-12 col-lg-9">
           <div className="card border-0 shadow-sm">

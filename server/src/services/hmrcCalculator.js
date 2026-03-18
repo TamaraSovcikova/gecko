@@ -9,7 +9,7 @@ function calculatePayslip(grossSalary) {
     // For the 2025/26 tax year, personal allowance is £12,570
 
     const personalAllowance = 12570;
-    taxableIncome = grossSalary - personalAllowance;
+    let taxableIncome = grossSalary - personalAllowance;
 
     if (taxableIncome < 0) {
         taxableIncome = 0;
@@ -20,6 +20,7 @@ function calculatePayslip(grossSalary) {
 
     // NI neede to be paid
     const niThreshold = 12570;
+    let niPaid = 0;
 
     if (grossSalary > niThreshold) {
         niPaid = (grossSalary - niThreshold) * 0.08;
