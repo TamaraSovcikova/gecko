@@ -21,11 +21,15 @@ const calculatePayslip = require('../services/hmrcCalculator');
 // POST /api/v1/payslip
 exports.createPayslip = async (req, res) => {
     try {
+    console.log("DEBUG AUTH:", req.user)
   
     const grossSalary = req.body.grossSalary
     const categories = req.body.categories
-    const userId = req.user.id;
-  
+    const userId = req.user.uid;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "User ID missing from token" });
+    }
     if (!grossSalary) {
         return res.status(400).json({ error: "Gross Salary required" });
     }
@@ -42,10 +46,12 @@ exports.createPayslip = async (req, res) => {
     });
 
     // Updating the User model fields
+    
     await User.findByIdAndUpdate(userId, {
         "payslipData.grossSalary": grossSalary,
         hasCompletedOnboarding: true
     });
+    
   
     res.status(201).json(budget);
   
@@ -53,12 +59,13 @@ exports.createPayslip = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+  
 
 // GET /api/v1/payslip
 exports.getPayslip = async (req, res) => {
 
     try {
-        const userId = req.user.id;
+        const userId = req.user.uid;
         const budget = await MonthlyBudget.findOne({ userId });
   
         if (!budget) {
