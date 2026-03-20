@@ -22,7 +22,7 @@ const Dashboard = () => {
 
     //useEffect runs once - triggers loading data from backens
     useEffect(() => {
-        //fetchDashboard responsible fofr fetching dashboard data from abckend
+        //fetchDashboard responsible for fetching dashboard data from abckend
         const fetchDashboard = async () => {
             try {
                 const res = await axios.get( //data requested from backend
@@ -137,7 +137,7 @@ const Dashboard = () => {
                         </p>
                     ) : (
                         <p>
-                            {/*math.abs ensures displayed numebr is positive wen showing overbudget*/}
+                            {/*abs ensures displayed numebr is positive wen showing overbudget*/}
                             Over budget by £{Math.abs(data.budgetLeft)}
                         </p>
                     )}
