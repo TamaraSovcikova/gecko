@@ -9,22 +9,21 @@ const authMiddleware = require("../middleware/auth"); //import middleware - this
 
 
 // GET api/v1/dashboard
-//this is protect - reuires valid firebase token
+//this should be protected - reuires valid firebase token
 //authMiddleware should be here I have removed it for front end testing purposes...
 router.get('/', async (req, res) => {
     try {
         const user_id = "test-user"; //test for now to bypass token require
-        //const user_id = req.user.uid; //auth middleware attaches uid to request object
+        //const user_id = req.user.uid; //for when I can confirm this
 
-        //provisional implementation of getting payslip data because this is difficult to test given import of a model that does not exist without merge
-        const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 }); //locate most recent payslip
-        const takeHome = payslip?.takeHomePay || 0; //if no data, dfaults zero as fallback
-        const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //hopefully converts to format that recharts requires
-        const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0); //adds all categories for total budget
-        //the [] defaults to empty array if no data
+        const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 });                                                   //locate most recent payslip
+        const takeHome = payslip?.takeHomePay || 0;                                                                                         //if no data, dfaults zero as fallback
+        const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //converts to format that recharts requires
+        const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);                    //adds all categories for total budget
 
+        //originally implemented for expnses model so may not have actually been my respnsbility...
         const now = new Date(); //current date to filter expense objects
-        const month = now.getMonth() + 1; //index values start at 0, so have to add 1. eg. January = 0, January = 1
+        const month = now.getMonth() + 1; //index values start at 0, so add 1 for logical reference. eg. January = 0, January = 1
         const year = now.getFullYear(); //self explanatory
 
         const categoryTotals = await Expense.aggregate([ //in orde to make pie charts use correct data, this needs to be combined...
@@ -46,7 +45,7 @@ router.get('/', async (req, res) => {
 
         const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.amount, 0); //calculate total expenses to calculate haleht score
 
-        let healthScore = 100; //without any payslip data to go off. healthScore is 100 by default - mentioned in MVP tasks
+        let healthScore = 100;
         if (totalBudget > 0) { //prevents Zero division error
             const Score = (1 - totalExpenses / totalBudget) * 100; //percentage of income not spent
             healthScore = Math.round(Math.min(100, Math.max(0, Score))); //effectively clamp. between 100 and 0);
