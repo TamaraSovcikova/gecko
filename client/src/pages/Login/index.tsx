@@ -5,7 +5,7 @@
 //
 // After a successful sign-in:
 //   - Calls the backend /api/v1/auth/register to ensure a User doc exists in MongoDB
-//   - If firstLogin is true  → redirect to /payslip-setup
+//   - If firstLogin is true  → redirect to /payslip
 //   - If firstLogin is false → redirect to /dashboard
 
 import { useState } from "react";
@@ -33,7 +33,7 @@ const Login = () => {
     const token = await user.getIdToken();
     const data = await registerUser(token);
     if (data.firstLogin) {
-      navigate("/payslip-setup");
+      navigate("/payslip");
     } else {
       navigate("/dashboard");
     }

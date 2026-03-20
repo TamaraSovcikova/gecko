@@ -15,8 +15,12 @@ const dashboardRouter = require('./routes/dashboard');
 
 const app = express();
 
-app.use(helmet());
-app.use("/api/v1/dashboard", dashboardRouter);
+app.use(
+  helmet({
+    // Firebase popup auth can be noisy or blocked with strict COOP in some flows.
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  })
+);
 
 app.use(
   cors({
@@ -26,6 +30,8 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use('/', router);
 

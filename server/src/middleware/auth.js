@@ -21,7 +21,12 @@ const authMiddleware = async (req, res, next) => {
 
     // Attach the decoded user to the request so route handlers can access it
     // e.g. req.user.uid, req.user.email
-    req.user = decodedToken;
+    const normalizedUid = decodedToken.uid || decodedToken.user_id || decodedToken.sub;
+    req.user = {
+      ...decodedToken,
+      uid: normalizedUid,
+      id: normalizedUid,
+    };
 
     next();
   } catch (err) {
