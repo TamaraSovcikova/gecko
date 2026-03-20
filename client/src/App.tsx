@@ -19,9 +19,11 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} /> {/*-test to bypass login page*/}
+      <Route path="/dashboard" element={<Dashboard />} /> {/*-test to bypass login page, this is still outside of protected route as I have not been able to test it directly*/}
+
 
       <Route
         path="/payslip"
