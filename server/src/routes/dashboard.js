@@ -10,8 +10,7 @@ const authMiddleware = require("../middleware/auth"); //import middleware - this
 
 // GET api/v1/dashboard
 //this should be protected - reuires valid firebase token
-//authMiddleware should be here I have removed it for front end testing purposes...
-router.get('/', authMiddleware(), async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const user_id = req.user.uid; //for when I can confirm this
         const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 });                                                   //locate most recent payslip
@@ -41,7 +40,7 @@ router.get('/', authMiddleware(), async (req, res) => {
             value: item.total
         }));
 
-        const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.amount, 0); //calculate total expenses to calculate haleht score
+        const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.total, 0); //calculate total expenses to calculate haleht score
 
         let healthScore = 100;
         if (totalBudget > 0) { //prevents Zero division error
