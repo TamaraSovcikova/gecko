@@ -28,6 +28,9 @@ const io = new Server(server, {
   },
 });
 
+// Allowing the expense controller to emit events
+app.set('io', io);
+
 // Socket.io connection handler
 // Each new browser tab / device that connects gets a unique socket.id
 io.on('connection', (socket) => {
