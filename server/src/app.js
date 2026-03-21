@@ -12,7 +12,7 @@ const helmet = require('helmet');
 
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
-const expenseRoutes = require('./routes/expenseRoutes');
+const expenseRoutes = require('./routes/expense');
 
 const app = express();
 
