@@ -12,8 +12,8 @@ const authMiddleware = require("../middleware/auth"); //import middleware - this
 //this should be protected - reuires valid firebase token
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const user_id = req.user.uid; //for when I can confirm this
-        const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 });                                                   //locate most recent payslip
+        const user_id = req.user.uid;     
+        const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 }); 
         const takeHome = payslip?.takeHomePay || 0;                                                                                         //if no data, dfaults zero as fallback
         const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //converts to format that recharts requires
         const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);                    //adds all categories for total budget
