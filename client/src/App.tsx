@@ -10,15 +10,34 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PayslipSetup from "./pages/PayslipSetup";
 
 function App() {
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      <Route
+        path="/payslip"
+        element={
+          <ProtectedRoute>
+            <PayslipSetup />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/dashboard" element={
+            <ProtectedRoute>
+                <Dashboard />
+            </ProtectedRoute>
+        }
+      />
 
       {/* Protected routes — redirect to /login if not authenticated */}
       {/* <Route path="/dashboard" element={

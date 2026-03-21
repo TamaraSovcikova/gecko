@@ -16,6 +16,7 @@ router.use('/api/v1/auth', require('./auth'));
 
 // ---- Protected routes (token required) ----
 // All routes below this line require a valid Firebase token.
-
+router.use('/api/v1/payslip', authMiddleware, require('./payslip'));
+router.use('/api/v1/dashboard', authMiddleware, require('./dashboard'));
 
 module.exports = router;

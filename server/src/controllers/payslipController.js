@@ -1,0 +1,102 @@
+// Responsible for handling payslip related API requests 
+// Specifically: 
+// ------------
+// - POST /api/v1/payslip <- When the user submits their salary + categories
+// - GET  /api/v1/payslip <- Retrieving the submitted user data
+// ___________________________________________________________________________________
+//
+// User Interaction Flow: 
+// ---------------------
+// 1. Recieve data from the frontend (on user salary + categories)
+// 2. Verifies the user's auth
+// 3. Runs HMRC calculations
+// 4. Stores the result in the DB
+// 5. Updates the User models fields (payslip data + completed onboarding)
+// 6. Sends the calculated financial breakdown to the frontend
+
+const MonthlyBudget = require('../models/MonthlyBudget');
+const User = require('../models/User');
+const calculatePayslip = require('../services/hmrcCalculator');
+
+// POST /api/v1/payslip
+exports.createPayslip = async (req, res) => {
+  try {
+    const grossSalary = Number(req.body.grossSalary);
+    const categories = Array.isArray(req.body.categories) ? req.body.categories : [];
+    const userId = req.user?.uid;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User ID missing from token" });
+    }
+
+    if (!Number.isFinite(grossSalary) || grossSalary <= 0) {
+      return res.status(400).json({ error: "Gross salary must be a positive number" });
+    }
+
+    const normalizedCategories = categories.map((category) => ({
+      name: String(category?.name || "").trim(),
+      budget: Number(category?.budget ?? category?.amount ?? 0),
+    }));
+
+    const hasInvalidCategoryBudget = normalizedCategories.some(
+      (category) => !Number.isFinite(category.budget) || category.budget < 0
+    );
+
+    if (hasInvalidCategoryBudget) {
+      return res.status(400).json({ error: "Each category budget must be a valid non-negative number" });
+    }
+
+    const result = calculatePayslip(grossSalary);
+
+    const budget = await MonthlyBudget.findOneAndUpdate(
+      { userId },
+      {
+        userId,
+        grossSalary,
+        taxPaid: result.taxPaid,
+        niPaid: result.niPaid,
+        takeHomePay: result.takeHomePay,
+        categories: normalizedCategories,
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        "payslipData.grossSalary": grossSalary,
+        hasCompletedOnboarding: true,
+      },
+      { upsert: false }
+    );
+
+    res.status(201).json(budget);
+  } catch (error) {
+    console.error("Create payslip error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+  
+
+// GET /api/v1/payslip
+exports.getPayslip = async (req, res) => {
+
+    try {
+        const userId = req.user.uid;
+        const budget = await MonthlyBudget.findOne({ userId });
+  
+        if (!budget) {
+            return res.status(404).json({ message: "No payslip found" });
+        }
+  
+        res.json(budget);
+  
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
