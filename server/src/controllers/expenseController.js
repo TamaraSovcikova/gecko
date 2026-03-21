@@ -12,6 +12,12 @@ exports.createExpense = async (req, res) => {
   try {
     const userId = req.user?.uid;
     const { category, amount, date, note } = req.body;
+
+    // Throwing an error for integral missing fields
+    if (!category || !amount || !date) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+
     const expenseDate = new Date(date);
     const month = expenseDate.getMonth() + 1; // JS is 0-indexed
     const year = expenseDate.getFullYear();
@@ -31,7 +37,7 @@ exports.createExpense = async (req, res) => {
     const dashboardData = await computeDashboard(userId);
 
     // 3. Emit real-time update
-    // Because socket.io lives in your server file, this gives the controller access
+    // Because socket.io lives in the server file, this gives the controller access
     const io = req.app.get('io'); 
     io.to(userId).emit('budget:update', dashboardData);
 

@@ -36,6 +36,14 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
+  // Triggering a join event when a user connects
+  socket.on('join', (userId) => {
+    // Placing the user in a room named after their userId
+    const roomId = userId.toString();
+    socket.join(roomId);
+    console.log(`User ${roomId} joined room`);
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
   });
