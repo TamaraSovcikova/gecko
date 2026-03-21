@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const ExpenseSchema = new mongoose.Schema({
     //ID of Firebase owner
-    user_id: {
+    userId: {
         type: String,
         required: true,
     },
