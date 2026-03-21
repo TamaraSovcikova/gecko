@@ -11,11 +11,9 @@ const authMiddleware = require("../middleware/auth"); //import middleware - this
 // GET api/v1/dashboard
 //this should be protected - reuires valid firebase token
 //authMiddleware should be here I have removed it for front end testing purposes...
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware(), async (req, res) => {
     try {
-        const user_id = "test-user"; //test for now to bypass token require
-        //const user_id = req.user.uid; //for when I can confirm this
-
+        const user_id = req.user.uid; //for when I can confirm this
         const payslip = await Payslip.findOne({user_id}).sort({ createdAt: -1 });                                                   //locate most recent payslip
         const takeHome = payslip?.takeHomePay || 0;                                                                                         //if no data, dfaults zero as fallback
         const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //converts to format that recharts requires

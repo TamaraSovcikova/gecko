@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -25,9 +26,10 @@ const Dashboard = () => {
         //fetchDashboard responsible for fetching dashboard data from abckend
         const fetchDashboard = async () => {
             try {
-                const res = await axios.get( //data requested from backend
-                    "http://localhost:3001/api/v1/dashboard" //backend returns data in one response as efined in MVP
-                );
+                const {token} = useAuth();
+                const res = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/api/v1/dashboard`,
+                    { headers: { Authorization: `Bearer ${token}` } });
                 setData(res.data); //store returned data
             } catch (error) {
                 //catch is used for testing at the moment, because I do not know how to access Mongo
