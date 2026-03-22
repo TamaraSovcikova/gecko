@@ -53,6 +53,29 @@ const PayslipBreakdown = ({ result, onContinue }) => {
           </div>
         )}
 
+        {/* Tips Box */}
+        <div
+          style={{
+            marginTop: "24px",
+            padding: "16px",
+            backgroundColor: "#fef9e7",
+            border: "2px solid #fcc200",
+            borderRadius: "8px",
+          }}
+        >
+          <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+            <div style={{ fontSize: "24px", minWidth: "30px" }}>💡</div>
+            <div>
+              <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600", color: "#333" }}>
+                Unlock Financial Insights
+              </h4>
+              <p style={{ margin: "0", fontSize: "13px", color: "#666", lineHeight: "1.5" }}>
+                Add your <strong>job title</strong> and <strong>location</strong> to your profile to unlock personalized salary insights and financial tips based on market data. Head to your profile to get started!
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="d-flex justify-content-end mt-3">
           <button type="button" className="btn btn-success" onClick={onContinue}>
             Continue
