@@ -25,7 +25,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
         const categoryTotals = await Expense.aggregate([ //in orde to make pie charts use correct data, this needs to be combined...
             {$match: { //query...
-                    user_id , //..id
+                    userId: user_id , //..id
                     month, //..month
                     year //..year ..as previously mentioned in comments
                 }},

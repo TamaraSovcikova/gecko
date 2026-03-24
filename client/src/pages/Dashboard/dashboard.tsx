@@ -3,8 +3,21 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../hooks/useSocket";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+
+/* Full Real-time Update Flow
+1. Frontend loads
+2. useSocket connects
+3. emits a join event
+4. Backend joins room
+5. User submits a new expense
+6. Backend emits 'budget:update'
+7. Frontend recieves the event
+8. New dashboard data is set
+9. React automatically re-renders the UI
+*/
 
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
@@ -18,10 +31,12 @@ type DashboardData = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { token, loading } = useAuth();
+  const { token, loading, currentUser } = useAuth();
+  const socket = useSocket(currentUser?.uid);
   //react state which stores dadhboard data, intially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
 
   //useEffect runs once - triggers loading data from backens
   useEffect(() => {
@@ -41,6 +56,22 @@ const Dashboard = () => {
 
     fetchDashboard();
   }, [token]); //dependency array ensures this only runs once when component mounts and when token changes
+
+  // useEffect() for real-time updates to the dashboard
+  // Runs when the socket is available
+  useEffect(() => {
+    if (!socket) return;
+    // Listens for an emission from the backend of the dashboard
+    socket.on('budget:update', (updatedData:DashboardData) => {
+      console.log('Recieved real-time update:', updatedData);
+      setData(updatedData)
+    });
+    return () => {
+      // Switches off the socket to prevent duplicate listeners
+      socket.off('budget:update');
+    };
+  }, [socket]);
+  
   if (error) return <div>{error}</div>;
   if (!data) return <div>Loading...</div>;
 
@@ -164,4 +195,5 @@ const Dashboard = () => {
     </div>
   );
 };
+
 export default Dashboard;

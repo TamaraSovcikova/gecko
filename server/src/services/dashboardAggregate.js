@@ -5,46 +5,87 @@ async function computeDashboard(userId) {
     // 2. Get current month expenses
     // 3. Aggregate totals per category
     // 4. Calculate:
-    //    - total spent
-    //    - budget left
     //    - health score
+    //    - take home
+    //    - budget left
+    //    - total budget
+    //    - actual spending
+    //    - budget allocation
     // 5. Return structured object
   }
 */
 
 const Expense = require('../models/Expense');
-const MonthlyBudget = require('../models/MonthlyBudget'); // adjust name if needed
+const MonthlyBudget = require('../models/MonthlyBudget');
 
 async function computeDashboard(userId) {
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  // 1. Get budget
-  const budget = await MonthlyBudget.findOne({ userId });
+  // 1. Get payslip (same as dashboard route)
+  const payslip = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
 
-  // 2. Get expenses for current month
-  const expenses = await Expense.find({ userId, month, year });
+  const takeHome = payslip?.takeHomePay || 0;
 
-  // 3. Total spent
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const budgetAllocation = (payslip?.categories || []).map(category => ({
+    name: category.name,
+    value: category.budget 
+  }));
 
-  // 4. Budget total
-  const totalBudget = budget?.takeHomePay || 0;
+  const totalBudget = (payslip?.categories || []).reduce(
+    (sum, category) => sum + category.budget,
+    0
+  );
 
-  // 5. Budget left
-  const budgetLeft = totalBudget - totalSpent;
+  // 2. Aggregate expenses
+  const categoryTotals = await Expense.aggregate([
+    {
+      $match: {
+        userId: userId,   // matching the schema field name
+        month,
+        year
+      }
+    },
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$amount" }
+      }
+    }
+  ]);
 
-  // 6. Health score 
-  const healthScore = totalBudget > 0
-    ? Math.max(0, Math.round((budgetLeft / totalBudget) * 100))
-    : 100;
+  const actualSpending = categoryTotals.map(item => ({
+    name: item._id,
+    value: item.total
+  }));
 
+  const totalExpenses = categoryTotals.reduce(
+    (sum, e) => sum + e.total,
+    0
+  );
+
+  // 3. Health score (same logic)
+  let healthScore = 100;
+
+  if (totalBudget > 0) {
+    const score = (1 - totalExpenses / totalBudget) * 100;
+    healthScore = Math.round(Math.min(100, Math.max(0, score)));
+  }
+
+  const budgetLeft = totalBudget - totalExpenses;
+
+  console.log("TOTAL EXPENSES:", totalExpenses);
+  console.log("TOTAL BUDGET:", totalBudget);
+
+  // Return Structure 
   return {
     healthScore,
+    takeHome,
     budgetLeft,
-    totalSpent,
-    expenses
+    totalBudget,
+    actualSpending,
+    budgetAllocation
   };
 }
 

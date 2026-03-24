@@ -13,6 +13,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
+import Expenses from "./pages/Expenses/Expenses.tsx";
+
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/expenses" element={<Expenses />} />
 
       <Route
         path="/payslip"
