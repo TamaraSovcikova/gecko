@@ -2,7 +2,11 @@ import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
-const Expenses = () => {
+type Props = {
+  categories? : {name: string, value: number}[]
+};
+
+const Expenses = ({categories}: Props) => {
   const { token } = useAuth();
 
   const [amount, setAmount] = useState("");
@@ -52,10 +56,14 @@ const Expenses = () => {
 
         <div>
           <label>Category:</label>
-          <select onChange={(e) => setCategory(e.target.value)}>
-            <option>Food</option>
-            <option>Travel</option>
-            <option>Bills</option>
+          <select value = {category} 
+          onChange={(e) => setCategory(e.target.value)}>
+            <option value = "">Select category</option>
+
+            {categories && categories.map((cat) => (
+              <option key={cat.name} value={cat.name}>{cat.name}</option>
+            ))}
+    
           </select>
         </div>
 

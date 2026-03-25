@@ -154,10 +154,10 @@ const Dashboard = () => {
             <Legend />
           </PieChart>
         </div>
-          {/* Embed the Expenses form */}
+          {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
           {showExpenses && (
             <div style={{flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }}>
-              <Expenses />
+              <Expenses categories ={data.budgetAllocation} />
             </div>
           )}
       </div>
