@@ -4,6 +4,7 @@ import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
+import Expenses from "../Expenses/Expenses"; 
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -36,6 +37,7 @@ const Dashboard = () => {
   //react state which stores dadhboard data, intially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExpenses, setShowExpenses] = useState<boolean>(false);
   
 
   //useEffect runs once - triggers loading data from backens
@@ -99,8 +101,8 @@ const Dashboard = () => {
           <button onClick={() => navigate("/profile")}>Profile</button>
           {/* redirects user to quiz page */}
           <button onClick={() => navigate("/quiz")}>Quiz</button>
-          {/* redirects to expense - may need to be renamed*/}
-          <button onClick={() => navigate("/expenses")}>Log Expense</button>
+          {/* Scrolls to the expense form */}
+          <button onClick={() => setShowExpenses((prev:boolean) => !prev)}> {showExpenses ? "Close Expense Form" : "Log Expense"} </button>
         </div>
       </div>
 
@@ -152,6 +154,12 @@ const Dashboard = () => {
             <Legend />
           </PieChart>
         </div>
+          {/* Embed the Expenses form */}
+          {showExpenses && (
+            <div style={{flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }}>
+              <Expenses />
+            </div>
+          )}
       </div>
 
       <div style={{ display: "flex", gap: "60px" }}>
