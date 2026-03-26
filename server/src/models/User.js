@@ -30,6 +30,14 @@ const UserSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      jobTitle: {
+        type: String,
+        default: "",
+      },
+      location: {
+        type: String,
+        default: "",
+      },
       // Future fields (add in later sprints):
       // taxCode: { type: String, default: '1257L' },
       // payFrequency: { type: String, enum: ['weekly', 'monthly'], default: 'monthly' },

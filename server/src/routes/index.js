@@ -18,5 +18,6 @@ router.use('/api/v1/auth', require('./auth'));
 // All routes below this line require a valid Firebase token.
 router.use('/api/v1/payslip', authMiddleware, require('./payslip'));
 router.use('/api/v1/dashboard', authMiddleware, require('./dashboard'));
+router.use('/api/v1/user', authMiddleware, require('./user'));
 
 module.exports = router;

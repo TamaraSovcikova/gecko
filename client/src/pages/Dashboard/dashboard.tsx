@@ -3,8 +3,18 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+
+// Type for individual tips
+type AdzunaTip = {
+  type: string;
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
+};
 
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
@@ -14,6 +24,8 @@ type DashboardData = {
   totalBudget: number;
   actualSpending: { name: string; value: number }[];
   budgetAllocation: { name: string; value: number }[];
+  averageSalary?: number;
+  adzunaTips?: AdzunaTip[];
 };
 
 const Dashboard = () => {
@@ -22,6 +34,15 @@ const Dashboard = () => {
   //react state which stores dadhboard data, intially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   //useEffect runs once - triggers loading data from backens
   useEffect(() => {
@@ -41,6 +62,33 @@ const Dashboard = () => {
 
     fetchDashboard();
   }, [token]); //dependency array ensures this only runs once when component mounts and when token changes
+  
+  const getTipColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "#fff3cd"; // light yellow
+      case "medium":
+        return "#d1ecf1"; // light blue
+      case "low":
+        return "#d4edda"; // light green
+      default:
+        return "#e2e3e5"; // light gray
+    }
+  };
+
+  const getTipBorderColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "#ffc107"; // yellow
+      case "medium":
+        return "#17a2b8"; // blue
+      case "low":
+        return "#28a745"; // green
+      default:
+        return "#6c757d"; // gray
+    }
+  };
+
   if (error) return <div>{error}</div>;
   if (!data) return <div>Loading...</div>;
 
@@ -70,12 +118,14 @@ const Dashboard = () => {
           <button onClick={() => navigate("/quiz")}>Quiz</button>
           {/* redirects to expense - may need to be renamed*/}
           <button onClick={() => navigate("/expenses")}>Log Expense</button>
+          {/* logout button */}
+          <button onClick={handleLogout} style={{ backgroundColor: "#ff6b6b", color: "white" }}>Logout</button>
         </div>
       </div>
 
       <div style={{ marginBottom: "20px" }}>
         <h3>
-          Take-home: £{data.takeHome} | Budget: £{data.totalBudget}
+          Take-home: £{data.takeHome.toFixed(2)} | Budget: £{data.totalBudget.toFixed(2)}
         </h3>
       </div>
 
@@ -141,26 +191,69 @@ const Dashboard = () => {
 
         <div>
           <h4>Take Home</h4>
-          <p style={{ fontSize: "20px" }}>£{data.takeHome}</p>
+          <p style={{ fontSize: "20px" }}>£{data.takeHome.toFixed(2)}</p>
         </div>
 
         <div>
           <h4>Budget Left</h4>
-          <p style={{ fontSize: "20px" }}>£{data.budgetLeft}</p>
+          <p style={{ fontSize: "20px" }}>£{data.budgetLeft.toFixed(2)}</p>
         </div>
 
         <div>
           <h4>Budget vs Actual</h4>
           {data.budgetLeft >= 0 ? (
-            <p>Under budget by £{data.budgetLeft}</p>
+            <p>Under budget by £{data.budgetLeft.toFixed(2)}</p>
           ) : (
             <p>
               {/*abs ensures displayed numebr is positive wen showing overbudget*/}
-              Over budget by £{Math.abs(data.budgetLeft)}
+              Over budget by £{Math.abs(data.budgetLeft).toFixed(2)}
             </p>
           )}
         </div>
+
+        {data.averageSalary && (
+          <div>
+            <h4>Market Salary</h4>
+            <p style={{ fontSize: "20px" }}>£{data.averageSalary.toLocaleString()}</p>
+            <p style={{ fontSize: "12px", color: "#666" }}>Average for your role</p>
+          </div>
+        )}
       </div>
+
+      {/* Adzuna Tips Section */}
+      {data.adzunaTips && data.adzunaTips.length > 0 && (
+        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }}>
+          <h3 style={{ marginBottom: "20px", color: "#333" }}>💡 Financial Tips Based on Market Data</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+            {data.adzunaTips.map((tip, index) => (
+              <div
+                key={`tip-${index}`}
+                style={{
+                  padding: "16px",
+                  backgroundColor: getTipColor(tip.priority),
+                  borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
+                  borderRadius: "4px",
+                  transition: "transform 0.2s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateX(4px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateX(0)";
+                }}
+              >
+                <h5 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "16px", fontWeight: "600" }}>
+                  {tip.title}
+                </h5>
+                <p style={{ margin: "0", color: "#555", fontSize: "14px", lineHeight: "1.5" }}>
+                  {tip.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
