@@ -71,7 +71,7 @@ const GroqChat = () => {
                         right: 20,
                         width: 320,
                         height: 420,
-                        background: "white",
+                        background: "lightgrey",
                         borderRadius: 12,
                         display: "flex",
                         flexDirection: "column",
