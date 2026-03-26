@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
+{/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
+
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* <Route path="/expenses" element={<Expenses />} /> 
+      Route commented out -> choosing to embed the expenses form in the /Dashboard route*/} 
 
       <Route
         path="/payslip"

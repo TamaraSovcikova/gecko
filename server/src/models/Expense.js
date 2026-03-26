@@ -9,7 +9,7 @@ const ExpenseSchema = new mongoose.Schema({
         required: true,
     },
     month: { //respective month the expense belongs too...
-        type: String,  //...could alternatively be a number for easy reference?
+        type: Number,  // Changed from String -> Number, as needed for the ComputeDashboard() function
         required: true,
     },
     year: { //year of expense

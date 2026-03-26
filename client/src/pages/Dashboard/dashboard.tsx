@@ -3,10 +3,24 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../hooks/useSocket";
+import Expenses from "../Expenses/Expenses";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/config";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+
+/* Full Real-time Update Flow
+1. Frontend loads
+2. useSocket connects
+3. emits a join event
+4. Backend joins room
+5. User submits a new expense
+6. Backend emits 'budget:update'
+7. Frontend recieves the event
+8. New dashboard data is set
+9. React automatically re-renders the UI
+*/
 
 // Type for individual tips
 type AdzunaTip = {
@@ -30,10 +44,12 @@ type DashboardData = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { token, loading } = useAuth();
-  //react state which stores dadhboard data, intially null
+  const { token, loading, currentUser } = useAuth();
+  const socket = useSocket(currentUser?.uid);
+  //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExpenses, setShowExpenses] = useState<boolean>(false);
 
   const handleLogout = async () => {
     try {
@@ -44,7 +60,7 @@ const Dashboard = () => {
     }
   };
 
-  //useEffect runs once - triggers loading data from backens
+  //useEffect runs once - triggers loading data from backend
   useEffect(() => {
     if (loading || !token) return; //wait for auth to finish and token to be available before fetching data
     const fetchDashboard = async () => {
@@ -61,8 +77,23 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [token]); //dependency array ensures this only runs once when component mounts and when token changes
-  
+  }, [token, loading]); //dependency array ensures this only runs once when component mounts and when token changes
+
+  // useEffect() for real-time updates to the dashboard
+  // Runs when the socket is available
+  useEffect(() => {
+    if (!socket) return;
+    // Listens for an emission from the backend of the dashboard
+    socket.on("budget:update", (updatedData: DashboardData) => {
+      console.log("Recieved real-time update:", updatedData);
+      setData(updatedData);
+    });
+    return () => {
+      // Switches off the socket to prevent duplicate listeners
+      socket.off("budget:update");
+    };
+  }, [socket]);
+
   const getTipColor = (priority: string) => {
     switch (priority) {
       case "high":
@@ -116,10 +147,17 @@ const Dashboard = () => {
           <button onClick={() => navigate("/profile")}>Profile</button>
           {/* redirects user to quiz page */}
           <button onClick={() => navigate("/quiz")}>Quiz</button>
-          {/* redirects to expense - may need to be renamed*/}
-          <button onClick={() => navigate("/expenses")}>Log Expense</button>
+          {/* Toggles the inline expense form */}
+          <button onClick={() => setShowExpenses((prev: boolean) => !prev)}>
+            {showExpenses ? "Close Expense Form" : "Log Expense"}
+          </button>
           {/* logout button */}
-          <button onClick={handleLogout} style={{ backgroundColor: "#ff6b6b", color: "white" }}>Logout</button>
+          <button
+            onClick={handleLogout}
+            style={{ backgroundColor: "#ff6b6b", color: "white" }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -146,7 +184,7 @@ const Dashboard = () => {
                 <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
               ))}
             </Pie>
-            {/*tooltps and labels allow cool breakdowns when hoevering*/}
+            {/*tooltips and labels allow cool breakdowns when hovering*/}
             <Tooltip />
             <Legend />
           </PieChart>
@@ -171,6 +209,13 @@ const Dashboard = () => {
             <Legend />
           </PieChart>
         </div>
+
+        {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
+        {showExpenses && (
+          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }}>
+            <Expenses categories={data.budgetAllocation} />
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: "60px" }}>
@@ -205,7 +250,7 @@ const Dashboard = () => {
             <p>Under budget by £{data.budgetLeft.toFixed(2)}</p>
           ) : (
             <p>
-              {/*abs ensures displayed numebr is positive wen showing overbudget*/}
+              {/*abs ensures displayed number is positive when showing overbudget*/}
               Over budget by £{Math.abs(data.budgetLeft).toFixed(2)}
             </p>
           )}
@@ -257,4 +302,5 @@ const Dashboard = () => {
     </div>
   );
 };
+
 export default Dashboard;
