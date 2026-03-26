@@ -33,47 +33,24 @@ exports.createPayslip = async (req, res) => {
       return res.status(400).json({ error: "Gross salary must be a positive number" });
     }
 
-    const normalizedCategories = categories.map((category) => ({
-      name: String(category?.name || "").trim(),
-      budget: Number(category?.budget ?? category?.amount ?? 0),
-    }));
-
-    const hasInvalidCategoryBudget = normalizedCategories.some(
-      (category) => !Number.isFinite(category.budget) || category.budget < 0
-    );
-
-    if (hasInvalidCategoryBudget) {
-      return res.status(400).json({ error: "Each category budget must be a valid non-negative number" });
-    }
-
     const result = calculatePayslip(grossSalary);
 
-    const budget = await MonthlyBudget.findOneAndUpdate(
-      { userId },
-      {
-        userId,
-        grossSalary,
-        taxPaid: result.taxPaid,
-        niPaid: result.niPaid,
-        takeHomePay: result.takeHomePay,
-        categories: normalizedCategories,
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
-      }
-    );
-
-    await User.findByIdAndUpdate(
+    const budget = await MonthlyBudget.create({
       userId,
-      {
-        "payslipData.grossSalary": grossSalary,
-        hasCompletedOnboarding: true,
-      },
-      { upsert: false }
-    );
+      grossSalary,
+      taxPaid: result.taxPaid,
+      niPaid: result.niPaid,
+      takeHomePay: result.takeHomePay,
+      categories: categories.map((category) => ({
+        name: String(category?.name || "").trim(),
+        budget: Number(category?.budget ?? category?.amount ?? 0),
+      })),
+    });
+
+    await User.findByIdAndUpdate(userId, {
+      "payslipData.grossSalary": grossSalary,
+      hasCompletedOnboarding: true,
+    });
 
     res.status(201).json(budget);
   } catch (error) {
@@ -100,3 +77,50 @@ exports.getPayslip = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+
+// PUT /api/v1/payslip
+exports.updatePayslip = async (req, res) => {
+  try {
+    const grossSalary = Number(req.body.grossSalary);
+    const categories = Array.isArray(req.body.categories) ? req.body.categories : [];
+    const userId = req.user?.uid;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User ID missing from token" });
+    }
+
+    if (!Number.isFinite(grossSalary) || grossSalary <= 0) {
+      return res.status(400).json({ error: "Gross salary must be a positive number" });
+    }
+
+    const result = calculatePayslip(grossSalary);
+
+    const budget = await MonthlyBudget.findOneAndUpdate(
+      { userId },
+      {
+        grossSalary,
+        taxPaid: result.taxPaid,
+        niPaid: result.niPaid,
+        takeHomePay: result.takeHomePay,
+        categories: categories.map((category) => ({
+          name: String(category?.name || "").trim(),
+          budget: Number(category?.budget ?? category?.amount ?? 0),
+        })),
+      },
+      { new: true }
+    );
+
+    if (!budget) {
+      return res.status(404).json({ error: "Payslip not found" });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      "payslipData.grossSalary": grossSalary,
+    });
+
+    res.status(200).json(budget);
+  } catch (error) {
+    console.error("Update payslip error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

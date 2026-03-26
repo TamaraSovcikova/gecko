@@ -9,10 +9,12 @@ const authMiddleware = require("../middleware/auth");
 // Importing POST or GET functions from the controller
 const {
   createPayslip,
-  getPayslip
+  getPayslip,
+  updatePayslip
 } = require("../controllers/payslipController");
 
 router.post("/", createPayslip);
 router.get("/", getPayslip);
+router.put("/", updatePayslip);
 
 module.exports = router;
