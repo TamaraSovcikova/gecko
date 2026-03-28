@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
         const { message } = req.body;
         const response = await axios.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            {model: "meta-llama/llama-prompt-guard-2-22m", //notes on this model on Jira
+            {model: "openai/gpt-oss-120b", //notes on this model on Jira
                 messages: [{
                     role: "user",
                     content: message
