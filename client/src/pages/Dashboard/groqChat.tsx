@@ -27,7 +27,7 @@ const GroqChat = () => {
 
         try {
             const res = await axios.post(//as requested in 'tehcnical notes' on JIRA
-                `$/api/v1/backendhere`, //exmple backend for time being as figured it's be best to start frontend
+                `${import.meta.env.VITE_API_URL}/api/v1/chat`,
                 {message: userMessage.content},
                 {headers: {Authorization: `Bearer ${token}`}}
             );
