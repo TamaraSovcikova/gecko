@@ -79,7 +79,7 @@ export default function TopicCard({ topic, onRead }: TopicCardProps) {
       <div
         style={{
           background: "#fff",
-          borderRadius: 16,
+          borderRadius: 10,
           border: "0.5px solid #E5E7EB",
           padding: "1rem",
           display: "flex",
@@ -101,23 +101,6 @@ export default function TopicCard({ topic, onRead }: TopicCardProps) {
       >
         {/* Icon + title */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: style.iconBg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <i
-              className={topic.icon}
-              style={{ color: style.iconColor, fontSize: 16 }}
-            />
-          </div>
           <div style={{ flex: 1, paddingTop: 1 }}>
             <div
               style={{
@@ -167,7 +150,7 @@ export default function TopicCard({ topic, onRead }: TopicCardProps) {
           style={{
             width: "100%",
             fontSize: 12,
-            padding: "7px 10px",
+            padding: "5px 10px",
             borderRadius: 9,
             border: `0.5px solid ${style.accent}33`,
             background: style.iconBg,

@@ -109,7 +109,7 @@ export default function Learn() {
       <div
         style={{
           background: "#EEF2FF",
-          borderRadius: 20,
+          borderRadius: 10,
           padding: "1.75rem",
           marginBottom: "1.5rem",
           display: "flex",
@@ -148,8 +148,8 @@ export default function Learn() {
                   margin: 0,
                 }}
               >
-                Plain-English guides to your money — from your first payslip to
-                long-term savings.
+                Explore the resources below to learn more about money - from
+                your first payslip to long-term savings.
               </p>
             </div>
             {/* Search */}
