@@ -14,8 +14,10 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-{/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
-
+import Learn from "./pages/Learn/index.tsx";
+{
+  /* import Expenses from "./pages/Expenses/Expenses.tsx"; */
+}
 
 function App() {
   return (
@@ -25,8 +27,9 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
       {/* <Route path="/expenses" element={<Expenses />} /> 
-      Route commented out -> choosing to embed the expenses form in the /Dashboard route*/} 
+      Route commented out -> choosing to embed the expenses form in the /Dashboard route*/}
 
       <Route
         path="/payslip"
@@ -37,36 +40,32 @@ function App() {
         }
       />
 
-      <Route path="/dashboard" element={
-            <ProtectedRoute>
-                <Dashboard />
-            </ProtectedRoute>
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
         }
       />
 
-      <Route path="/profile" element={
-            <ProtectedRoute>
-                <Profile />
-            </ProtectedRoute>
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
         }
       />
 
-      {/* Protected routes — redirect to /login if not authenticated */}
-      {/* <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/payslip" element={
-        <ProtectedRoute>
-          <PayslipSetup />
-        </ProtectedRoute>
-      } />     
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } /> */}
+      <Route
+        path="/learn"
+        element={
+          <ProtectedRoute>
+            <Learn />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

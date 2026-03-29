@@ -42,7 +42,7 @@ const CATEGORY_META: Record<
     color: "#D97706",
     dotColor: "#FBBF24",
     description:
-      "From emergency funds to ISAs - savings that work for your goals.",
+      "From emergency funds to ISAs — savings that work for your goals.",
   },
 };
 
@@ -105,7 +105,7 @@ export default function Learn() {
 
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
-      {/* --- Hero ------------------------- */}
+      {/* ------ Hero ----------- */}
       <div
         style={{
           background: "#EEF2FF",
@@ -211,7 +211,7 @@ export default function Learn() {
         </div>
       </div>
 
-      {/* --- Category filter pills ------------------------- */}
+      {/* ------ Category filter pills ----------- */}
       <div
         style={{
           display: "flex",
@@ -265,7 +265,7 @@ export default function Learn() {
         })}
       </div>
 
-      {/* --- No results ------------------------- */}
+      {/* ------ No results ----------- */}
       {filteredTopics.length === 0 && (
         <div style={{ textAlign: "center", padding: "3rem 0" }}>
           <i
@@ -298,7 +298,7 @@ export default function Learn() {
         </div>
       )}
 
-      {/* --- Topic groups ------------------------- */}
+      {/* -- Topic groups --------*/}
       {groupedTopics.map(({ category, topics }) => {
         const meta = CATEGORY_META[category as LearningCategory];
         return (
