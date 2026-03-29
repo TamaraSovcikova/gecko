@@ -2,10 +2,10 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
 import CategoryBuilder from "../../components/CategoryBuilder.jsx";
 import PayslipBreakdown from "../../components/PayslipBreakdown.jsx";
+import TopNav from "../../components/TopNav";
 
 type Category = {
   name: string;
@@ -55,7 +55,6 @@ const PayslipSetup = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [logoutLoading, setLogoutLoading] = useState(false);
   const [result, setResult] = useState<PayslipResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -148,18 +147,6 @@ const PayslipSetup = () => {
     return () => clearTimeout(timer);
   }, [locationSearchQuery, showLocationDropdown, token]);
 
-  const handleLogout = async () => {
-    try {
-      setLogoutLoading(true);
-      await auth.signOut();
-      navigate("/login", { replace: true });
-    } catch {
-      setApiError("Unable to log out right now. Please try again.");
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
-
   const totalCategoryAmount = useMemo(() => {
     return categories.reduce((sum, category) => {
       const value = Number(category.amount);
@@ -193,6 +180,9 @@ const PayslipSetup = () => {
   const validate = () => {
     const nextErrors: string[] = [];
     const salary = Number(grossSalary);
+    const normalizedCategoryNames = categories
+      .map((category) => category.name.trim().toLowerCase())
+      .filter(Boolean);
 
     if (!grossSalary || Number.isNaN(salary) || salary <= 0) {
       nextErrors.push("Gross salary must be greater than 0.");
@@ -208,6 +198,10 @@ const PayslipSetup = () => {
         nextErrors.push(`Category ${index + 1} amount must be 0 or more.`);
       }
     });
+
+    if (new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length) {
+      nextErrors.push("Category names must be unique.");
+    }
 
     if (!Number.isNaN(salary) && totalCategoryAmount > salary) {
       nextErrors.push("Total category amount cannot be more than gross salary.");
@@ -390,33 +384,7 @@ const PayslipSetup = () => {
 
   return (
     <div className="container py-4 py-md-5">
-      <nav className="navbar justify-content-between align-items-center bg-white border rounded-3 shadow-sm mb-4 px-3 py-2">
-        <h5 className="mb-0" style={{ color: "#666" }}>Payslip</h5>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => navigate("/profile")}
-          >
-            Profile
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-danger btn-sm"
-            onClick={handleLogout}
-            disabled={logoutLoading}
-          >
-            {logoutLoading ? "Logging out..." : "Logout"}
-          </button>
-        </div>
-      </nav>
+      <TopNav />
 
       <div className="row justify-content-center">
         <div className="col-12 col-lg-9">

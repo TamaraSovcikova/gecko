@@ -6,18 +6,59 @@ const MonthlyBudget = require("../models/MonthlyBudget");
 const PDFDocument = require("pdfkit");
 const { searchJobTitles, searchLocations } = require("../services/adzunaCalculator");
 
+const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
+  const entries = [];
+
+  if (displayNameChanged) {
+    entries.push({ action: "username_changed", changedAt: new Date() });
+  }
+
+  if (auditEvent) {
+    entries.push({ action: auditEvent, changedAt: new Date() });
+  }
+
+  return entries;
+};
+
+const buildFallbackDisplayName = (decodedUser = {}) => {
+  if (decodedUser.name) {
+    return String(decodedUser.name).trim();
+  }
+
+  if (decodedUser.email) {
+    return String(decodedUser.email).split("@")[0] || "User";
+  }
+
+  return "User";
+};
+
 // GET /api/v1/user/profile
 // Returns the current user's profile information
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.uid;
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
 
+    // Some Google-auth users may exist in Firebase before a Mongo user is created.
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      user = await User.create({
+        _id: userId,
+        email: String(req.user.email || "").toLowerCase().trim() || "unknown@example.com",
+        displayName: buildFallbackDisplayName(req.user),
+      });
     }
 
-    res.json(user);
+    const [expenses, budgets] = await Promise.all([
+      Expense.find({ userId }).sort({ date: -1, createdAt: -1 }),
+      MonthlyBudget.find({ userId }).sort({ createdAt: -1 }),
+    ]);
+
+    res.json({
+      ...user.toObject(),
+      expenses,
+      budgets,
+      latestBudget: budgets[0] || null,
+    });
   } catch (err) {
     console.error("Error fetching user profile:", err);
     res.status(500).json({ error: "Server error" });
@@ -204,34 +245,77 @@ const deleteUserProfile = async (req, res) => {
 };
 
 // PATCH /api/v1/user/profile
-// Updates user profile fields (e.g., payslipData)
+// Updates user profile fields (e.g., payslipData, username, metadata)
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.uid;
-    const { payslipData } = req.body;
+    const authenticatedUserId = req.user.uid;
+    const requestedUserId = req.params.userId || authenticatedUserId;
+    const { payslipData, displayName, auditEvent } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        ...(payslipData && {
-          "payslipData.jobTitle": payslipData.jobTitle,
-          "payslipData.location": payslipData.location,
-          "payslipData.grossSalary": payslipData.grossSalary,
-        }),
-      },
-      { new: true }
-    );
+    if (requestedUserId !== authenticatedUserId) {
+      return res.status(403).json({ error: "You can only update your own profile" });
+    }
+
+    const user = await User.findById(authenticatedUserId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(user);
+    const updateDoc = {};
+    const trimmedDisplayName = typeof displayName === "string" ? displayName.trim() : "";
+
+    if (typeof displayName === "string") {
+      if (!trimmedDisplayName) {
+        return res.status(400).json({ error: "Username cannot be empty" });
+      }
+
+      updateDoc.displayName = trimmedDisplayName;
+    }
+
+    if (payslipData) {
+      if (Object.prototype.hasOwnProperty.call(payslipData, "jobTitle")) {
+        updateDoc["payslipData.jobTitle"] = payslipData.jobTitle;
+      }
+      if (Object.prototype.hasOwnProperty.call(payslipData, "location")) {
+        updateDoc["payslipData.location"] = payslipData.location;
+      }
+      if (Object.prototype.hasOwnProperty.call(payslipData, "grossSalary")) {
+        updateDoc["payslipData.grossSalary"] = payslipData.grossSalary;
+      }
+    }
+
+    const displayNameChanged = typeof displayName === "string" && trimmedDisplayName !== user.displayName;
+    const auditEntries = buildAuditEntries({
+      displayNameChanged,
+      auditEvent,
+    });
+
+    if (auditEntries.length > 0) {
+      updateDoc.$push = {
+        accountChangeLog: {
+          $each: auditEntries,
+        },
+      };
+    }
+
+    if (Object.keys(updateDoc).length === 0) {
+      return res.status(400).json({ error: "No valid profile fields provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      authenticatedUserId,
+      updateDoc,
+      { new: true }
+    );
+
+    res.json(updatedUser);
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 // GET /api/v1/user/job-search
 // Searches for job titles from Adzuna

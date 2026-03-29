@@ -14,8 +14,13 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-{/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
-
+import Expenses from "./pages/Expenses/Expenses";
+import Learn from "./pages/Learn";
+import Quiz from "./pages/Quiz";
+import Terms from "./pages/Terms";
+import SettingsPage from "./pages/Settings";
+import ChangePasswordPage from "./pages/ChangePassword";
+import DataPolicyPage from "./pages/DataPolicy";
 
 function App() {
   return (
@@ -37,17 +42,76 @@ function App() {
         }
       />
 
-      <Route path="/dashboard" element={
-            <ProtectedRoute>
-                <Dashboard />
-            </ProtectedRoute>
+      <Route
+        path="/expenses"
+        element={
+          <ProtectedRoute>
+            <Expenses />
+          </ProtectedRoute>
         }
       />
 
-      <Route path="/profile" element={
-            <ProtectedRoute>
-                <Profile />
-            </ProtectedRoute>
+      <Route
+        path="/learn"
+        element={
+          <ProtectedRoute>
+            <Learn />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/quiz"
+        element={
+          <ProtectedRoute>
+            <Quiz />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/terms"
+        element={<Terms />}
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePasswordPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/data-policy"
+        element={<DataPolicyPage />}
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
         }
       />
 

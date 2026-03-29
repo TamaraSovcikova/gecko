@@ -16,13 +16,68 @@
 
 const MonthlyBudget = require('../models/MonthlyBudget');
 const User = require('../models/User');
+const Expense = require('../models/Expense');
 const calculatePayslip = require('../services/hmrcCalculator');
+const { computeDashboard } = require('../services/dashboardAggregate');
+
+const normalizeCategoryName = (name) => String(name || "").trim();
+
+const sanitizeCategories = (categories) => {
+  const normalized = categories.map((category) => ({
+    name: normalizeCategoryName(category?.name),
+    budget: Number(category?.budget ?? category?.amount ?? 0),
+  }));
+
+  if (normalized.some((category) => !category.name)) {
+    throw new Error("Each category requires a name");
+  }
+
+  if (normalized.some((category) => !Number.isFinite(category.budget) || category.budget < 0)) {
+    throw new Error("Each category budget must be 0 or more");
+  }
+
+  const dedupedNames = new Set(normalized.map((category) => category.name.toLowerCase()));
+  if (dedupedNames.size !== normalized.length) {
+    throw new Error("Category names must be unique");
+  }
+
+  return normalized;
+};
+
+const reconcileCurrentMonthExpenses = async (userId, previousCategories, nextCategories) => {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const activeCategoryNames = new Set(nextCategories.map((category) => category.name));
+
+  for (let index = 0; index < Math.min(previousCategories.length, nextCategories.length); index += 1) {
+    const previousName = normalizeCategoryName(previousCategories[index]?.name);
+    const nextName = normalizeCategoryName(nextCategories[index]?.name);
+
+    if (previousName && nextName && previousName !== nextName) {
+      await Expense.updateMany(
+        { userId, month, year, category: previousName },
+        { $set: { category: nextName } }
+      );
+    }
+  }
+
+  const previousNames = previousCategories.map((category) => normalizeCategoryName(category?.name)).filter(Boolean);
+  const namesToArchive = previousNames.filter((name) => !activeCategoryNames.has(name));
+
+  if (namesToArchive.length > 0) {
+    await Expense.updateMany(
+      { userId, month, year, category: { $in: namesToArchive } },
+      { $set: { category: "Uncategorised" } }
+    );
+  }
+};
 
 // POST /api/v1/payslip
 exports.createPayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
-    const categories = Array.isArray(req.body.categories) ? req.body.categories : [];
+    const categories = sanitizeCategories(Array.isArray(req.body.categories) ? req.body.categories : []);
     const userId = req.user?.uid;
 
     if (!userId) {
@@ -41,16 +96,17 @@ exports.createPayslip = async (req, res) => {
       taxPaid: result.taxPaid,
       niPaid: result.niPaid,
       takeHomePay: result.takeHomePay,
-      categories: categories.map((category) => ({
-        name: String(category?.name || "").trim(),
-        budget: Number(category?.budget ?? category?.amount ?? 0),
-      })),
+      categories,
     });
 
     await User.findByIdAndUpdate(userId, {
       "payslipData.grossSalary": grossSalary,
       hasCompletedOnboarding: true,
     });
+
+    const dashboardData = await computeDashboard(userId);
+    const io = req.app.get("io");
+    io?.to(userId).emit("budget:update", dashboardData);
 
     res.status(201).json(budget);
   } catch (error) {
@@ -82,7 +138,7 @@ exports.getPayslip = async (req, res) => {
 exports.updatePayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
-    const categories = Array.isArray(req.body.categories) ? req.body.categories : [];
+    const categories = sanitizeCategories(Array.isArray(req.body.categories) ? req.body.categories : []);
     const userId = req.user?.uid;
 
     if (!userId) {
@@ -95,6 +151,14 @@ exports.updatePayslip = async (req, res) => {
 
     const result = calculatePayslip(grossSalary);
 
+    const existingBudget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+
+    if (!existingBudget) {
+      return res.status(404).json({ error: "Payslip not found" });
+    }
+
+    await reconcileCurrentMonthExpenses(userId, existingBudget.categories || [], categories);
+
     const budget = await MonthlyBudget.findOneAndUpdate(
       { userId },
       {
@@ -102,21 +166,18 @@ exports.updatePayslip = async (req, res) => {
         taxPaid: result.taxPaid,
         niPaid: result.niPaid,
         takeHomePay: result.takeHomePay,
-        categories: categories.map((category) => ({
-          name: String(category?.name || "").trim(),
-          budget: Number(category?.budget ?? category?.amount ?? 0),
-        })),
+        categories,
       },
       { new: true }
     );
 
-    if (!budget) {
-      return res.status(404).json({ error: "Payslip not found" });
-    }
-
     await User.findByIdAndUpdate(userId, {
       "payslipData.grossSalary": grossSalary,
     });
+
+    const dashboardData = await computeDashboard(userId);
+    const io = req.app.get("io");
+    io?.to(userId).emit("budget:update", dashboardData);
 
     res.status(200).json(budget);
   } catch (error) {

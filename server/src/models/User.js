@@ -62,6 +62,20 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    accountChangeLog: [
+      {
+        action: {
+          type: String,
+          required: true,
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
   },
   {
     // createdAt and updatedAt timestamps added automatically by Mongoose

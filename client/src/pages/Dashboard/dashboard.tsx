@@ -5,8 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
-import { signOut } from "firebase/auth";
-import { auth } from "../../firebase/config";
+import TopNav from "../../components/TopNav";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -49,16 +48,7 @@ const Dashboard = () => {
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showExpenses, setShowExpenses] = useState<boolean>(false);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
+  const showExpenses = true;
 
   //useEffect runs once - triggers loading data from backend
   useEffect(() => {
@@ -131,35 +121,7 @@ const Dashboard = () => {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* simple navbar with navigation buttons */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          padding: "10px 0",
-          borderBottom: "1px solid #ccc",
-        }}
-      >
-        <h2>Dashboard</h2>
-        <div style={{ display: "flex", gap: "10px" }}>
-          {/* redirects user to profile page */}
-          <button onClick={() => navigate("/profile")}>Profile</button>
-          {/* redirects user to quiz page */}
-          <button onClick={() => navigate("/quiz")}>Quiz</button>
-          {/* Toggles the inline expense form */}
-          <button onClick={() => setShowExpenses((prev: boolean) => !prev)}>
-            {showExpenses ? "Close Expense Form" : "Log Expense"}
-          </button>
-          {/* logout button */}
-          <button
-            onClick={handleLogout}
-            style={{ backgroundColor: "#ff6b6b", color: "white" }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+      <TopNav />
 
       <div style={{ marginBottom: "20px" }}>
         <h3>
@@ -169,7 +131,16 @@ const Dashboard = () => {
 
       <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
         <div>
-          <h4>Budget Allocation</h4>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
+            <h4 style={{ margin: 0 }}>Budget Allocation</h4>
+            <button
+              type="button"
+              onClick={() => navigate("/payslip?mode=edit")}
+              style={{ padding: "8px 12px", borderRadius: "999px", border: "1px solid #bfd1c0", backgroundColor: "#eef5eb", color: "#37553e", fontWeight: 600 }}
+            >
+              Edit Payslip/Budget
+            </button>
+          </div>
           <PieChart width={300} height={220}>
             <Pie
               data={data.budgetAllocation || []} //fallback to empty array prevents runtime
@@ -191,7 +162,16 @@ const Dashboard = () => {
         </div>
 
         <div>
-          <h4>Actual Spending</h4>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
+            <h4 style={{ margin: 0 }}>Actual Spending</h4>
+            <button
+              type="button"
+              onClick={() => navigate("/expenses")}
+              style={{ padding: "8px 12px", borderRadius: "999px", border: "1px solid #bfd1c0", backgroundColor: "#eef5eb", color: "#37553e", fontWeight: 600 }}
+            >
+              Edit Expenses
+            </button>
+          </div>
           <PieChart width={300} height={220}>
             <Pie
               data={data.actualSpending || []}

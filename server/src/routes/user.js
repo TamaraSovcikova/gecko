@@ -28,5 +28,6 @@ router.delete("/profile", deleteUserProfile);
 
 // PATCH /api/v1/user/profile
 router.patch("/profile", updateUserProfile);
+router.patch("/:userId/profile", updateUserProfile);
 
 module.exports = router;
