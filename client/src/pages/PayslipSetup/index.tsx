@@ -6,6 +6,8 @@ import { registerUser } from "../../api/authApi";
 import CategoryBuilder from "../../components/CategoryBuilder.jsx";
 import PayslipBreakdown from "../../components/PayslipBreakdown.jsx";
 import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 type Category = {
   name: string;
@@ -57,6 +59,14 @@ const PayslipSetup = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PayslipResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/payslip");
 
   // Load existing payslip on mount
   useEffect(() => {
@@ -398,7 +408,7 @@ const PayslipSetup = () => {
               </p>
 
               <form onSubmit={handleSubmit} noValidate>
-                <div className="mb-3">
+                <div className="mb-3" data-onboarding="payslip-gross">
                   <label htmlFor="grossSalary" className="form-label">
                     Gross Salary (annual)
                   </label>
@@ -416,6 +426,7 @@ const PayslipSetup = () => {
 
                 {/* Tips Box for Job Title & Location */}
                 <div
+                  data-onboarding="payslip-profile-tip"
                   style={{
                     marginBottom: "20px",
                     padding: "16px",
@@ -596,15 +607,17 @@ const PayslipSetup = () => {
                   )}
                 </div>
 
-                <CategoryBuilder
-                  categories={categories}
-                  onAddCategory={addCategory}
-                  onRemoveCategory={removeCategory}
-                  onUpdateCategory={updateCategory}
-                  totalCategoryAmount={totalCategoryAmount}
-                  isOverAllocated={isOverAllocated}
-                  disabled={loading}
-                />
+                <div data-onboarding="payslip-categories">
+                  <CategoryBuilder
+                    categories={categories}
+                    onAddCategory={addCategory}
+                    onRemoveCategory={removeCategory}
+                    onUpdateCategory={updateCategory}
+                    totalCategoryAmount={totalCategoryAmount}
+                    isOverAllocated={isOverAllocated}
+                    disabled={loading}
+                  />
+                </div>
 
                 {errors.length > 0 && (
                   <div className="alert alert-warning" role="alert">
@@ -640,6 +653,14 @@ const PayslipSetup = () => {
           />
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

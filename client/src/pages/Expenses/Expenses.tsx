@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 type Props = {
   categories? : {name: string, value: number}[]
@@ -34,6 +36,14 @@ const Expenses = ({categories}: Props) => {
   const [pageError, setPageError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState({ amount: "", category: "", date: "", note: "" });
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/expenses", isStandalonePage);
 
   useEffect(() => {
     if (!categories) {
@@ -221,7 +231,7 @@ const Expenses = ({categories}: Props) => {
           {pageError && <p style={{ color: "#b54848" }}>{pageError}</p>}
 
           <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "24px" }}>
-            <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }}>
+            <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }} data-onboarding="expenses-log-form">
               <h2 style={{ marginTop: 0, color: "#355f46", fontSize: "22px" }}>Log expense</h2>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: "12px" }}>
@@ -253,10 +263,10 @@ const Expenses = ({categories}: Props) => {
               </form>
             </div>
 
-            <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }}>
+            <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }} data-onboarding="expenses-list">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "20px" }}>
                 <h2 style={{ margin: 0, color: "#355f46", fontSize: "22px" }}>Expenses</h2>
-                <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} style={{ padding: "10px", borderRadius: "8px", border: "1px solid #d6d0c8" }}>
+                <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} style={{ padding: "10px", borderRadius: "8px", border: "1px solid #d6d0c8" }} data-onboarding="expenses-filter">
                   <option value="all">All categories</option>
                   {formCategories.map((name) => (
                     <option key={name} value={name}>{name}</option>
@@ -327,7 +337,7 @@ const Expenses = ({categories}: Props) => {
           </div>
         </div>
       ) : (
-        <div style={{ padding: "20px" }}>
+        <div style={{ padding: "20px" }} data-onboarding="dashboard-embedded-expenses">
           <h2>Log Expense</h2>
 
           <form onSubmit={handleSubmit}>
@@ -364,6 +374,14 @@ const Expenses = ({categories}: Props) => {
           </form>
         </div>
       )}
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
       </div>
     </>
   );

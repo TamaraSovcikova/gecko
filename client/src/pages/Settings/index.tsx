@@ -8,6 +8,10 @@ import {
 import TopNav from "../../components/TopNav";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../firebase/config";
+import { resetServerOnboarding } from "../../api/onboardingApi";
+import { resetLocalOnboardingPages } from "../../utils/onboardingState";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const mapFirebaseEmailError = (error: unknown) => {
   const errorCode = typeof error === "object" && error !== null && "code" in error
@@ -70,10 +74,23 @@ const SettingsPage = () => {
   const [emailPassword, setEmailPassword] = useState("");
   const [usernameState, setUsernameState] = useState({ saving: false, message: "", error: "" });
   const [emailState, setEmailState] = useState({ saving: false, message: "", error: "" });
+  const [onboardingState, setOnboardingState] = useState({ saving: false, message: "", error: "" });
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [newsletterState, setNewsletterState] = useState({ saving: false, message: "", error: "" });
+  const [newsletterTestState, setNewsletterTestState] = useState({ sending: false, message: "", error: "" });
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/settings");
 
   useEffect(() => {
     setUsername(profile?.displayName || "");
     setEmail(profile?.email || currentUser?.email || "");
+    setNewsletterOptIn(Boolean(profile?.newsletterOptIn));
   }, [profile, currentUser]);
 
   const usernameChanged = useMemo(() => {
@@ -159,6 +176,100 @@ const SettingsPage = () => {
     }
   };
 
+  const handleReplayOnboarding = async () => {
+    setOnboardingState({ saving: true, message: "", error: "" });
+
+    try {
+      resetLocalOnboardingPages();
+
+      let completedPages: string[] = [];
+      if (token) {
+        completedPages = await resetServerOnboarding(token);
+      }
+
+      setProfile((previous) => ({
+        ...(previous || {}),
+        onboardingCompletedPages: completedPages,
+      }));
+
+      setOnboardingState({
+        saving: false,
+        message: "Onboarding reset. Visit any supported page to replay numbered tips.",
+        error: "",
+      });
+    } catch (error) {
+      console.error("Failed to reset onboarding", error);
+      setOnboardingState({ saving: false, message: "", error: "Unable to reset onboarding right now." });
+    }
+  };
+
+  const handleNewsletterSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setNewsletterState({ saving: true, message: "", error: "" });
+
+    if (!currentUser?.uid || !token) {
+      setNewsletterState({ saving: false, message: "", error: "Please sign in again to update newsletter settings." });
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${currentUser.uid}/profile`,
+        { newsletterOptIn },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      const nextValue = Boolean(response.data?.newsletterOptIn);
+      setProfile((prev) => ({ ...(prev || {}), newsletterOptIn: nextValue }));
+      setNewsletterOptIn(nextValue);
+      setNewsletterState({
+        saving: false,
+        message: nextValue
+          ? "Newsletter subscription enabled. You can opt out anytime here or from the email link."
+          : "Newsletter subscription disabled.",
+        error: "",
+      });
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.error || "Unable to update newsletter preference."
+        : "Unable to update newsletter preference.";
+      setNewsletterState({ saving: false, message: "", error: message });
+    }
+  };
+
+  const handleSendNewsletterTest = async () => {
+    setNewsletterTestState({ sending: true, message: "", error: "" });
+
+    if (!currentUser?.uid || !token) {
+      setNewsletterTestState({ sending: false, message: "", error: "Please sign in again to send a test email." });
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/user/newsletter/send-test`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      const sentTo = response.data?.email || profile?.email || currentUser?.email || "your email";
+      const period = response.data?.period?.label ? ` for ${response.data.period.label}` : "";
+      const consistencyChecks = Array.isArray(response.data?.consistencyChecks)
+        ? response.data.consistencyChecks.join(" ")
+        : "";
+      setNewsletterTestState({
+        sending: false,
+        message: `Test newsletter sent to ${sentTo}${period}. ${consistencyChecks}`.trim(),
+        error: "",
+      });
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.error || "Unable to send test newsletter."
+        : "Unable to send test newsletter.";
+      setNewsletterTestState({ sending: false, message: "", error: message });
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: "24px" }}>Loading account settings...</div>;
   }
@@ -167,7 +278,7 @@ const SettingsPage = () => {
     <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "24px" }}>
       <TopNav />
       <div style={{ maxWidth: "980px", margin: "24px auto 0" }}>
-        <div style={{ marginBottom: "24px" }}>
+        <div style={{ marginBottom: "24px" }} data-onboarding="settings-heading">
           <p style={{ margin: 0, color: "#7e887e", letterSpacing: "0.08em", textTransform: "uppercase" }}>Account</p>
           <h1 style={{ margin: "8px 0 0", color: "#355f46", fontSize: "44px", fontWeight: 300 }}>Edit Account Details</h1>
         </div>
@@ -218,8 +329,75 @@ const SettingsPage = () => {
               {emailState.saving ? "Saving..." : "Save email"}
             </button>
           </form>
+
+          <form onSubmit={handleNewsletterSave} style={cardStyle} data-onboarding="settings-newsletter-card">
+            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Newsletter</h2>
+            <p style={{ margin: "0 0 12px", color: "#5f625c", lineHeight: 1.6 }}>
+              Opt in to receive one monthly email with a concise financial snapshot.
+              You can unsubscribe any time from this page or from the unsubscribe link in the email.
+            </p>
+            <p style={{ margin: "0 0 14px", color: "#7d7a72", fontSize: "13px" }}>
+              Monthly comparison and history insights are not live yet and are currently placeholder content.
+            </p>
+            <label style={{ display: "flex", alignItems: "center", gap: "10px", color: "#35483a", fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                onChange={(event) => setNewsletterOptIn(event.target.checked)}
+                data-onboarding="settings-newsletter-toggle"
+              />
+              Send me the monthly newsletter
+            </label>
+            {newsletterState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{newsletterState.message}</p>}
+            {newsletterState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{newsletterState.error}</p>}
+            <button
+              type="submit"
+              disabled={newsletterState.saving}
+              data-onboarding="settings-newsletter-save"
+              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+            >
+              {newsletterState.saving ? "Saving..." : "Save newsletter preference"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendNewsletterTest}
+              disabled={newsletterTestState.sending || newsletterState.saving}
+              data-onboarding="settings-newsletter-test-send"
+              style={{ marginTop: "14px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#eef5eb", color: "#2d5237", fontWeight: 600 }}
+            >
+              {newsletterTestState.sending ? "Sending test..." : "Get Last Month's Newsletter"}
+            </button>
+            {newsletterTestState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{newsletterTestState.message}</p>}
+            {newsletterTestState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{newsletterTestState.error}</p>}
+          </form>
+
+          <section style={cardStyle}>
+            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Tutorial / Onboarding</h2>
+            <p style={{ margin: 0, color: "#5f625c", lineHeight: 1.6 }}>
+              Replay the financial walkthrough tooltips for completed areas of the app.
+            </p>
+            {onboardingState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{onboardingState.message}</p>}
+            {onboardingState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{onboardingState.error}</p>}
+            <button
+              type="button"
+              disabled={onboardingState.saving}
+              onClick={handleReplayOnboarding}
+              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+            >
+              {onboardingState.saving ? "Resetting..." : "Replay onboarding"}
+            </button>
+          </section>
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

@@ -6,6 +6,8 @@ import { auth } from "../../firebase/config";
 import axios from "axios";
 import TopNav from "../../components/TopNav";
 import ProfileAvatar from "../../components/ProfileAvatar";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -16,6 +18,14 @@ const Profile = () => {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/profile");
 
   // Fetch user data from backend
   useEffect(() => {
@@ -80,17 +90,15 @@ const Profile = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Delete Firebase account
-        if (currentUser) {
-          await currentUser.delete();
-        }
-
         // Sign out
         await signOut(auth);
         navigate("/login");
       } catch (err) {
         console.error("Error deleting profile:", err);
-        setError("Failed to delete profile");
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.error || "Failed to delete profile"
+          : "Failed to delete profile";
+        setError(message);
         setDeleting(false);
       }
     }
@@ -160,6 +168,7 @@ const Profile = () => {
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         {/* Top section: Profile heading - centered */}
         <div
+          data-onboarding="profile-heading"
           style={{
             textAlign: "center",
             marginBottom: "50px",
@@ -484,6 +493,14 @@ const Profile = () => {
           </button>
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

@@ -19,6 +19,7 @@ const TopNav = () => {
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <Link
           to="/dashboard"
+          data-onboarding="nav-brand"
           style={{
             textDecoration: "none",
             fontSize: "20px",
@@ -52,7 +53,7 @@ const TopNav = () => {
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "18px", flex: 1, justifyContent: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "18px", flex: 1, justifyContent: "center" }} data-onboarding="nav-primary-links">
         <Link
           to="/dashboard"
           style={{ textDecoration: "none", color: "#4c5d53", fontWeight: 600 }}

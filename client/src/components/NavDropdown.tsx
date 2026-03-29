@@ -68,6 +68,7 @@ const NavDropdown = () => {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
+        data-onboarding="nav-account-menu"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Open account menu"
@@ -100,24 +101,24 @@ const NavDropdown = () => {
           }}
         >
           {isAuthenticated && (
-            <Link to="/profile" onClick={() => setOpen(false)} style={itemStyle}>
+            <Link to="/profile" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-profile-link">
               Profile
             </Link>
           )}
           {isAuthenticated && (
-            <Link to="/settings" onClick={() => setOpen(false)} style={itemStyle}>
+            <Link to="/settings" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-settings-link">
               Edit Account Details
             </Link>
           )}
           {isAuthenticated && (
-            <Link to="/change-password" onClick={() => setOpen(false)} style={itemStyle}>
+            <Link to="/change-password" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-change-password-link">
               Change Password
             </Link>
           )}
-          <Link to="/terms" onClick={() => setOpen(false)} style={itemStyle}>
+          <Link to="/terms" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-terms-link">
             Terms & Conditions
           </Link>
-          <Link to="/data-policy" onClick={() => setOpen(false)} style={itemStyle}>
+          <Link to="/data-policy" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-data-policy-link">
             Data Policy
           </Link>
           {isAuthenticated ? (

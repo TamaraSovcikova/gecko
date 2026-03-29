@@ -14,6 +14,8 @@ import { auth } from "../firebase/config";
 type AuthProfile = {
   displayName?: string;
   email?: string;
+  onboardingCompletedPages?: string[];
+  newsletterOptIn?: boolean;
 };
 
 interface AuthContextType {
@@ -64,6 +66,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile({
         displayName: response.data?.displayName,
         email: response.data?.email,
+        onboardingCompletedPages: response.data?.financialOnboarding?.completedPages || [],
+        newsletterOptIn: Boolean(response.data?.newsletterOptIn),
       });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401 && auth.currentUser) {
@@ -82,6 +86,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setProfile({
             displayName: retryResponse.data?.displayName,
             email: retryResponse.data?.email,
+            onboardingCompletedPages: retryResponse.data?.financialOnboarding?.completedPages || [],
+            newsletterOptIn: Boolean(retryResponse.data?.newsletterOptIn),
           });
           return;
         } catch (retryError) {

@@ -4,7 +4,14 @@ const User = require("../models/User");
 const Expense = require("../models/Expense");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const PDFDocument = require("pdfkit");
+const admin = require("../config/firebase");
 const { searchJobTitles, searchLocations } = require("../services/adzunaCalculator");
+const {
+  hashToken,
+  createUnsubscribeToken,
+  getPreviousMonthPeriod,
+  sendMonthlyNewsletterToUser,
+} = require("../services/newsletterService");
 
 const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
   const entries = [];
@@ -232,6 +239,13 @@ const deleteUserProfile = async (req, res) => {
   try {
     const userId = req.user.uid;
 
+    try {
+      await admin.auth().deleteUser(userId);
+    } catch (firebaseError) {
+      console.error("Error deleting Firebase auth user:", firebaseError);
+      return res.status(500).json({ error: "Failed to delete authentication account" });
+    }
+
     // Delete all associated data
     await Expense.deleteMany({ userId });
     await MonthlyBudget.deleteMany({ userId });
@@ -250,7 +264,7 @@ const updateUserProfile = async (req, res) => {
   try {
     const authenticatedUserId = req.user.uid;
     const requestedUserId = req.params.userId || authenticatedUserId;
-    const { payslipData, displayName, auditEvent } = req.body;
+    const { payslipData, displayName, auditEvent, onboarding, newsletterOptIn } = req.body;
 
     if (requestedUserId !== authenticatedUserId) {
       return res.status(403).json({ error: "You can only update your own profile" });
@@ -285,6 +299,40 @@ const updateUserProfile = async (req, res) => {
       }
     }
 
+    if (onboarding && typeof onboarding === "object") {
+      const shouldReset = onboarding.reset === true;
+      const completePages = Array.isArray(onboarding.completePages)
+        ? onboarding.completePages.map((page) => String(page).trim()).filter(Boolean)
+        : [];
+
+      if (shouldReset) {
+        updateDoc["financialOnboarding.completedPages"] = [];
+      }
+
+      if (completePages.length > 0) {
+        updateDoc.$addToSet = {
+          ...(updateDoc.$addToSet || {}),
+          "financialOnboarding.completedPages": {
+            $each: completePages,
+          },
+        };
+      }
+
+      if (shouldReset || completePages.length > 0) {
+        updateDoc["financialOnboarding.updatedAt"] = new Date();
+      }
+    }
+
+    if (typeof newsletterOptIn === "boolean") {
+      updateDoc.newsletterOptIn = newsletterOptIn;
+
+      if (newsletterOptIn) {
+        const plainToken = createUnsubscribeToken();
+        updateDoc.newsletterUnsubscribeTokenHash = hashToken(plainToken);
+        updateDoc.newsletterUnsubscribeTokenCreatedAt = new Date();
+      }
+    }
+
     const displayNameChanged = typeof displayName === "string" && trimmedDisplayName !== user.displayName;
     const auditEntries = buildAuditEntries({
       displayNameChanged,
@@ -313,6 +361,80 @@ const updateUserProfile = async (req, res) => {
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+// GET /api/v1/user/newsletter/unsubscribe
+// Public route used from email links.
+const unsubscribeFromNewsletter = async (req, res) => {
+  try {
+    const userId = String(req.query.uid || "").trim();
+    const token = String(req.query.token || "").trim();
+
+    if (!userId || !token) {
+      return res.status(400).send("Missing unsubscribe details.");
+    }
+
+    const user = await User.findById(userId);
+    if (!user || !user.newsletterUnsubscribeTokenHash) {
+      return res.status(400).send("This unsubscribe link is invalid or expired.");
+    }
+
+    const providedTokenHash = hashToken(token);
+    if (providedTokenHash !== user.newsletterUnsubscribeTokenHash) {
+      return res.status(400).send("This unsubscribe link is invalid or expired.");
+    }
+
+    user.newsletterOptIn = false;
+    user.newsletterUnsubscribeTokenHash = null;
+    user.newsletterUnsubscribeTokenCreatedAt = null;
+    await user.save();
+
+    return res.status(200).send("You have been unsubscribed from the newsletter.");
+  } catch (err) {
+    console.error("Error unsubscribing from newsletter:", err);
+    return res.status(500).send("Could not process unsubscribe request.");
+  }
+};
+
+// POST /api/v1/user/newsletter/send-test
+// Sends one test newsletter email to the authenticated user.
+const sendTestNewsletter = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.newsletterOptIn) {
+      return res.status(400).json({ error: "Enable newsletter opt-in before sending a test email." });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ error: "No email address found for this account." });
+    }
+
+    const period = getPreviousMonthPeriod(new Date());
+    const result = await sendMonthlyNewsletterToUser({
+      user,
+      year: period.year,
+      month: period.month,
+      isTest: true,
+    });
+
+    return res.json({
+      message: "Test newsletter sent.",
+      email: result.email,
+      period: result.period,
+      metrics: result.metrics,
+      comparisons: result.comparisons,
+      consistencyChecks: result.consistencyChecks,
+    });
+  } catch (err) {
+    console.error("Error sending test newsletter:", err);
+    return res.status(500).json({ error: err.message || "Failed to send test newsletter." });
   }
 };
 
@@ -350,4 +472,6 @@ module.exports = {
   updateUserProfile,
   getJobTitleOptions,
   getLocationOptions,
+  unsubscribeFromNewsletter,
+  sendTestNewsletter,
 };

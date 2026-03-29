@@ -9,6 +9,7 @@ const {
   updateUserProfile,
   getJobTitleOptions,
   getLocationOptions,
+  sendTestNewsletter,
 } = require("../controllers/userController");
 
 // GET /api/v1/user/profile
@@ -29,5 +30,8 @@ router.delete("/profile", deleteUserProfile);
 // PATCH /api/v1/user/profile
 router.patch("/profile", updateUserProfile);
 router.patch("/:userId/profile", updateUserProfile);
+
+// POST /api/v1/user/newsletter/send-test
+router.post("/newsletter/send-test", sendTestNewsletter);
 
 module.exports = router;

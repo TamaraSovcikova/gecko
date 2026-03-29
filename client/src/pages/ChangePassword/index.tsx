@@ -3,6 +3,8 @@ import axios from "axios";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import TopNav from "../../components/TopNav";
 import { useAuth } from "../../context/AuthContext";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const strengthLabel = (password: string) => {
   if (!password) return { text: "Enter a new password", color: "#7d7a72" };
@@ -34,6 +36,14 @@ const ChangePasswordPage = () => {
   const strength = strengthLabel(newPassword);
   const supportsPasswordProvider = currentUser?.providerData?.some((provider: any) => provider.providerId === "password") ?? false;
   const isGoogleOnlyAccount = Boolean(currentUser) && !supportsPasswordProvider && (currentUser?.providerData?.some((provider: any) => provider.providerId === "google.com") ?? false);
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/change-password");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -82,7 +92,7 @@ const ChangePasswordPage = () => {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "24px" }}>
       <TopNav />
-      <div style={{ maxWidth: "860px", margin: "24px auto 0", backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "24px", boxShadow: "0 12px 24px rgba(77, 87, 69, 0.06)" }}>
+      <div style={{ maxWidth: "860px", margin: "24px auto 0", backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "24px", boxShadow: "0 12px 24px rgba(77, 87, 69, 0.06)" }} data-onboarding="change-password-heading">
         <p style={{ margin: 0, color: "#7e887e", letterSpacing: "0.08em", textTransform: "uppercase" }}>Security</p>
         <h1 style={{ margin: "8px 0 20px", color: "#355f46", fontSize: "42px", fontWeight: 300 }}>Change Password</h1>
 
@@ -116,6 +126,14 @@ const ChangePasswordPage = () => {
           </button>
         </form>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

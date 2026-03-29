@@ -6,6 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
 import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import BreakdownPanel from "../../components/BreakdownPanel";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -29,6 +32,24 @@ type AdzunaTip = {
   priority: "high" | "medium" | "low";
 };
 
+type HealthFactor = {
+  key: string;
+  title: string;
+  weight: number;
+  score: number;
+  contribution: number;
+  impact: "helping" | "lowering" | "neutral";
+  valueLabel: string;
+  explanation: string;
+};
+
+type HealthBreakdown = {
+  healthScore: number;
+  hasEnoughData: boolean;
+  summary: string;
+  factors: HealthFactor[];
+};
+
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
   healthScore: number;
@@ -39,6 +60,7 @@ type DashboardData = {
   budgetAllocation: { name: string; value: number }[];
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
+  healthBreakdown?: HealthBreakdown;
 };
 
 const Dashboard = () => {
@@ -48,7 +70,16 @@ const Dashboard = () => {
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const showExpenses = true;
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/dashboard");
 
   //useEffect runs once - triggers loading data from backend
   useEffect(() => {
@@ -124,14 +155,14 @@ const Dashboard = () => {
         }}
       >
 
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
         <h3>
           Take-home: £{data.takeHome.toFixed(2)} | Budget: £{data.totalBudget.toFixed(2)}
         </h3>
       </div>
 
       <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
-        <div>
+        <div data-onboarding="dashboard-allocation">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
             <h4 style={{ margin: 0 }}>Budget Allocation</h4>
             <button
@@ -162,7 +193,7 @@ const Dashboard = () => {
           </PieChart>
         </div>
 
-        <div>
+        <div data-onboarding="dashboard-actual-spending">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
             <h4 style={{ margin: 0 }}>Actual Spending</h4>
             <button
@@ -193,27 +224,38 @@ const Dashboard = () => {
 
         {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
         {showExpenses && (
-          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }}>
+          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }} data-onboarding="dashboard-embedded-expenses">
             <Expenses categories={data.budgetAllocation} />
           </div>
         )}
       </div>
 
       <div style={{ display: "flex", gap: "60px" }}>
-        <p
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            color:
-              data.healthScore < 40
-                ? "red"
-                : data.healthScore < 70
-                  ? "orange"
-                  : "green",
-          }}
-        >
-          {data.healthScore}
-        </p>
+        <div data-onboarding="dashboard-health-score">
+          <p
+            style={{
+              margin: 0,
+              fontSize: "28px",
+              fontWeight: "bold",
+              color:
+                data.healthScore < 40
+                  ? "red"
+                  : data.healthScore < 70
+                    ? "orange"
+                    : "green",
+            }}
+          >
+            {data.healthScore}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowBreakdown(true)}
+            data-onboarding="dashboard-health-breakdown-trigger"
+            style={{ marginTop: "8px", border: "none", background: "none", color: "#2f6a4b", textDecoration: "underline", cursor: "pointer", padding: 0, fontWeight: 600 }}
+          >
+            See breakdown
+          </button>
+        </div>
 
         <div>
           <h4>Take Home</h4>
@@ -225,7 +267,7 @@ const Dashboard = () => {
           <p style={{ fontSize: "20px" }}>£{data.budgetLeft.toFixed(2)}</p>
         </div>
 
-        <div>
+        <div data-onboarding="dashboard-budget-vs-actual">
           <h4>Budget vs Actual</h4>
           {data.budgetLeft >= 0 ? (
             <p>Under budget by £{data.budgetLeft.toFixed(2)}</p>
@@ -248,7 +290,7 @@ const Dashboard = () => {
 
       {/* Adzuna Tips Section */}
       {data.adzunaTips && data.adzunaTips.length > 0 && (
-        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }}>
+        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }} data-onboarding="dashboard-adzuna-tips">
           <h3 style={{ marginBottom: "20px", color: "#333" }}>💡 Financial Tips Based on Market Data</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
             {data.adzunaTips.map((tip, index) => (
@@ -281,6 +323,19 @@ const Dashboard = () => {
         </div>
       )}
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
+      <BreakdownPanel
+        isOpen={showBreakdown}
+        onClose={() => setShowBreakdown(false)}
+        breakdown={data.healthBreakdown || null}
+      />
     </>
   );
 };

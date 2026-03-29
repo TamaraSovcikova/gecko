@@ -2,17 +2,27 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import TopNav from "../../components/TopNav";
 import { useAuth } from "../../context/AuthContext";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const DataPolicyPage = () => {
   const [showDeleteHelp, setShowDeleteHelp] = useState(false);
   const { currentUser } = useAuth();
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/data-policy");
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "20px" }}>
       <TopNav />
       <div style={{ maxWidth: "980px", margin: "24px auto", background: "#fff", padding: "28px", borderRadius: "14px", border: "1px solid #e8e3dc" }}>
         <p style={{ margin: 0, color: "#7f8678", textTransform: "uppercase", letterSpacing: "0.08em" }}>Last updated: 29 March 2026</p>
-        <h1 style={{ margin: "10px 0 20px", color: "#355f46", fontWeight: 300, fontSize: "44px" }}>Data Policy</h1>
+        <h1 style={{ margin: "10px 0 20px", color: "#355f46", fontWeight: 300, fontSize: "44px" }} data-onboarding="data-policy-heading">Data Policy</h1>
 
         <section style={{ color: "#4d504f", lineHeight: 1.7 }}>
           <h2 style={{ color: "#355f46", fontSize: "22px" }}>What data we collect</h2>
@@ -88,6 +98,14 @@ const DataPolicyPage = () => {
           )}
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

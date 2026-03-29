@@ -17,19 +17,19 @@ const PayslipBreakdown = ({ result, onContinue }) => {
             </div>
           </div>
           <div className="col-6 col-md-3">
-            <div className="p-2 bg-light rounded border">
+            <div className="p-2 bg-light rounded border" data-onboarding="breakdown-tax">
               <div className="small text-muted">Tax</div>
               <div className="fw-semibold">{Number(result.taxPaid || 0).toFixed(2)}</div>
             </div>
           </div>
           <div className="col-6 col-md-3">
-            <div className="p-2 bg-light rounded border">
+            <div className="p-2 bg-light rounded border" data-onboarding="breakdown-ni">
               <div className="small text-muted">NI</div>
               <div className="fw-semibold">{Number(result.niPaid || 0).toFixed(2)}</div>
             </div>
           </div>
           <div className="col-6 col-md-3">
-            <div className="p-2 bg-success-subtle rounded border border-success-subtle">
+            <div className="p-2 bg-success-subtle rounded border border-success-subtle" data-onboarding="breakdown-takehome">
               <div className="small text-muted">Take Home</div>
               <div className="fw-semibold">{Number(result.takeHomePay || 0).toFixed(2)}</div>
             </div>

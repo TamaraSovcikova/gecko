@@ -1,12 +1,23 @@
 import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const Terms = () => {
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/terms");
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "20px" }}>
       <TopNav />
       <div style={{ maxWidth: "980px", margin: "24px auto", background: "#fff", padding: "28px", borderRadius: "14px", border: "1px solid #e8e3dc" }}>
         <p style={{ margin: 0, color: "#7f8678", textTransform: "uppercase", letterSpacing: "0.08em" }}>Last updated: 29 March 2026</p>
-        <h1 style={{ margin: "10px 0 20px", color: "#355f46", fontWeight: 300, fontSize: "44px" }}>Terms & Conditions</h1>
+        <h1 style={{ margin: "10px 0 20px", color: "#355f46", fontWeight: 300, fontSize: "44px" }} data-onboarding="terms-heading">Terms & Conditions</h1>
 
         <section style={{ color: "#4d504f", lineHeight: 1.7 }}>
           <h2 style={{ color: "#355f46", fontSize: "22px" }}>Using the service</h2>
@@ -54,6 +65,14 @@ const Terms = () => {
           </p>
         </section>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };
