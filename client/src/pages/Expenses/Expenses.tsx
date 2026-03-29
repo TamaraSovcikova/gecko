@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import TopNav from "../../components/TopNav";
 
 type Props = {
   categories? : {name: string, value: number}[]
@@ -198,20 +199,22 @@ const Expenses = ({categories}: Props) => {
   const formCategories = availableCategories;
 
   return (
-    <div style={{ padding: isStandalonePage ? "0" : "20px" }}>
-      {isStandalonePage ? (
-        <div style={{ maxWidth: "1120px", margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
+    <>
+      {isStandalonePage && <TopNav />}
+      <div style={{ padding: isStandalonePage ? "0" : "20px" }}>
+        {isStandalonePage ? (
+          <div style={{ maxWidth: "1120px", margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <div>
               <p style={{ margin: 0, color: "#7e887e", textTransform: "uppercase", letterSpacing: "0.08em" }}>Dashboard tools</p>
-              <h1 style={{ margin: "8px 0 0", color: "#355f46", fontSize: "40px", fontWeight: 300 }}>Edit Budget</h1>
+              <h1 style={{ margin: "8px 0 0", color: "#355f46", fontSize: "40px", fontWeight: 300 }}>Edit Expenses</h1>
             </div>
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
               style={{ padding: "10px 16px", borderRadius: "999px", border: "1px solid #d6d0c8", backgroundColor: "#fff", color: "#355f46", fontWeight: 600 }}
             >
-              Cancel
+              Back
             </button>
           </div>
 
@@ -361,7 +364,8 @@ const Expenses = ({categories}: Props) => {
           </form>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

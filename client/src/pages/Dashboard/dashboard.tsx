@@ -114,14 +114,15 @@ const Dashboard = () => {
   if (!data) return <div>Loading...</div>;
 
   return (
-    <div
-      style={{
-        maxWidth: "1000px",
-        margin: "30px auto",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <>
       <TopNav />
+      <div
+        style={{
+          maxWidth: "1000px",
+          margin: "30px auto",
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
 
       <div style={{ marginBottom: "20px" }}>
         <h3>
@@ -279,7 +280,8 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
