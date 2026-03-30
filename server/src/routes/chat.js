@@ -1,18 +1,29 @@
 const express = require("express");
 const router = express.Router();
+const { retrieveDashboardData } = require("./dashboard");
+const { retrieveSanitisedContext } = require("./sanitisedContext");
 
 const axios = require("axios");
 
 router.post("/", async (req, res) => {
     try {
         const { message } = req.body;
+        //const user_id = req.user.id;
+        const user_id = "test_user_id";
+        const dashboardData = await retrieveDashboardData(user_id);
+        const sanitisedContext = await retrieveSanitisedContext(dashboardData);
+        console.log("SANITISED CONTEXT:", sanitisedContext);
+
         const response = await axios.post(
             "https://api.groq.com/openai/v1/chat/completions",
             {model: "openai/gpt-oss-120b", //notes on this model on Jira
                 messages: [{
-                    role: "user",
-                    content: message
-                }]
+                        role: "system",
+                        content: `User financial context: ${JSON.stringify(sanitisedContext)}`
+                    }, {
+                        role: "user",
+                        content: message
+                    }]
             },
             {headers: {
                     Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
