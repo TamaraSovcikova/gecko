@@ -215,5 +215,50 @@ router.get('/', async (req, res) => {
     }
 });
 
+async function retrieveDashboardData(user_id) {
+    const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 });
+    const takeHome = payslip?.takeHomePay || 0;
+    const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget}));
+    const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);
+
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const categoryTotals = await Expense.aggregate([
+        {$match: {
+                user_id ,
+                month,
+                year
+            }},
+        {$group: {
+                _id: "$category",
+                total: { $sum: "$amount" }
+            }}
+    ]);
+
+    const actualSpending = categoryTotals.map(item => ({
+        name: item._id,
+        value: item.total
+    }));
+
+    let healthScore = 100;
+    if (totalBudget > 0) {
+        const Score = (1 - totalExpenses / totalBudget) * 100;
+        healthScore = Math.round(Math.min(100, Math.max(0, Score)));
+    }
+    const budgetLeft = totalBudget - totalExpenses;
+
+    return {
+        healthScore,
+        takeHome,
+        budgetLeft,
+        totalBudget,
+        actualSpending
+    };
+}
+//...previous function literally contains copied and pasted information from routing above
+
 //export router to be used in app.js
 module.exports = router;
+module.exports.retrieveDashboardData = retrieveDashboardData;
