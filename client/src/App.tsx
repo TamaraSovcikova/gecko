@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
+import DailyHello from "./pages/MonthlySnapshot/snapshot.tsx";
+
 {/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
 
 
@@ -47,6 +49,13 @@ function App() {
       <Route path="/profile" element={
             <ProtectedRoute>
                 <Profile />
+            </ProtectedRoute>
+        }
+      />
+
+      <Route path="/snapshot" element={
+            <ProtectedRoute>
+                <DailyHello />
             </ProtectedRoute>
         }
       />

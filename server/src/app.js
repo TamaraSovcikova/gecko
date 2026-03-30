@@ -32,6 +32,15 @@ app.use(
 
 app.use(express.json());
 
+//
+// TEST ROUTES FOR CRON JOB
+//
+const dailyMessageRoutes = require("./routes/dailyMessage.routes");
+app.use("/api/messages", dailyMessageRoutes);
+//
+// TEST ROUTES FOR CRON JOB
+//
+
 app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use('/api/v1/expenses', expenseRoutes);
