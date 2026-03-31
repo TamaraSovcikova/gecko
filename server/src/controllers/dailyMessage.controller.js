@@ -1,6 +1,7 @@
 //
 // TEST CONTROLLER FOR CRON JOB
 //
+
 const DailyMessage = require("../models/DailyMessage");
 
 function getDateKey(date = new Date()) {
@@ -21,6 +22,7 @@ exports.getTodayMessage = async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
+
 //
 // TEST CONTROLLER FOR CRON JOB
 //

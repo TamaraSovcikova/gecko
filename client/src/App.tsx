@@ -14,7 +14,7 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-import DailyHello from "./pages/MonthlySnapshot/snapshot.tsx";
+import DailyHello from "./pages/MonthlySnapshot/dailyHello.tsx";
 
 {/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
 
@@ -53,7 +53,7 @@ function App() {
         }
       />
 
-      <Route path="/snapshot" element={
+      <Route path="/today" element={
             <ProtectedRoute>
                 <DailyHello />
             </ProtectedRoute>

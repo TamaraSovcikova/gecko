@@ -13,7 +13,6 @@ const DailyMessageSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("DailyMessage", DailyMessageSchema);
-
 //
 // TEST MODEL FOR CRON JOB
 //
