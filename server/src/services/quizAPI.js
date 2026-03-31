@@ -1,7 +1,7 @@
 //this file used for thae actual backend data implementation.
 //for time being, it will contain mock data so I can get to grips with how frontend works...
 function getTestQuiz() {
-    return { //these tst questions should be in the format which Quizgecko backend will return: https://quizgecko.com/api-docs
+    return { //these tst questions should be in the format which QuizAPI backend will return: https://quizgecko.com/api-docs
         "questions":[
             {
                 "id": "1",
