@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
-import { signOut } from "firebase/auth";
-import { auth } from "../../firebase/config";
+import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import BreakdownPanel from "../../components/BreakdownPanel";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -30,6 +32,24 @@ type AdzunaTip = {
   priority: "high" | "medium" | "low";
 };
 
+type HealthFactor = {
+  key: string;
+  title: string;
+  weight: number;
+  score: number;
+  contribution: number;
+  impact: "helping" | "lowering" | "neutral";
+  valueLabel: string;
+  explanation: string;
+};
+
+type HealthBreakdown = {
+  healthScore: number;
+  hasEnoughData: boolean;
+  summary: string;
+  factors: HealthFactor[];
+};
+
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
   healthScore: number;
@@ -40,27 +60,29 @@ type DashboardData = {
   budgetAllocation: { name: string; value: number }[];
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
+  healthBreakdown?: HealthBreakdown;
 };
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showExpenses, setShowExpenses] = useState<boolean>(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const showExpenses = true;
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/dashboard");
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
-
-  //useEffect runs once - triggers loading data from backend
+  //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
     if (loading || !token) return; //wait for auth to finish and token to be available before fetching data
     const fetchDashboard = async () => {
@@ -77,7 +99,7 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [token, loading]); //dependency array ensures this only runs once when component mounts and when token changes
+  }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
   // useEffect() for real-time updates to the dashboard
   // Runs when the socket is available
@@ -124,52 +146,34 @@ const Dashboard = () => {
   if (!data) return <div>Loading...</div>;
 
   return (
-    <div
-      style={{
-        maxWidth: "1000px",
-        margin: "30px auto",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      {/* simple navbar with navigation buttons */}
+    <>
+      <TopNav />
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          padding: "10px 0",
-          borderBottom: "1px solid #ccc",
+          maxWidth: "1000px",
+          margin: "30px auto",
+          fontFamily: "Arial, sans-serif",
         }}
       >
-        <h2>Dashboard</h2>
-        <div style={{ display: "flex", gap: "10px" }}>
-          {/* redirects user to profile page */}
-          <button onClick={() => navigate("/profile")}>Profile</button>
-          {/* redirects user to quiz page */}
-          <button onClick={() => navigate("/quiz")}>Quiz</button>
-          {/* Toggles the inline expense form */}
-          <button onClick={() => setShowExpenses((prev: boolean) => !prev)}>
-            {showExpenses ? "Close Expense Form" : "Log Expense"}
-          </button>
-          {/* logout button */}
-          <button
-            onClick={handleLogout}
-            style={{ backgroundColor: "#ff6b6b", color: "white" }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
 
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
         <h3>
           Take-home: £{data.takeHome.toFixed(2)} | Budget: £{data.totalBudget.toFixed(2)}
         </h3>
       </div>
 
       <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
-        <div>
-          <h4>Budget Allocation</h4>
+        <div data-onboarding="dashboard-allocation">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
+            <h4 style={{ margin: 0 }}>Budget Allocation</h4>
+            <button
+              type="button"
+              onClick={() => navigate("/payslip?mode=edit")}
+              style={{ padding: "8px 12px", borderRadius: "999px", border: "1px solid #bfd1c0", backgroundColor: "#eef5eb", color: "#37553e", fontWeight: 600 }}
+            >
+              Edit Payslip/Budget
+            </button>
+          </div>
           <PieChart width={300} height={220}>
             <Pie
               data={data.budgetAllocation || []} //fallback to empty array prevents runtime
@@ -190,8 +194,17 @@ const Dashboard = () => {
           </PieChart>
         </div>
 
-        <div>
-          <h4>Actual Spending</h4>
+        <div data-onboarding="dashboard-actual-spending">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
+            <h4 style={{ margin: 0 }}>Actual Spending</h4>
+            <button
+              type="button"
+              onClick={() => navigate("/expenses")}
+              style={{ padding: "8px 12px", borderRadius: "999px", border: "1px solid #bfd1c0", backgroundColor: "#eef5eb", color: "#37553e", fontWeight: 600 }}
+            >
+              Edit Expenses
+            </button>
+          </div>
           <PieChart width={300} height={220}>
             <Pie
               data={data.actualSpending || []}
@@ -212,27 +225,38 @@ const Dashboard = () => {
 
         {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
         {showExpenses && (
-          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }}>
+          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }} data-onboarding="dashboard-embedded-expenses">
             <Expenses categories={data.budgetAllocation} />
           </div>
         )}
       </div>
 
       <div style={{ display: "flex", gap: "60px" }}>
-        <p
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            color:
-              data.healthScore < 40
-                ? "red"
-                : data.healthScore < 70
-                  ? "orange"
-                  : "green",
-          }}
-        >
-          {data.healthScore}
-        </p>
+        <div data-onboarding="dashboard-health-score">
+          <p
+            style={{
+              margin: 0,
+              fontSize: "28px",
+              fontWeight: "bold",
+              color:
+                data.healthScore < 40
+                  ? "red"
+                  : data.healthScore < 70
+                    ? "orange"
+                    : "green",
+            }}
+          >
+            {data.healthScore}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowBreakdown(true)}
+            data-onboarding="dashboard-health-breakdown-trigger"
+            style={{ marginTop: "8px", border: "none", background: "none", color: "#2f6a4b", textDecoration: "underline", cursor: "pointer", padding: 0, fontWeight: 600 }}
+          >
+            See breakdown
+          </button>
+        </div>
 
         <div>
           <h4>Take Home</h4>
@@ -244,7 +268,7 @@ const Dashboard = () => {
           <p style={{ fontSize: "20px" }}>£{data.budgetLeft.toFixed(2)}</p>
         </div>
 
-        <div>
+        <div data-onboarding="dashboard-budget-vs-actual">
           <h4>Budget vs Actual</h4>
           {data.budgetLeft >= 0 ? (
             <p>Under budget by £{data.budgetLeft.toFixed(2)}</p>
@@ -267,7 +291,7 @@ const Dashboard = () => {
 
       {/* Adzuna Tips Section */}
       {data.adzunaTips && data.adzunaTips.length > 0 && (
-        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }}>
+        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }} data-onboarding="dashboard-adzuna-tips">
           <h3 style={{ marginBottom: "20px", color: "#333" }}>💡 Financial Tips Based on Market Data</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
             {data.adzunaTips.map((tip, index) => (
@@ -299,7 +323,21 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
+      <BreakdownPanel
+        isOpen={showBreakdown}
+        onClose={() => setShowBreakdown(false)}
+        breakdown={data.healthBreakdown || null}
+      />
+    </>
   );
 };
 

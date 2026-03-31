@@ -4,20 +4,68 @@ const User = require("../models/User");
 const Expense = require("../models/Expense");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const PDFDocument = require("pdfkit");
+const admin = require("../config/firebase");
 const { searchJobTitles, searchLocations } = require("../services/adzunaCalculator");
+const {
+  hashToken,
+  createUnsubscribeToken,
+  getPreviousMonthPeriod,
+  sendMonthlyNewsletterToUser,
+} = require("../services/newsletterService");
+
+const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
+  const entries = [];
+
+  if (displayNameChanged) {
+    entries.push({ action: "username_changed", changedAt: new Date() });
+  }
+
+  if (auditEvent) {
+    entries.push({ action: auditEvent, changedAt: new Date() });
+  }
+
+  return entries;
+};
+
+const buildFallbackDisplayName = (decodedUser = {}) => {
+  if (decodedUser.name) {
+    return String(decodedUser.name).trim();
+  }
+
+  if (decodedUser.email) {
+    return String(decodedUser.email).split("@")[0] || "User";
+  }
+
+  return "User";
+};
 
 // GET /api/v1/user/profile
 // Returns the current user's profile information
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.uid;
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
 
+    // Some Google-auth users may exist in Firebase before a Mongo user is created.
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      user = await User.create({
+        _id: userId,
+        email: String(req.user.email || "").toLowerCase().trim() || "unknown@example.com",
+        displayName: buildFallbackDisplayName(req.user),
+      });
     }
 
-    res.json(user);
+    const [expenses, budgets] = await Promise.all([
+      Expense.find({ userId }).sort({ date: -1, createdAt: -1 }),
+      MonthlyBudget.find({ userId }).sort({ createdAt: -1 }),
+    ]);
+
+    res.json({
+      ...user.toObject(),
+      expenses,
+      budgets,
+      latestBudget: budgets[0] || null,
+    });
   } catch (err) {
     console.error("Error fetching user profile:", err);
     res.status(500).json({ error: "Server error" });
@@ -191,6 +239,13 @@ const deleteUserProfile = async (req, res) => {
   try {
     const userId = req.user.uid;
 
+    try {
+      await admin.auth().deleteUser(userId);
+    } catch (firebaseError) {
+      console.error("Error deleting Firebase auth user:", firebaseError);
+      return res.status(500).json({ error: "Failed to delete authentication account" });
+    }
+
     // Delete all associated data
     await Expense.deleteMany({ userId });
     await MonthlyBudget.deleteMany({ userId });
@@ -204,34 +259,185 @@ const deleteUserProfile = async (req, res) => {
 };
 
 // PATCH /api/v1/user/profile
-// Updates user profile fields (e.g., payslipData)
+// Updates user profile fields (e.g., payslipData, username, metadata)
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.uid;
-    const { payslipData } = req.body;
+    const authenticatedUserId = req.user.uid;
+    const requestedUserId = req.params.userId || authenticatedUserId;
+    const { payslipData, displayName, auditEvent, onboarding, newsletterOptIn } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        ...(payslipData && {
-          "payslipData.jobTitle": payslipData.jobTitle,
-          "payslipData.location": payslipData.location,
-          "payslipData.grossSalary": payslipData.grossSalary,
-        }),
-      },
-      { new: true }
-    );
+    if (requestedUserId !== authenticatedUserId) {
+      return res.status(403).json({ error: "You can only update your own profile" });
+    }
+
+    const user = await User.findById(authenticatedUserId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(user);
+    const updateDoc = {};
+    const trimmedDisplayName = typeof displayName === "string" ? displayName.trim() : "";
+
+    if (typeof displayName === "string") {
+      if (!trimmedDisplayName) {
+        return res.status(400).json({ error: "Username cannot be empty" });
+      }
+
+      updateDoc.displayName = trimmedDisplayName;
+    }
+
+    if (payslipData) {
+      if (Object.prototype.hasOwnProperty.call(payslipData, "jobTitle")) {
+        updateDoc["payslipData.jobTitle"] = payslipData.jobTitle;
+      }
+      if (Object.prototype.hasOwnProperty.call(payslipData, "location")) {
+        updateDoc["payslipData.location"] = payslipData.location;
+      }
+      if (Object.prototype.hasOwnProperty.call(payslipData, "grossSalary")) {
+        updateDoc["payslipData.grossSalary"] = payslipData.grossSalary;
+      }
+    }
+
+    if (onboarding && typeof onboarding === "object") {
+      const shouldReset = onboarding.reset === true;
+      const completePages = Array.isArray(onboarding.completePages)
+        ? onboarding.completePages.map((page) => String(page).trim()).filter(Boolean)
+        : [];
+
+      if (shouldReset) {
+        updateDoc["financialOnboarding.completedPages"] = [];
+      }
+
+      if (completePages.length > 0) {
+        updateDoc.$addToSet = {
+          ...(updateDoc.$addToSet || {}),
+          "financialOnboarding.completedPages": {
+            $each: completePages,
+          },
+        };
+      }
+
+      if (shouldReset || completePages.length > 0) {
+        updateDoc["financialOnboarding.updatedAt"] = new Date();
+      }
+    }
+
+    if (typeof newsletterOptIn === "boolean") {
+      updateDoc.newsletterOptIn = newsletterOptIn;
+
+      if (newsletterOptIn) {
+        const plainToken = createUnsubscribeToken();
+        updateDoc.newsletterUnsubscribeTokenHash = hashToken(plainToken);
+        updateDoc.newsletterUnsubscribeTokenCreatedAt = new Date();
+      }
+    }
+
+    const displayNameChanged = typeof displayName === "string" && trimmedDisplayName !== user.displayName;
+    const auditEntries = buildAuditEntries({
+      displayNameChanged,
+      auditEvent,
+    });
+
+    if (auditEntries.length > 0) {
+      updateDoc.$push = {
+        accountChangeLog: {
+          $each: auditEntries,
+        },
+      };
+    }
+
+    if (Object.keys(updateDoc).length === 0) {
+      return res.status(400).json({ error: "No valid profile fields provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      authenticatedUserId,
+      updateDoc,
+      { new: true }
+    );
+
+    res.json(updatedUser);
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
+// GET /api/v1/user/newsletter/unsubscribe
+// Public route used from email links.
+const unsubscribeFromNewsletter = async (req, res) => {
+  try {
+    const userId = String(req.query.uid || "").trim();
+    const token = String(req.query.token || "").trim();
+
+    if (!userId || !token) {
+      return res.status(400).send("Missing unsubscribe details.");
+    }
+
+    const user = await User.findById(userId);
+    if (!user || !user.newsletterUnsubscribeTokenHash) {
+      return res.status(400).send("This unsubscribe link is invalid or expired.");
+    }
+
+    const providedTokenHash = hashToken(token);
+    if (providedTokenHash !== user.newsletterUnsubscribeTokenHash) {
+      return res.status(400).send("This unsubscribe link is invalid or expired.");
+    }
+
+    user.newsletterOptIn = false;
+    user.newsletterUnsubscribeTokenHash = null;
+    user.newsletterUnsubscribeTokenCreatedAt = null;
+    await user.save();
+
+    return res.status(200).send("You have been unsubscribed from the newsletter.");
+  } catch (err) {
+    console.error("Error unsubscribing from newsletter:", err);
+    return res.status(500).send("Could not process unsubscribe request.");
+  }
+};
+
+// POST /api/v1/user/newsletter/send-test
+// Sends one test newsletter email to the authenticated user.
+const sendTestNewsletter = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.newsletterOptIn) {
+      return res.status(400).json({ error: "Enable newsletter opt-in before sending a test email." });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ error: "No email address found for this account." });
+    }
+
+    const period = getPreviousMonthPeriod(new Date());
+    const result = await sendMonthlyNewsletterToUser({
+      user,
+      year: period.year,
+      month: period.month,
+      isTest: true,
+    });
+
+    return res.json({
+      message: "Test newsletter sent.",
+      email: result.email,
+      period: result.period,
+      metrics: result.metrics,
+      comparisons: result.comparisons,
+      consistencyChecks: result.consistencyChecks,
+    });
+  } catch (err) {
+    console.error("Error sending test newsletter:", err);
+    return res.status(500).json({ error: err.message || "Failed to send test newsletter." });
+  }
+};
+
 
 // GET /api/v1/user/job-search
 // Searches for job titles from Adzuna
@@ -266,4 +472,6 @@ module.exports = {
   updateUserProfile,
   getJobTitleOptions,
   getLocationOptions,
+  unsubscribeFromNewsletter,
+  sendTestNewsletter,
 };
