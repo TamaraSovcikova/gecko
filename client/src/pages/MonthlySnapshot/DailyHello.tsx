@@ -2,54 +2,65 @@
 // TEST PAGE FOR CRON JOB
 //
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import axios from "axios";
 
 type DailyMessage = {
+  _id: string;
   dateKey: string;
   message: string;
-  createdAt: string;
 };
 
-export default function DailyHello() {
-  const [data, setData] = useState<DailyMessage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const DailyHello = () => {
+  const { token, loading } = useAuth();
+
+  const [message, setMessage] = useState<string>("");
+  const [loadingMsg, setLoadingMsg] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    async function fetchTodayMessage() {
+    if (loading || !token) return;
+
+    const fetchMessage = async () => {
       try {
-        const res = await fetch("/api/messages/today");
+        const res = await axios.get<DailyMessage>(
+          `${import.meta.env.VITE_API_URL}/api/messages/today`,
+          {
+            headers: { Authorization: `Bearer ${token}` }, // optional if protected
+          }
+        );
 
-        if (!res.ok) {
-          throw new Error("No daily message yet.");
-        }
-
-        const json = await res.json();
-        setData(json);
+        setMessage(res.data.message);
       } catch (err: any) {
-        setError(err.message || "Fetch failed");
+        console.error(err);
+
+        // Handle 404 (no message) separately
+        if (err.response?.status === 404) {
+          setError("No message for today yet.");
+        } else {
+          setError("Failed to fetch today's message.");
+        }
       } finally {
-        setLoading(false);
+        setLoadingMsg(false);
       }
-    }
+    };
 
-    fetchTodayMessage();
-  }, []);
+    fetchMessage();
+  }, [token, loading]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (loadingMsg) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Daily Hello</h1>
-      <p>{data?.message}</p>
-      <small>
-        Stored:{" "}
-        {data?.createdAt ? new Date(data.createdAt).toLocaleString() : ""}
-      </small>
+      <h1>Today's Message</h1>
+      <p>{message}</p>
     </div>
   );
-}
+};
+
+export default DailyHello;
 
 //
 // TEST PAGE FOR CRON JOB

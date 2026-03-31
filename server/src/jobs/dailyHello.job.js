@@ -29,7 +29,7 @@ function buildMessage(date = new Date()) {
 }
 
 function startDailyHelloJob() {
-  cron.schedule("0 21 * * *", async () => {
+  cron.schedule("55 12 * * *", async () => {
     try {
       const now = new Date();
       const dateKey = getDateKey(now);

@@ -3,7 +3,7 @@
 //
 
 const express = require("express");
-const { getTodayMessage } = require("./controllers/dailyMessage.controller.js");
+const { getTodayMessage } = require("../controllers/dailyMessage.controller.js");
 
 const router = express.Router();
 
