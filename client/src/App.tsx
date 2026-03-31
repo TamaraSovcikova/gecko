@@ -10,7 +10,8 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
+//import ProtectedRoute from "./components/ProtectedRoute";
+import Learn from "./pages/Learn";
 
 function App() {
   return (
@@ -20,7 +21,10 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected routes — redirect to /login if not authenticated */}
+      <Route path="/quiz" element={<Learn />}/>
+
+
+        {/* Protected routes — redirect to /login if not authenticated */}
       {/* <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
