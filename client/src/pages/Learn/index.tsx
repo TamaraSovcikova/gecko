@@ -13,8 +13,6 @@ type Question = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-console.log("API_URL:", API_URL);
-
 export default function QuizPage() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
