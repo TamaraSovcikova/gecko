@@ -11,14 +11,20 @@ type Question = {
     answers: Answer[];
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+console.log("API_URL:", API_URL);
+
 export default function QuizPage() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selected, setSelected] = useState<number | null>(null);
     const [showResult, setShowResult] = useState(false);
+    const [score, setScore] = useState(0);
+    const [finished, setFinished] = useState(false);
 
     useEffect(() => {
-        fetch("http://localhost:3000/api/v1/quiz")//i know this is hardcoded endpoint but, it's just for test data monetrily
+        fetch(`${API_URL}/api/v1/quiz`)//i know this is hardcoded endpoint but, it's just for test data monetrily
             .then(res => res.json())
             .then(data => setQuestions(data.questions));
     }, []);
@@ -35,40 +41,106 @@ export default function QuizPage() {
         if (a.correct) return { background: "lightgreen" };
 
         if (selected === i && !a.correct) {
-            return { background: "lightblue" };
+            return { background: "red" };
         }
         return { background: "white" };
     }
 
-    return (
-        <div style={{ padding: "20px" }}>
-            <h2>Quiz</h2>
-            <h3>{current.question}</h3>
-            {current.answers.map((a, i) => (
-                <button
-                    key={i}
-                    onClick={() => {
-                        if (showResult) return;
-                        setSelected(i);
-                        setShowResult(true);
-                    }}
-                    style={{
-                        display: "block",
-                        margin: "10px 0",
-                        ...getButtonStyle(i, a)
-                    }}>
-                    {a.text}
-                </button>
-            ))}
+    if (finished) {
+        return (
+            <div style={{display: "flex", flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "80vh",
+                textAlign: "center"}}>
+                <h1>Quiz Complete!!</h1>
+                <h2>Your Score: {score} / {questions.length}</h2>
 
-            <button
-                onClick={() => {
-                    setSelected(null);
-                    setShowResult(false);
-                    setCurrentIndex(prev => prev + 1);
-                }}>
-                Next
-            </button>
-        </div>
+                <button onClick={() => {window.location.href = "/";}}
+                        style={{marginTop: "20px", padding: "12px 20px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "blue",
+                            color: "white",
+                            fontSize: "16px",
+                            cursor: "pointer"}}>
+                    Go to Dashboard
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <div style={{background: "blue", color: "white",
+                padding: "20px",
+                textAlign: "center",
+                fontSize: "24px",
+                fontWeight: "bold"}}>
+                Quiz
+            </div>
+
+            <div style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "40px"}}>
+
+                <div style={{width: "400px", padding: "30px",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    background: "white",
+                    textAlign: "center"}}>
+
+                    <p style={{ marginBottom: "10px", color: "darkgray" }}>
+                        Question {currentIndex + 1} of {questions.length}
+                    </p>
+
+                    <h3 style={{ marginBottom: "20px" }}>{current.question}</h3>
+
+                    {current.answers.map((a, i) => (
+                        <button key={i}
+                                onClick={() => {
+                                    if (showResult) return;
+                                    setSelected(i);
+                                    setShowResult(true);
+                                    if (a.correct) {
+                                        setScore(prev => prev + 1);
+                                    }
+                                }}
+                                style={{width: "100%", padding: "12px",
+                                    margin: "8px 0",
+                                    borderRadius: "8px",
+                                    border: "1px solid",
+                                    cursor: "pointer",
+                                    fontSize: "16px",
+                                    transition: "0.2s",
+                                    ...getButtonStyle(i, a)}}>
+                            {a.text}
+                        </button>))}
+
+                    {showResult && (
+                        <button onClick={() => {
+                            if (currentIndex + 1 >= questions.length) {
+                                setFinished(true);
+                                return;
+                            }
+                            setSelected(null);
+                            setShowResult(false);
+                            setCurrentIndex(prev => prev + 1);
+                        }}
+                                style={{marginTop: "20px", width: "100%",
+                                    padding: "12px",
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    background: "lightblue",
+                                    color: "black",
+                                    fontSize: "16px",
+                                    cursor: "pointer"}}>
+                            Next
+                        </button>
+                    )}
+                </div>
+            </div>
+        </>
     );
 }
