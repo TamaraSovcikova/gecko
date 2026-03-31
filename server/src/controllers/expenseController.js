@@ -16,9 +16,14 @@ const emitDashboardUpdate = async (req, userId) => {
 
 const validateExpenseCategory = async (userId, category) => {
   const latestBudget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
-  const validCategories = new Set((latestBudget?.categories || []).map((item) => String(item.name || '').trim()));
+  const normalizedInput = String(category || '').trim().toLowerCase();
+  const validCategories = new Set(
+    (latestBudget?.categories || [])
+      .map((item) => String(item.name || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
 
-  if (validCategories.size > 0 && !validCategories.has(category)) {
+  if (validCategories.size > 0 && !validCategories.has(normalizedInput)) {
     return 'Expense category must match one of your current budget categories';
   }
 

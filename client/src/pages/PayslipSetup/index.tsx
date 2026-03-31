@@ -59,6 +59,7 @@ const PayslipSetup = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PayslipResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isFetchingPayslip, setIsFetchingPayslip] = useState(true);
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -97,6 +98,8 @@ const PayslipSetup = () => {
         if (!axios.isAxiosError(error) || error.response?.status !== 404) {
           console.error("Error loading payslip:", error);
         }
+      } finally {
+        setIsFetchingPayslip(false);
       }
     };
 
@@ -270,6 +273,8 @@ const PayslipSetup = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
         }
+
+        navigate("/dashboard");
       } else {
         // Create new payslip
         const fetchExistingPayslip = async () => {
@@ -332,6 +337,8 @@ const PayslipSetup = () => {
               { headers: { Authorization: `Bearer ${token}` } }
             );
           }
+
+          navigate("/dashboard");
         } catch (firstError: unknown) {
           if (!axios.isAxiosError(firstError)) {
             throw firstError;
@@ -391,6 +398,23 @@ const PayslipSetup = () => {
       setLoading(false);
     }
   };
+
+  if (isFetchingPayslip) {
+    return (
+      <div className="container py-4 py-md-5">
+        <TopNav />
+        <div className="row justify-content-center">
+          <div className="col-12 col-lg-9">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body p-4 p-md-5">
+                <p className="text-muted">Loading payslip...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-4 py-md-5">

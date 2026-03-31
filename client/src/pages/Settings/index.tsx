@@ -35,11 +35,21 @@ const mapFirebaseEmailError = (error: unknown) => {
       return "Too many attempts. Wait a moment and try again.";
     case "auth/operation-not-allowed":
       return "Firebase requires you to verify the new email address before the change is applied. Check your inbox for the verification email.";
+    case "auth/unauthorized-continue-uri":
+      return "Email verification link is blocked by Firebase settings. Add this app domain to Firebase Authentication authorized domains.";
+    case "auth/invalid-continue-uri":
+      return "Email verification link configuration is invalid. Contact support.";
     default:
       return errorCode
         ? `Unable to update email. Firebase returned ${errorCode}.`
         : "Unable to update email.";
   }
+};
+
+const isValidEmail = (value: string) => {
+  const trimmed = value.trim();
+  // Keep this stricter than HTML5 email validation to reduce obvious invalid inputs.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmed);
 };
 
 const cardStyle = {
@@ -71,9 +81,11 @@ const SettingsPage = () => {
   const { currentUser, token, loading, profile, refreshProfile, setProfile } = useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [usernameState, setUsernameState] = useState({ saving: false, message: "", error: "" });
   const [emailState, setEmailState] = useState({ saving: false, message: "", error: "" });
+  const [emailSyncState, setEmailSyncState] = useState({ syncing: false, message: "", error: "" });
   const [onboardingState, setOnboardingState] = useState({ saving: false, message: "", error: "" });
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [newsletterState, setNewsletterState] = useState({ saving: false, message: "", error: "" });
@@ -90,6 +102,7 @@ const SettingsPage = () => {
   useEffect(() => {
     setUsername(profile?.displayName || "");
     setEmail(profile?.email || currentUser?.email || "");
+    setConfirmEmail(profile?.email || currentUser?.email || "");
     setNewsletterOptIn(Boolean(profile?.newsletterOptIn));
   }, [profile, currentUser]);
 
@@ -145,15 +158,37 @@ const SettingsPage = () => {
       return;
     }
 
+    const updatedEmail = email.trim().toLowerCase();
+    const currentEmail = String(profile?.email || currentUser?.email || "").trim().toLowerCase();
+
+    if (!isValidEmail(updatedEmail)) {
+      setEmailState({ saving: false, message: "", error: "Enter a valid email address." });
+      return;
+    }
+
+    if (updatedEmail === currentEmail) {
+      setEmailState({ saving: false, message: "", error: "Enter a different email address." });
+      return;
+    }
+
+    if (confirmEmail.trim().toLowerCase() !== updatedEmail) {
+      setEmailState({ saving: false, message: "", error: "New email and confirmation email must match." });
+      return;
+    }
+
     try {
       const credential = EmailAuthProvider.credential(currentUser.email, emailPassword);
       await reauthenticateWithCredential(currentUser, credential);
-      const updatedEmail = email.trim().toLowerCase();
       const activeUser = auth.currentUser || currentUser;
 
-      await verifyBeforeUpdateEmail(activeUser, updatedEmail);
+      await verifyBeforeUpdateEmail(activeUser, updatedEmail, {
+        url: `${window.location.origin}/login?emailVerification=pending`,
+        handleCodeInApp: false,
+      });
+      await activeUser.reload();
       await refreshProfile(token);
-      setEmail(profile?.email || currentUser?.email || "");
+      setEmail(updatedEmail);
+      setConfirmEmail(updatedEmail);
 
       setEmailPassword("");
       setEmailState({
@@ -173,6 +208,28 @@ const SettingsPage = () => {
       }
 
       setEmailState({ saving: false, message: "", error: message });
+    }
+  };
+
+  const handleEmailSync = async () => {
+    if (!currentUser) {
+      setEmailSyncState({ syncing: false, message: "", error: "No authenticated user found." });
+      return;
+    }
+
+    setEmailSyncState({ syncing: true, message: "", error: "" });
+
+    try {
+      await currentUser.reload();
+      const refreshedToken = await currentUser.getIdToken(true);
+      await refreshProfile(refreshedToken);
+      const latestEmail = String(auth.currentUser?.email || currentUser.email || "").toLowerCase();
+      setEmail(latestEmail);
+      setConfirmEmail(latestEmail);
+      setEmailSyncState({ syncing: false, message: "Email synced from Firebase.", error: "" });
+    } catch (error) {
+      console.error("Failed to sync email", error);
+      setEmailSyncState({ syncing: false, message: "", error: "Unable to sync email right now." });
     }
   };
 
@@ -314,16 +371,34 @@ const SettingsPage = () => {
             <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Email address</h2>
             <label style={labelStyle} htmlFor="email">Email</label>
             <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
+            <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="confirm-email">Confirm new email</label>
+            <input id="confirm-email" type="email" value={confirmEmail} onChange={(event) => setConfirmEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
             <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="email-password">Current password</label>
             <input id="email-password" type="password" value={emailPassword} onChange={(event) => setEmailPassword(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
             <p style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}>
               Firebase may require recent sign-in before sensitive email changes.
             </p>
+            <button
+              type="button"
+              onClick={handleEmailSync}
+              disabled={emailSyncState.syncing || isGoogleOnlyAccount}
+              style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d6d0c8", backgroundColor: "#fff", color: "#355f46", fontWeight: 600 }}
+            >
+              {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
+            </button>
             {emailState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailState.message}</p>}
             {emailState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{emailState.error}</p>}
+            {emailSyncState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailSyncState.message}</p>}
+            {emailSyncState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{emailSyncState.error}</p>}
             <button
               type="submit"
-              disabled={isGoogleOnlyAccount || !emailChanged || emailState.saving || !emailPassword.trim()}
+              disabled={
+                isGoogleOnlyAccount
+                || !emailChanged
+                || emailState.saving
+                || !emailPassword.trim()
+                || confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()
+              }
               style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
             >
               {emailState.saving ? "Saving..." : "Save email"}

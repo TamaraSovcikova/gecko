@@ -121,7 +121,7 @@ exports.getPayslip = async (req, res) => {
 
     try {
         const userId = req.user.uid;
-        const budget = await MonthlyBudget.findOne({ userId });
+    const budget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
   
         if (!budget) {
             return res.status(404).json({ message: "No payslip found" });
@@ -159,8 +159,8 @@ exports.updatePayslip = async (req, res) => {
 
     await reconcileCurrentMonthExpenses(userId, existingBudget.categories || [], categories);
 
-    const budget = await MonthlyBudget.findOneAndUpdate(
-      { userId },
+    const budget = await MonthlyBudget.findByIdAndUpdate(
+      existingBudget._id,
       {
         grossSalary,
         taxPaid: result.taxPaid,

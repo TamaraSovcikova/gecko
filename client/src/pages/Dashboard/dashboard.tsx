@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
 import TopNav from "../../components/TopNav";
@@ -65,6 +65,7 @@ type DashboardData = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
   //react state which stores dashboard data, initially null
@@ -81,7 +82,7 @@ const Dashboard = () => {
     goToStep,
   } = usePageOnboarding("/dashboard");
 
-  //useEffect runs once - triggers loading data from backend
+  //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
     if (loading || !token) return; //wait for auth to finish and token to be available before fetching data
     const fetchDashboard = async () => {
@@ -98,7 +99,7 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [token, loading]); //dependency array ensures this only runs once when component mounts and when token changes
+  }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
   // useEffect() for real-time updates to the dashboard
   // Runs when the socket is available
