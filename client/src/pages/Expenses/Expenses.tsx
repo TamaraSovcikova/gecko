@@ -232,6 +232,7 @@ const Expenses = ({categories}: Props) => {
 
           <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "24px" }}>
             <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }} data-onboarding="expenses-log-form">
+              
               <h2 style={{ marginTop: 0, color: "#355f46", fontSize: "22px" }}>Log expense</h2>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: "12px" }}>
@@ -262,6 +263,7 @@ const Expenses = ({categories}: Props) => {
                 </button>
               </form>
             </div>
+            
 
             <div style={{ backgroundColor: "#fff", border: "1px solid #e5dfd6", borderRadius: "14px", padding: "20px" }} data-onboarding="expenses-list">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "20px" }}>
@@ -336,44 +338,9 @@ const Expenses = ({categories}: Props) => {
             </div>
           </div>
         </div>
-      ) : (
-        <div style={{ padding: "20px" }} data-onboarding="dashboard-embedded-expenses">
-          <h2>Log Expense</h2>
+        ) : null}
 
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label>Amount:</label>
-              <input value={amount} onChange={(e) => setAmount(e.target.value)} required />
-            </div>
 
-            <div>
-              <label>Category:</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">Select category</option>
-
-                {formCategories.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label>Date:</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-            </div>
-
-            <div>
-              <label>Note:</label>
-              <input value={note} onChange={(e) => setNote(e.target.value)} />
-            </div>
-
-            {formSuccess && <p style={{ color: "#3c7b52" }}>{formSuccess}</p>}
-            {formError && <p style={{ color: "#b54848" }}>{formError}</p>}
-
-            <button type="submit">Add Expense</button>
-          </form>
-        </div>
-      )}
       <TooltipGuide
         isOpen={isOnboardingOpen}
         activeStepNumber={activeStepNumber}
