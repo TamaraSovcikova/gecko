@@ -2,10 +2,12 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
 import CategoryBuilder from "../../components/CategoryBuilder.jsx";
 import PayslipBreakdown from "../../components/PayslipBreakdown.jsx";
+import TopNav from "../../components/TopNav";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 type Category = {
   name: string;
@@ -55,9 +57,17 @@ const PayslipSetup = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [logoutLoading, setLogoutLoading] = useState(false);
   const [result, setResult] = useState<PayslipResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isFetchingPayslip, setIsFetchingPayslip] = useState(true);
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/payslip");
 
   // Load existing payslip on mount
   useEffect(() => {
@@ -88,6 +98,8 @@ const PayslipSetup = () => {
         if (!axios.isAxiosError(error) || error.response?.status !== 404) {
           console.error("Error loading payslip:", error);
         }
+      } finally {
+        setIsFetchingPayslip(false);
       }
     };
 
@@ -148,18 +160,6 @@ const PayslipSetup = () => {
     return () => clearTimeout(timer);
   }, [locationSearchQuery, showLocationDropdown, token]);
 
-  const handleLogout = async () => {
-    try {
-      setLogoutLoading(true);
-      await auth.signOut();
-      navigate("/login", { replace: true });
-    } catch {
-      setApiError("Unable to log out right now. Please try again.");
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
-
   const totalCategoryAmount = useMemo(() => {
     return categories.reduce((sum, category) => {
       const value = Number(category.amount);
@@ -193,6 +193,9 @@ const PayslipSetup = () => {
   const validate = () => {
     const nextErrors: string[] = [];
     const salary = Number(grossSalary);
+    const normalizedCategoryNames = categories
+      .map((category) => category.name.trim().toLowerCase())
+      .filter(Boolean);
 
     if (!grossSalary || Number.isNaN(salary) || salary <= 0) {
       nextErrors.push("Gross salary must be greater than 0.");
@@ -208,6 +211,10 @@ const PayslipSetup = () => {
         nextErrors.push(`Category ${index + 1} amount must be 0 or more.`);
       }
     });
+
+    if (new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length) {
+      nextErrors.push("Category names must be unique.");
+    }
 
     if (!Number.isNaN(salary) && totalCategoryAmount > salary) {
       nextErrors.push("Total category amount cannot be more than gross salary.");
@@ -266,6 +273,8 @@ const PayslipSetup = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
         }
+
+        navigate("/dashboard");
       } else {
         // Create new payslip
         const fetchExistingPayslip = async () => {
@@ -328,6 +337,8 @@ const PayslipSetup = () => {
               { headers: { Authorization: `Bearer ${token}` } }
             );
           }
+
+          navigate("/dashboard");
         } catch (firstError: unknown) {
           if (!axios.isAxiosError(firstError)) {
             throw firstError;
@@ -388,35 +399,26 @@ const PayslipSetup = () => {
     }
   };
 
+  if (isFetchingPayslip) {
+    return (
+      <div className="container py-4 py-md-5">
+        <TopNav />
+        <div className="row justify-content-center">
+          <div className="col-12 col-lg-9">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body p-4 p-md-5">
+                <p className="text-muted">Loading payslip...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-4 py-md-5">
-      <nav className="navbar justify-content-between align-items-center bg-white border rounded-3 shadow-sm mb-4 px-3 py-2">
-        <h5 className="mb-0" style={{ color: "#666" }}>Payslip</h5>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => navigate("/profile")}
-          >
-            Profile
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-danger btn-sm"
-            onClick={handleLogout}
-            disabled={logoutLoading}
-          >
-            {logoutLoading ? "Logging out..." : "Logout"}
-          </button>
-        </div>
-      </nav>
+      <TopNav />
 
       <div className="row justify-content-center">
         <div className="col-12 col-lg-9">
@@ -430,7 +432,7 @@ const PayslipSetup = () => {
               </p>
 
               <form onSubmit={handleSubmit} noValidate>
-                <div className="mb-3">
+                <div className="mb-3" data-onboarding="payslip-gross">
                   <label htmlFor="grossSalary" className="form-label">
                     Gross Salary (annual)
                   </label>
@@ -448,6 +450,7 @@ const PayslipSetup = () => {
 
                 {/* Tips Box for Job Title & Location */}
                 <div
+                  data-onboarding="payslip-profile-tip"
                   style={{
                     marginBottom: "20px",
                     padding: "16px",
@@ -628,15 +631,17 @@ const PayslipSetup = () => {
                   )}
                 </div>
 
-                <CategoryBuilder
-                  categories={categories}
-                  onAddCategory={addCategory}
-                  onRemoveCategory={removeCategory}
-                  onUpdateCategory={updateCategory}
-                  totalCategoryAmount={totalCategoryAmount}
-                  isOverAllocated={isOverAllocated}
-                  disabled={loading}
-                />
+                <div data-onboarding="payslip-categories">
+                  <CategoryBuilder
+                    categories={categories}
+                    onAddCategory={addCategory}
+                    onRemoveCategory={removeCategory}
+                    onUpdateCategory={updateCategory}
+                    totalCategoryAmount={totalCategoryAmount}
+                    isOverAllocated={isOverAllocated}
+                    disabled={loading}
+                  />
+                </div>
 
                 {errors.length > 0 && (
                   <div className="alert alert-warning" role="alert">
@@ -672,6 +677,14 @@ const PayslipSetup = () => {
           />
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };

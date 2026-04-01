@@ -8,6 +8,7 @@ const Payslip = require("../models/MonthlyBudget"); //import MonthlyBudget (this
 const User = require("../models/User"); //import User model to get job title and location
 const authMiddleware = require("../middleware/auth"); //import middleware - this verifies token before (!!) the route runs - if not authenticated, can't use
 const { getAverageSalary } = require("../services/adzunaCalculator"); //import Adzuna service
+const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
 
 // Helper function to generate tips based on budget and health data
 const generateBudgetTips = (totalBudget, healthScore, budgetAllocation, totalExpenses) => {
@@ -148,11 +149,15 @@ router.get('/', authMiddleware, async (req, res) => {
 
         const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.total, 0); //calculate total expenses to calculate haleht score
 
-        let healthScore = 100;
-        if (totalBudget > 0) { //prevents Zero division error
-            const Score = (1 - totalExpenses / totalBudget) * 100; //percentage of income not spent
-            healthScore = Math.round(Math.min(100, Math.max(0, Score))); //effectively clamp. between 100 and 0);
-        }
+        const currentUser = await User.findById(user_id);
+        const healthBreakdown = computeHealthScoreBreakdown({
+          takeHome,
+          totalBudget,
+          totalExpenses,
+          budgetAllocation,
+          actualSpending,
+        });
+        const healthScore = healthBreakdown.healthScore;
         const budgetLeft = totalBudget - totalExpenses;
 
         //Generate budget-based tips (always)
@@ -163,7 +168,7 @@ router.get('/', authMiddleware, async (req, res) => {
         let grossSalary = payslip?.grossSalary || 0;
         
         try {
-          const user = await User.findById(user_id);
+          const user = currentUser;
           console.log(`Dashboard: User found - jobTitle: ${user?.payslipData?.jobTitle}, location: ${user?.payslipData?.location}`);
           
           if (user?.payslipData?.jobTitle && user?.payslipData?.location) {
@@ -195,6 +200,7 @@ router.get('/', authMiddleware, async (req, res) => {
             totalBudget,
             actualSpending,
             budgetAllocation,
+            healthBreakdown,
             averageSalary,
             adzunaTips
         });

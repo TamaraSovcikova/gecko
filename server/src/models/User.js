@@ -58,10 +58,44 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
 
+    financialOnboarding: {
+      completedPages: {
+        type: [String],
+        default: [],
+      },
+      updatedAt: {
+        type: Date,
+      },
+    },
+
     newsletterOptIn: {
       type: Boolean,
       default: false,
     },
+
+    newsletterUnsubscribeTokenHash: {
+      type: String,
+      default: null,
+    },
+
+    newsletterUnsubscribeTokenCreatedAt: {
+      type: Date,
+      default: null,
+    },
+
+    accountChangeLog: [
+      {
+        action: {
+          type: String,
+          required: true,
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
   },
   {
     // createdAt and updatedAt timestamps added automatically by Mongoose
