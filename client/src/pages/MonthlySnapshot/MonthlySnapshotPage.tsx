@@ -69,6 +69,9 @@ const MonthlySnapshotPage = () => {
   }, [token, loading, currentUser]);
 
   if (error) return <div>{error}</div>;
+  if (snapshots.length === 0) {
+    return <div>No monthly snapshots available yet.</div>;
+  }
   if (!selectedSnapshot) return <div>Loading monthly snapshots...</div>;
 
   const budgetAllocation = selectedSnapshot.categories.map((cat) => ({
