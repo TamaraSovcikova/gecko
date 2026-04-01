@@ -35,15 +35,13 @@ app.use(express.json());
 //
 // TEST ROUTES FOR CRON JOB
 //
-const dailyMessageRoutes = require("./routes/dailyMessage.routes");
-app.use("/api/messages", dailyMessageRoutes);
 
 // !! ACTUAL SNAPSHOT TEST !!
 // IMPORTANT: Import the cron job so it runs automatically
 require("./jobs/monthlySnapshotJob");
 
 // Snapshots route
-const snapshotRoutes = require("./routes/snapshotRoutes");
+const snapshotRoutes = require("./routes/snapshot");
 app.use("/api/snapshots", snapshotRoutes);
 // !! ACTUAL CRON JOB TEST !!
 

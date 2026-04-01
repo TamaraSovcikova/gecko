@@ -14,7 +14,6 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-import DailyHello from "./pages/MonthlySnapshot/dailyHello.tsx";
 import MonthlySnapshotPage from "./pages/MonthlySnapshot/monthlySnapshotPage";
 
 <Route path="/monthlysnapshot" element={<MonthlySnapshotPage />} />
@@ -52,13 +51,6 @@ function App() {
       <Route path="/profile" element={
             <ProtectedRoute>
                 <Profile />
-            </ProtectedRoute>
-        }
-      />
-
-      <Route path="/today" element={
-            <ProtectedRoute>
-                <DailyHello />
             </ProtectedRoute>
         }
       />
