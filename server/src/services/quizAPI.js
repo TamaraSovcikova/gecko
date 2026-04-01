@@ -20,7 +20,7 @@ const getQuiz = async (quizID) => {
         include_answers: 'true',
       },
       headers: {
-        Authorization: QUIZ_API_KEY,
+        Authorization: `Bearer ${QUIZ_API_KEY}`,
       },
       timeout: 5000,
     });
