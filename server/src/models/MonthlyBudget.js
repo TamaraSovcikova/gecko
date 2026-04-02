@@ -17,6 +17,17 @@ const MonthlyBudgetSchema = new mongoose.Schema(
         required: true,
     },
 
+    // MONTH & YEAR ADDED FOR MONTHLY SNAPSHOT
+    month: {
+      type: Number, // 1-12
+    },
+
+    year: {
+      type: Number,
+    },
+    // MONTH & YEAR ADDED FOR MONTHLY SNAPSHOT
+
+
     grossSalary: {
         type: Number,
         required: true
@@ -34,5 +45,15 @@ const MonthlyBudgetSchema = new mongoose.Schema(
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
   }
 );
+
+// Pre-save hook to automatically set month and year
+MonthlyBudgetSchema.pre('save', function (next) {
+  if (!this.month || !this.year) {
+    const now = new Date();
+    this.month = now.getMonth() + 1; // 1-12
+    this.year = now.getFullYear();
+  }
+  next();
+});
 
 module.exports = mongoose.model('MonthlyBudget', MonthlyBudgetSchema);

@@ -1,34 +1,32 @@
 // server/jobs/monthlySnapshotJob.js
 
 const cron = require("node-cron");
+const { Types } = require("mongoose");
 const MonthlySnapshot = require("../models/MonthlySnapshot");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const Expense = require("../models/Expense");
 const User = require("../models/User");
+const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
 
-// calendar month range helper
+// Helper to get start/end of month
 function getMonthRange(month, year) {
   const start = new Date(year, month - 1, 1, 0, 0, 0);
   const end = new Date(year, month, 0, 23, 59, 59);
   return { start, end };
 }
 
-// health score (simple logic - replace with your computeDashboard formula if needed)
+// Compute health score
 function computeHealthScore(takeHomePay, totalExpenses) {
-  if (takeHomePay <= 0) return 0;
-
-  const savings = takeHomePay - totalExpenses;
-  const ratio = savings / takeHomePay;
-
-  return Math.max(0, Math.min(100, Math.round(ratio * 100)));
+  const breakdown = computeHealthScoreBreakdown(takeHomePay, totalExpenses);
+  return breakdown.healthScore;
 }
 
-// snapshot generator
+// Main snapshot generator
 async function generateMonthlySnapshots() {
   const now = new Date();
 
-  // snapshot for PREVIOUS month
-  // (since job runs on 1st of next month)
+  // configure for the month before
+  // scheduled time 00:05 1st of every month
   now.setMonth(now.getMonth() - 1);
 
   const month = now.getMonth() + 1;
@@ -37,51 +35,63 @@ async function generateMonthlySnapshots() {
   console.log(`[CRON] Generating snapshots for ${month}/${year}`);
 
   const users = await User.find();
+  console.log('Users found:', users.length);
+  console.log("[CRON] Found users:", users.map(u => u._id));
 
   for (const user of users) {
-    const userId = user._id.toString();
+    // Properly read user ID as string
+    const userId = user._id;
 
-    // IMPORTANT: update this field to match your User model
-    if (!user.hasCompletedPayslipSetup) {
+    if (!user.hasCompletedOnboarding) {
       console.log(`[CRON] Skipping ${userId} (no payslip setup)`);
       continue;
     }
 
-    // idempotent skip
+    // Idempotent: skip if snapshot exists
     const existing = await MonthlySnapshot.findOne({ userId, month, year });
     if (existing) {
       console.log(`[CRON] Skipping ${userId} (snapshot exists)`);
       continue;
     }
 
-    // find the user's budget record for this month
-    const budget = await MonthlyBudget.findOne({ userId, month, year });
-
-    // if no budget record, skip (no empty snapshots)
+    // Get user's budget for the month
+    const budget = await MonthlyBudget.findOne({ 
+        userId,
+        // month,
+        // year
+    });
+  
+    // Skip if user has no budget whatsoever
+    // the month of the budget doesn't count
     if (!budget) {
       console.log(`[CRON] Skipping ${userId} (no MonthlyBudget found)`);
       continue;
     }
 
-    // expenses in that month
-    const { start, end } = getMonthRange(month, year);
-
+    // Find expenses for this user during the month/year
     const expenses = await Expense.find({
-      userId,
-      date: { $gte: start, $lte: end },
+        userId: user._id,
+        month,
+        year,
     });
 
-    // compute actual expenses by category
+    // Skip if no expenses
+    if (!expenses.length) {
+        console.log(`[CRON] Skipping ${userId} (no expenses found)`);
+        continue;
+    }
+
+
+    // Aggregate actual expenses by category
     const actualByCategory = {};
     let totalExpenses = 0;
-
     for (const exp of expenses) {
       const cat = exp.category || "Other";
       actualByCategory[cat] = (actualByCategory[cat] || 0) + exp.amount;
       totalExpenses += exp.amount;
     }
 
-    // merge budget categories with actual spending
+    // Merge budget categories with actual spending
     const categoriesSnapshot = budget.categories.map((cat) => ({
       name: cat.name,
       budget: cat.budget,
@@ -90,11 +100,10 @@ async function generateMonthlySnapshots() {
 
     const takeHomePay = budget.takeHomePay || 0;
     const savings = takeHomePay - totalExpenses;
-
     const healthScore = computeHealthScore(takeHomePay, totalExpenses);
 
     const snapshotData = {
-      userId,
+      userId, // always string
       month,
       year,
       healthScore,
@@ -103,8 +112,6 @@ async function generateMonthlySnapshots() {
       totalExpenses,
       savings,
       categories: categoriesSnapshot,
-
-      // placeholders unless you already have these models
       xpEarned: 0,
       quizzesCompleted: 0,
     };
@@ -116,9 +123,11 @@ async function generateMonthlySnapshots() {
       console.error(`[CRON] Error saving snapshot for ${userId}:`, err);
     }
   }
+
 }
 
-// runs 00:05 on the 1st day of every month
+
+// Schedule: runs 00:05 on 1st of each month
 cron.schedule("5 0 1 * *", async () => {
   await generateMonthlySnapshots();
 });
