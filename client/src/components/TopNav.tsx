@@ -72,6 +72,12 @@ const TopNav = () => {
         >
           Educational
         </Link>
+        <Link
+          to="/monthlysnapshot"
+          style={{ textDecoration: "none", color: "#4c5d53", fontWeight: 600 }}
+        >
+          Snapshots
+        </Link>
       </div>
 
       <NavDropdown />

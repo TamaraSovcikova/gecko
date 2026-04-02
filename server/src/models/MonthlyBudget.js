@@ -17,17 +17,6 @@ const MonthlyBudgetSchema = new mongoose.Schema(
         required: true,
     },
 
-    // MONTH & YEAR ADDED FOR MONTHLY SNAPSHOT
-    month: {
-      type: Number, // 1-12
-    },
-
-    year: {
-      type: Number,
-    },
-    // MONTH & YEAR ADDED FOR MONTHLY SNAPSHOT
-
-
     grossSalary: {
         type: Number,
         required: true

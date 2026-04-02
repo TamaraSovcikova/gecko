@@ -32,11 +32,13 @@ async function generateMonthlySnapshots() {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  console.log(`[CRON] Generating snapshots for ${month}/${year}`);
+  // DEBUGGING PURPOSES
+  // console.log(`[CRON] Generating snapshots for ${month}/${year}`);
 
   const users = await User.find();
-  console.log('Users found:', users.length);
-  console.log("[CRON] Found users:", users.map(u => u._id));
+  // DEBUGGING PURPOSES
+  // console.log('Users found:', users.length);
+  // console.log("[CRON] Found users:", users.map(u => u._id));
 
   for (const user of users) {
     // Properly read user ID as string
@@ -55,14 +57,12 @@ async function generateMonthlySnapshots() {
     }
 
     // Get user's budget for the month
+    // month and year doesn't matter
     const budget = await MonthlyBudget.findOne({ 
         userId,
-        // month,
-        // year
     });
   
     // Skip if user has no budget whatsoever
-    // the month of the budget doesn't count
     if (!budget) {
       console.log(`[CRON] Skipping ${userId} (no MonthlyBudget found)`);
       continue;
@@ -74,13 +74,6 @@ async function generateMonthlySnapshots() {
         month,
         year,
     });
-
-    // Skip if no expenses
-    if (!expenses.length) {
-        console.log(`[CRON] Skipping ${userId} (no expenses found)`);
-        continue;
-    }
-
 
     // Aggregate actual expenses by category
     const actualByCategory = {};
