@@ -4,6 +4,7 @@
 // Progress tracks topics the user has expanded in this session (stored in localStorage).
 
 import { useState, useEffect } from "react";
+import TopNav from "../../components/TopNav";
 import {
   LEARNING_CONTENT,
   LEARNING_CATEGORIES,
@@ -105,6 +106,7 @@ export default function Learn() {
 
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
+      <TopNav />
       {/* ------ Hero ----------- */}
       <div
         style={{

@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import axios from "axios";
+import TopNav from "../../components/TopNav";
+import ProfileAvatar from "../../components/ProfileAvatar";
+import TooltipGuide from "../../components/TooltipGuide";
+import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -13,6 +17,15 @@ const Profile = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/profile");
 
   // Fetch user data from backend
   useEffect(() => {
@@ -77,17 +90,15 @@ const Profile = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Delete Firebase account
-        if (currentUser) {
-          await currentUser.delete();
-        }
-
         // Sign out
         await signOut(auth);
         navigate("/login");
       } catch (err) {
         console.error("Error deleting profile:", err);
-        setError("Failed to delete profile");
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.error || "Failed to delete profile"
+          : "Failed to delete profile";
+        setError(message);
         setDeleting(false);
       }
     }
@@ -95,10 +106,14 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
+      setLoggingOut(true);
       await signOut(auth);
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (err) {
-      console.error("Logout error:", err);
+      console.error("Error logging out:", err);
+      setError("Failed to log out");
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -147,38 +162,13 @@ const Profile = () => {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* Navigation Bar */}
-      <nav className="navbar justify-content-between align-items-center bg-white border rounded-3 shadow-sm mb-4 px-3 py-2">
-        <h5 className="mb-0" style={{ color: "#666" }}>Profile</h5>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => navigate("/payslip")}
-          >
-            Payslip
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-danger btn-sm"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      <TopNav />
 
       {/* Main container */}
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         {/* Top section: Profile heading - centered */}
         <div
+          data-onboarding="profile-heading"
           style={{
             textAlign: "center",
             marginBottom: "50px",
@@ -219,28 +209,53 @@ const Profile = () => {
               border: "1px solid #e0ddd5",
             }}
           >
-            <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
-              Name
-            </p>
-            <p style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#333" }}>
-              {userData?.displayName || "Not set"}
-            </p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                  Name
+                </p>
+                <p style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#333" }}>
+                  {userData?.displayName || "Not set"}
+                </p>
 
-            <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
-              Email
-            </p>
-            <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#666" }}>
-              {userData?.email || currentUser?.email}
-            </p>
+                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                  Email
+                </p>
+                <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#666" }}>
+                  {userData?.email || currentUser?.email}
+                </p>
 
-            <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
-              Member Since
-            </p>
-            <p style={{ margin: "0 0 20px 0", fontSize: "14px", color: "#666" }}>
-              {userData?.createdAt
-                ? new Date(userData.createdAt).toLocaleDateString()
-                : "Recently"}
-            </p>
+                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                  Member Since
+                </p>
+                <p style={{ margin: "0", fontSize: "14px", color: "#666" }}>
+                  {userData?.createdAt
+                    ? new Date(userData.createdAt).toLocaleDateString()
+                    : "Recently"}
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "142px", marginTop: "34px" }}>
+                <ProfileAvatar size={74} />
+                <button
+                  onClick={() => navigate("/settings")}
+                  style={{
+                    width: "100%",
+                    marginTop: "44px",
+                    padding: "8px 12px",
+                    backgroundColor: "#eef5eb",
+                    color: "#2d5237",
+                    border: "1px solid #bfd1c0",
+                    borderRadius: "999px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Details
+                </button>
+              </div>
+            </div>
 
             {/* Payslip Details */}
             <div style={{ borderTop: "1px solid #e8dfd5", paddingTop: "16px" }}>
@@ -296,7 +311,7 @@ const Profile = () => {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ead966")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f5d899")}
               >
-                ✏️ Edit Details
+                Edit Payslip/Budget
               </button>
             </div>
           </div>
@@ -406,6 +421,30 @@ const Profile = () => {
           }}
         >
           <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "#f2ece4",
+              color: "#6a4a3a",
+              border: "1px solid #ddccb8",
+              borderRadius: "4px",
+              cursor: loggingOut ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              opacity: loggingOut ? 0.6 : 1,
+              transition: "background-color 0.2s",
+            }}
+            onMouseEnter={(e) =>
+              !loggingOut && (e.currentTarget.style.backgroundColor = "#eadfce")
+            }
+            onMouseLeave={(e) =>
+              !loggingOut && (e.currentTarget.style.backgroundColor = "#f2ece4")
+            }
+          >
+            {loggingOut ? "Logging out..." : "Logout"}
+          </button>
+
+          <button
             onClick={handleExportData}
             disabled={exporting}
             style={{
@@ -454,6 +493,14 @@ const Profile = () => {
           </button>
         </div>
       </div>
+      <TooltipGuide
+        isOpen={isOnboardingOpen}
+        activeStepNumber={activeStepNumber}
+        steps={onboardingSteps}
+        onClose={closeGuide}
+        onComplete={completeGuide}
+        onGoToStep={goToStep}
+      />
     </div>
   );
 };
