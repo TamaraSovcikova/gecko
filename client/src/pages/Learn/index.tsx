@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import {BsArrow90DegLeft, BsArrowLeft, BsBack} from "react-icons/bs";
 
 type Answer = {
     text: string;
@@ -13,6 +14,8 @@ type Question = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+console.log("API_URL:", API_URL);
+
 export default function QuizPage() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,9 +25,11 @@ export default function QuizPage() {
     const [finished, setFinished] = useState(false);
 
     useEffect(() => {
-        fetch(`${API_URL}/api/v1/quiz`)//i know this is hardcoded endpoint but, it's just for test data monetrily
+        fetch(`${API_URL}/api/v1/quiz`)
             .then(res => res.json())
-            .then(data => setQuestions(data.questions));
+            .then(data => {
+                console.log("API RESPONSE:", data);
+                setQuestions(data.questions);});
     }, []);
 
     if (questions.length === 0) return <p>Loading...</p>;
@@ -54,6 +59,7 @@ export default function QuizPage() {
                 <h1>Quiz Complete!!</h1>
                 <h2>Your Score: {score} / {questions.length}</h2>
 
+                {/*this will need to be changed to /dashboard before merging!!*/}
                 <button onClick={() => {window.location.href = "/";}}
                         style={{marginTop: "20px", padding: "12px 20px",
                             borderRadius: "8px",
@@ -70,6 +76,21 @@ export default function QuizPage() {
 
     return (
         <>
+            {/*this will need to be changed to /dashboard before merging!!*/}
+            <button onClick={() => {window.location.href = "/";}}
+                    style={{marginTop: "20px",
+                        position: "fixed",
+                        borderColor: "white",
+                        padding: "5px",
+                        left: 20,
+                        borderRadius: "8px",
+                        background: "transparent",
+                        display: "flex",
+                        justifyContent: "center",
+                        color: "white",
+                        cursor: "pointer"}}>
+                <BsArrowLeft size={30}/>
+            </button>
             <div style={{background: "blue", color: "white",
                 padding: "20px",
                 textAlign: "center",
