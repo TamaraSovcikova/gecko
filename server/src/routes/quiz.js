@@ -5,8 +5,9 @@ const authMiddleware = require("../middleware/auth");
 const { getQuiz , getTestQuiz} = require("../services/quizAPI");
 
 //removing authMiddleware for now as just wanting to test forntend mplementation
-router.get("/", (req, res) => {
-    res.json(getQuiz("cmmdjgdzb004autgrtn29hcbk")); //Add quiz id in parameter -- Currently testing using random Python quiz published on QuizAPI site
+router.get("/",async (req, res) => {
+    const quiz = await getQuiz("cmmdjgdzb004autgrtn29hcbk");//Add quiz id in parameter -- Currently testing using random Python quiz published on QuizAPI site
+    res.json(quiz);
 });
 
 module.exports = router;
