@@ -2,7 +2,7 @@
 const cron = require("node-cron");
 const MonthlySnapshot = require("../models/MonthlySnapshot");
 const User = require("../models/User");
-const computeDashboard = require("../services/dashboardAggregate");
+const { computeDashboard } = require("../services/dashboardAggregate");
 
 // Helper to get previous month/year
 function getPreviousMonthYear() {
@@ -38,6 +38,20 @@ async function generateMonthlySnapshots() {
      console.log(`[CRON] Skipping ${userId} (snapshot exists)`);
      continue;
    }
+
+  // check if budget exists for month
+  let budget = await MonthlyBudget.findOne({ userId, month, year });
+
+  // if not, take latest budget
+  if (!budget) {
+    budget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+  }
+
+  if (!budget) {
+    console.log(`[CRON] Skipping ${userId} (no MonthlyBudget found)`);
+    continue;
+  }
+  // skip if no budget exists
 
    // Pull all available data from dashboard for the specified month
    let dashboardData;
@@ -94,7 +108,7 @@ async function generateMonthlySnapshots() {
 }
 
 // Schedule: runs 00:05 on 1st of each month
-cron.schedule("2 0 3 * *", async () => {
+cron.schedule("26 11 6 * *", async () => {
  await generateMonthlySnapshots();
 });
 

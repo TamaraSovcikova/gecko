@@ -95,4 +95,4 @@ async function computeDashboard(userId, month = null, year = null) {
   };
 }
 
-module.exports = computeDashboard;
+module.exports = { computeDashboard };
