@@ -108,7 +108,7 @@ async function generateMonthlySnapshots() {
 }
 
 // Schedule: runs 00:05 on 1st of each month
-cron.schedule("26 11 6 * *", async () => {
+cron.schedule("5 0 1 * *", async () => {
  await generateMonthlySnapshots();
 });
 

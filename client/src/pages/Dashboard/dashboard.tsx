@@ -216,18 +216,6 @@ const displayedData: DashboardData | null = selectedSnapshot
   if (error) return <div>{error}</div>;
   if (!displayedData) return <div>Loading...</div>;
 
-if (selectedSnapshot) {
-  const budgetAllocation = selectedSnapshot.categories.map((cat) => ({
-    name: cat.name,
-    value: cat.budget,
-  }));
-
-  const actualSpending = selectedSnapshot.categories.map((cat) => ({
-    name: cat.name,
-    value: cat.actual,
-  }));
-}
-
   return (
     <>
       <TopNav />
