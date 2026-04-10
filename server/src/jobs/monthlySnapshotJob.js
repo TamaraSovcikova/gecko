@@ -1,6 +1,7 @@
 // server/jobs/monthlySnapshotJob.js
 const cron = require("node-cron");
 const MonthlySnapshot = require("../models/MonthlySnapshot");
+const MonthlyBudget = require("../models/MonthlyBudget");
 const User = require("../models/User");
 const { computeDashboard } = require("../services/dashboardAggregate");
 
@@ -19,6 +20,9 @@ async function generateMonthlySnapshots() {
   console.log(`[CRON] Generating snapshots for ${month}/${year}`);
 
   const users = await User.find();
+  // DEBUGGING
+  console.log('Users found:', users.length);
+  console.log("[CRON] Found users:", users.map(u => u._id));
 
   for (const user of users) {
     const userId = user._id.toString();
@@ -108,7 +112,7 @@ async function generateMonthlySnapshots() {
 }
 
 // Schedule: runs 00:05 on 1st of each month
-cron.schedule("5 0 1 * *", async () => {
+cron.schedule("56 17 10 * *", async () => {
  await generateMonthlySnapshots();
 });
 

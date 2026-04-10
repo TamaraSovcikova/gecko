@@ -9,6 +9,7 @@ import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
+import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -227,6 +228,14 @@ const displayedData: DashboardData | null = selectedSnapshot
         }}
       >
 
+      {isSnapshotMode && selectedSnapshot && (
+      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
+        <h3>
+          Snapshot of {snapshots[snapshotIndex].month}/{snapshots[snapshotIndex].year}
+        </h3>
+      </div>
+      )}
+
       <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
         <h3>
           Take-home: £{displayedData.takeHome.toFixed(2)} | Budget: £{displayedData.totalBudget.toFixed(2)}
@@ -395,7 +404,6 @@ const displayedData: DashboardData | null = selectedSnapshot
         )}
       </div>
 
-      {/* Monthly Snapshot Navigation */}
       {snapshots.length > 0 && (
         <div
           style={{
@@ -437,6 +445,21 @@ const displayedData: DashboardData | null = selectedSnapshot
             Newer ▶
           </button>
         </div>
+      )}
+
+      {/* Calendar dropdown */}
+      {/* Only shows months with valid snapshots */}
+      <SnapshotMonthDropdown
+        snapshots={snapshots}
+        snapshotIndex={snapshotIndex}
+        setSnapshotIndex={setSnapshotIndex}
+      />
+
+      {/* If no snapshot yet */}
+      {snapshots.length == 0 && (
+          <div style={{ fontWeight: 600 }}>
+              You don't have any snapshots yet
+          </div>
       )}
 
       {/* summary */}

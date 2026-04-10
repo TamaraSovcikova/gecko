@@ -14,7 +14,6 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-import MonthlySnapshotPage from "./pages/MonthlySnapshot/MonthlySnapshotPage";
 
 {/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
 
@@ -116,13 +115,6 @@ function App() {
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
-        }
-      />
-
-      <Route path="/monthlysnapshot" element={
-            <ProtectedRoute>
-                <MonthlySnapshotPage />
-            </ProtectedRoute>
         }
       />
 
