@@ -10,6 +10,7 @@ import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
+import MonthlySnapshotPopup from "../../components/SnapshotPopup";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -87,7 +88,21 @@ type DashboardData = {
   healthBreakdown?: HealthBreakdown;
 };
 
+// year, month select helper
+const monthName = (month: number) => {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  return months[month - 1] || "Unknown";
+};
+
+
 const Dashboard = () => {
+  // monthly snapshot popup states
+  const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
+  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(null);
+  // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
   const { token, loading, currentUser } = useAuth();
@@ -187,6 +202,34 @@ const displayedData: DashboardData | null = selectedSnapshot
       })),
     }
   : data;
+
+  // useEffect for pop-up on first log-in of the month
+  useEffect(() => {
+    if (!currentUser || snapshots.length === 0) return;
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    // snapshot is always previous month
+    const snapshotMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const snapshotYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+    const latestSnapshot = snapshots.find(
+      (s) => s.month === snapshotMonth && s.year === snapshotYear
+    );
+
+    if (!latestSnapshot) return;
+
+    const key = `snapshotSeen_${currentUser.uid}_${snapshotMonth}_${snapshotYear}`;
+    const alreadySeen = localStorage.getItem(key);
+
+    if (!alreadySeen) {
+      setPopupSnapshot(latestSnapshot);
+      setShowSnapshotPopup(true);
+      localStorage.setItem(key, "true");
+    }
+  }, [snapshots, currentUser]);
 
   const getTipColor = (priority: string) => {
     switch (priority) {
@@ -560,7 +603,15 @@ const displayedData: DashboardData | null = selectedSnapshot
         />
       )}
       {/*breakdown disable for snapshot test*/}
+
+      {showSnapshotPopup && popupSnapshot && (
+        <MonthlySnapshotPopup
+        snapshot={popupSnapshot}
+        onClose={() => setShowSnapshotPopup(false)}
+        />
+      )}
     </>
+  
   );
 };
 
