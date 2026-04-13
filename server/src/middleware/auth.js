@@ -1,6 +1,8 @@
 // auth.js — Authentication middleware.
 // This runs on every protected route BEFORE the route handler.
 
+// don't initialise firebase here
+// it fails testing
 const admin = require('../config/firebase');
 const User = require('../models/User');
 
