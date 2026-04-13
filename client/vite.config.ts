@@ -12,7 +12,6 @@ export default defineConfig({
    port: 5173,
  },
 
-
  test: {
    environment: "jsdom",   // fixes document/window errors
    globals: true,           // allows describe/it/expect without imports
