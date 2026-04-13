@@ -6,6 +6,8 @@
 //   cors    - allows the React frontend (CLIENT_URL) to call this API
 //   json    - parses incoming request bodies as JSON
 
+require("./config/firebase"); // initializes Firebase once
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
