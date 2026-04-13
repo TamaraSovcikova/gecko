@@ -111,6 +111,8 @@ const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  // expense breakdown toggle
+  const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
   const showExpenses = true;
   const {
     isOpen: isOnboardingOpen,
@@ -393,6 +395,7 @@ const displayedData: DashboardData | null = selectedSnapshot
           >
             {displayedData.healthScore}
           </p>
+
         {/*breakdown button test*/}
         {!isSnapshotMode && (
           <button
@@ -446,6 +449,65 @@ const displayedData: DashboardData | null = selectedSnapshot
           </div>
         )}
       </div>
+
+      {/* expense breakdown button */}
+      {!isSnapshotMode && (
+        <button
+            type="button"
+            onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
+            data-onboarding="dashboard-health-breakdown-trigger"
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "999px",
+                  border: "1px solid #bfd1c0",
+                  backgroundColor: "#eef5eb",
+                  color: "#37553e",
+                  fontWeight: 600,
+                }}
+          >
+            {showExpenseBreakdown ? "Hide expense breakdown" : "See expense breakdown"}
+        </button>
+      )}
+
+      {/* expense table but make it live */}
+      {!isSnapshotMode && showExpenseBreakdown && displayedData && (
+        <div style={{ marginTop: "30px" }}>
+          <h4>Expense Breakdown</h4>
+
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #ccc" }}>
+                <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {displayedData.budgetAllocation.map((cat, idx) => {
+                const actual =
+                  displayedData.actualSpending.find((a) => a.name === cat.name)?.value || 0;
+
+                const diff = cat.value - actual;
+
+                return (
+                  <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "8px" }}>{cat.name}</td>
+                    <td style={{ padding: "8px" }}>£{cat.value.toFixed(2)}</td>
+                    <td style={{ padding: "8px" }}>£{actual.toFixed(2)}</td>
+                    <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
+                      {diff >= 0
+                        ? `+£${diff.toFixed(2)}`
+                        : `-£${Math.abs(diff).toFixed(2)}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {snapshots.length > 0 && (
         <div
