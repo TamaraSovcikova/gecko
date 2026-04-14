@@ -14,6 +14,9 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
+
+{/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
+
 import Expenses from "./pages/Expenses/Expenses";
 import Learn from "./pages/Learn";
 import Quiz from "./pages/Quiz";
