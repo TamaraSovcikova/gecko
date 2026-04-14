@@ -36,6 +36,7 @@ describe("payslipController.createPayslip", () => {
 
   test("returns 400 when gross salary is invalid", async () => {
     // GIVEN: An authenticated user with an invalid gross salary payload
+    console.log("[Payslip Test] Initialising invalid gross salary scenario");
     const req = {
       body: {
         grossSalary: 0,
@@ -47,16 +48,20 @@ describe("payslipController.createPayslip", () => {
     const res = makeResponse();
 
     // WHEN: createPayslip is called
+    console.log("[Payslip Test] Executing createPayslip with invalid salary payload");
     await createPayslip(req, res);
 
     // THEN: The API should reject with 400 and should not create a budget
+    console.log("[Payslip Test] Verifying 400 response and no budget creation");
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Gross salary must be a positive number" });
     expect(MonthlyBudget.create).not.toHaveBeenCalled();
+    console.log("[Payslip Test] Invalid salary scenario verified successfully");
   });
 
   test("creates payslip, updates user, and emits dashboard update", async () => {
     // GIVEN: An authenticated user and a valid payslip payload
+    console.log("[Payslip Test] Initialising valid payslip creation scenario");
     const req = {
       body: {
         grossSalary: 36000,
@@ -94,9 +99,11 @@ describe("payslipController.createPayslip", () => {
     computeDashboard.mockResolvedValue(dashboardData);
 
     // WHEN: createPayslip is called
+    console.log("[Payslip Test] Executing createPayslip with valid payload");
     await createPayslip(req, res);
 
     // THEN: Payslip is created, user onboarding is updated, and budget:update is emitted
+    console.log("[Payslip Test] Verifying calculation, persistence, update, and socket emission");
     expect(calculatePayslip).toHaveBeenCalledWith(36000);
     expect(MonthlyBudget.create).toHaveBeenCalledWith({
       userId: "user-456",
@@ -118,5 +125,6 @@ describe("payslipController.createPayslip", () => {
     expect(emit).toHaveBeenCalledWith("budget:update", dashboardData);
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(createdBudget);
+    console.log("[Payslip Test] Valid payslip scenario verified successfully");
   });
 });
