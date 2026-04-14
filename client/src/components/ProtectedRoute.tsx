@@ -9,8 +9,8 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   // Still waiting for Firebase to confirm auth state - don't render anything yet to avoid flashing the wrong page
   if (loading) return null;
 
-  // Not logged in - send them to the login page
-  if (!currentUser) return <Navigate to="/login" replace />;
+  // Not logged in - send them to the homepage
+  if (!currentUser) return <Navigate to="/" replace />;
 
   // Logged in - render the protected page
   return children;
