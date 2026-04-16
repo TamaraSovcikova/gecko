@@ -86,6 +86,17 @@ type DashboardData = {
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
   healthBreakdown?: HealthBreakdown;
+  expenses?: {
+    _id: string;
+    category: string;
+    amount: number;
+    day: number,
+    month: number;
+    year: number;
+    date: string;
+    note?: string;
+    createdAt: string;
+  }[];
 };
 
 // year, month select helper
@@ -186,6 +197,10 @@ const isSnapshotMode = snapshotIndex !== null;
 const selectedSnapshot =
   snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
+// use state for 7 expenses per table page
+const [expensePage, setExpensePage] = useState(1);
+const EXPENSES_PER_PAGE = 7;
+
 const displayedData: DashboardData | null = selectedSnapshot
   ? {
       healthScore: selectedSnapshot.healthScore,
@@ -204,6 +219,93 @@ const displayedData: DashboardData | null = selectedSnapshot
       })),
     }
   : data;
+
+  // delete expense
+  const deleteExpense = async (expenseId: string) => {
+  try {
+    await axios.delete(
+      `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // socket connection updates automatically
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // expense edit button
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  const [editForm, setEditForm] = useState({
+    category: "",
+    amount: 0,
+    date: "",
+    note: "",
+  });
+
+  const updateExpense = async (expenseId: string) => {
+    try {
+      console.log("Updating expense:", expenseId, editForm);
+
+      const res = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        {
+          category: editForm.category,
+          amount: editForm.amount,
+          date: editForm.date,
+          note: editForm.note,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log("Expense updated successfully:", res.data);
+
+      // update frontend immediately (without waiting for socket)
+      setData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          expenses: prev.expenses?.map((exp) =>
+            exp._id === expenseId
+              ? {
+                  ...exp,
+                  category: editForm.category,
+                  amount: editForm.amount,
+                  date: editForm.date,
+                  note: editForm.note,
+                  month: new Date(editForm.date).getMonth() + 1,
+                  year: new Date(editForm.date).getFullYear(),
+                }
+              : exp
+          ),
+        };
+      });
+
+      setEditingExpenseId(null);
+    } catch (err) {
+      console.error("Failed to update expense:", err);
+    }
+  };
+
+  // cancel expense edit
+  const cancelEditing = () => {
+    setEditingExpenseId(null);
+    setEditForm({
+      category: "",
+      amount: 0,
+      date: "",
+      note: "",
+    });
+  };
+
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
@@ -259,8 +361,24 @@ const displayedData: DashboardData | null = selectedSnapshot
     }
   };
 
+  // DEBUGGING
+  console.log("expenses:", displayedData?.expenses);
+  console.log("showExpenseBreakdown:", showExpenseBreakdown);
+  console.log("isSnapshotMode:", isSnapshotMode);
+
+  // calculate number of expenses
+  // 7 expenses (rows) per expense breakdown table page
+  const totalExpenses = displayedData?.expenses?.length || 0;
+  const totalExpensePages = Math.ceil(totalExpenses / EXPENSES_PER_PAGE);
+
+  const expenseStartIndex = (expensePage - 1) * EXPENSES_PER_PAGE;
+  const expenseEndIndex = expenseStartIndex + EXPENSES_PER_PAGE;
+
+  const pagedExpenses = displayedData?.expenses?.slice(expenseStartIndex, expenseEndIndex) || [];
+
   if (error) return <div>{error}</div>;
   if (!displayedData) return <div>Loading...</div>;
+
 
   return (
     <>
@@ -435,7 +553,7 @@ const displayedData: DashboardData | null = selectedSnapshot
             <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
           ) : (
             <p>
-              {/*abs ensures displayed number is positive when showing overbudget*/}
+              {/* tabs ensures displayed number is positive when showing overbudget*/}
               Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
             </p>
           )}
@@ -470,7 +588,7 @@ const displayedData: DashboardData | null = selectedSnapshot
       )}
 
       {/* expense table but make it live */}
-      {!isSnapshotMode && showExpenseBreakdown && displayedData && (
+      {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
         <div style={{ marginTop: "30px" }}>
           <h4>Expense Breakdown</h4>
 
@@ -478,28 +596,161 @@ const displayedData: DashboardData | null = selectedSnapshot
             <thead>
               <tr style={{ borderBottom: "1px solid #ccc" }}>
                 <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>dd/mm/yyyy</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
               </tr>
             </thead>
 
             <tbody>
-              {displayedData.budgetAllocation.map((cat, idx) => {
-                const actual =
-                  displayedData.actualSpending.find((a) => a.name === cat.name)?.value || 0;
-
-                const diff = cat.value - actual;
+              {pagedExpenses.map((exp, idx) => {
+                const isEditing = editingExpenseId === exp._id;
 
                 return (
-                  <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: "8px" }}>{cat.name}</td>
-                    <td style={{ padding: "8px" }}>£{cat.value.toFixed(2)}</td>
-                    <td style={{ padding: "8px" }}>£{actual.toFixed(2)}</td>
-                    <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
-                      {diff >= 0
-                        ? `+£${diff.toFixed(2)}`
-                        : `-£${Math.abs(diff).toFixed(2)}`}
+                  <tr key={exp._id || idx} style={{ borderBottom: "1px solid #eee" }}>
+                    {/* CATEGORY */}
+                    <td style={{ padding: "8px" }}>
+                      {isEditing ? (
+                        <select
+                          value={editForm.category}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              category: e.target.value,
+                            }))
+                          }
+                          style={{
+                            padding: "6px",
+                            borderRadius: "6px",
+                            border: "1px solid #ccc",
+                            width: "100%",
+                          }}
+                        >
+                          {(displayedData.budgetAllocation || []).map((cat) => (
+                            <option key={cat.name} value={cat.name}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        exp.category
+                      )}
+                    </td>
+
+                    {/* VALUE */}
+                    <td style={{ padding: "8px" }}>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editForm.amount}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              amount: Number(e.target.value),
+                            }))
+                          }
+                        />
+                      ) : (
+                        `£${exp.amount.toFixed(2)}`
+                      )}
+                    </td>
+
+                    {/* DATE */}
+                    <td style={{ padding: "8px" }}>
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          value={editForm.date}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, date: e.target.value }))
+                          }
+                        />
+                      ) : (
+                        new Date(exp.date).toLocaleDateString("en-GB")
+                      )}
+                    </td>
+
+                    {/* NOTE */}
+                    <td style={{ padding: "8px" }}>
+                      {isEditing ? (
+                        <input
+                          value={editForm.note}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, note: e.target.value }))
+                          }
+                        />
+                      ) : (
+                        exp.note || "-"
+                      )}
+                    </td>
+
+                    {/* EDIT / SAVE */}
+                    <td style={{ padding: "8px" }}>
+                    {isEditing ? (
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          onClick={() => updateExpense(exp._id)}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            border: "1px solid #ccc",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Save
+                        </button>
+
+                        <button
+                          onClick={cancelEditing}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            border: "1px solid #ccc",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingExpenseId(exp._id);
+                          setEditForm({
+                            category: exp.category,
+                            amount: exp.amount,
+                            date: exp.date,
+                            note: exp.note || "",
+                          });
+                        }}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          border: "1px solid #ccc",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </td>
+
+                    {/* DELETE */}
+                    <td style={{ padding: "8px" }}>
+                      <button
+                        onClick={() => deleteExpense(exp._id)}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          border: "1px solid #ccc",
+                          cursor: "pointer",
+                          color: "red",
+                        }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 );
@@ -508,6 +759,95 @@ const displayedData: DashboardData | null = selectedSnapshot
           </table>
         </div>
       )}
+
+      {/* expense breakdown table nav buttons */}
+      {showExpenseBreakdown && totalExpensePages > 1 && (
+        <div
+          style={{
+            marginTop: "12px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <button
+            onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
+            disabled={expensePage === 1}
+            style={{
+              padding: "4px 10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+            }}
+          >
+            ◀
+          </button>
+
+          <span style={{ fontSize: "13px", fontWeight: 600 }}>
+            Page {expensePage}/{totalExpensePages}
+          </span>
+
+          <button
+            onClick={() => setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))}
+            disabled={expensePage === totalExpensePages}
+            style={{
+              padding: "4px 10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+            }}
+          >
+            ▶
+          </button>
+        </div>
+      )}
+
+      {/* summary */}
+      {isSnapshotMode && selectedSnapshot && (
+        <div style={{ marginBottom: "30px" }}>
+          <p><b>XP Earned:</b> {selectedSnapshot.xpEarned}</p>
+          <p><b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}</p>
+        </div>
+      )}
+
+      {/* budget adherence table */}
+      {isSnapshotMode && selectedSnapshot && (
+  <div>
+    <div style={{ marginTop: "20px" }}>
+      <h4>Budget Adherence</h4>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #ccc" }}>
+            <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
+            <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
+            <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
+            <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {selectedSnapshot.categories.map((cat, idx) => {
+            const diff = cat.budget - cat.actual;
+            return (
+              <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "8px" }}>{cat.name}</td>
+                <td style={{ padding: "8px" }}>£{cat.budget.toFixed(2)}</td>
+                <td style={{ padding: "8px" }}>£{cat.actual.toFixed(2)}</td>
+                <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
+                  {diff >= 0 ? `+£${diff.toFixed(2)}` : `-£${Math.abs(diff).toFixed(2)}`}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+
+    <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
+      Snapshot created: {new Date(selectedSnapshot.createdAt).toLocaleString()}
+    </p>
+  </div>
+)}
 
       {snapshots.length > 0 && (
         <div
@@ -566,52 +906,6 @@ const displayedData: DashboardData | null = selectedSnapshot
               You don't have any snapshots yet
           </div>
       )}
-
-      {/* summary */}
-      {isSnapshotMode && selectedSnapshot && (
-        <div style={{ marginBottom: "30px" }}>
-          <p><b>XP Earned:</b> {selectedSnapshot.xpEarned}</p>
-          <p><b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}</p>
-        </div>
-      )}
-
-      {/* budget adherence table */}
-      {isSnapshotMode && selectedSnapshot && (
-  <div>
-    <div style={{ marginTop: "20px" }}>
-      <h4>Budget Adherence</h4>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid #ccc" }}>
-            <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedSnapshot.categories.map((cat, idx) => {
-            const diff = cat.budget - cat.actual;
-            return (
-              <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "8px" }}>{cat.name}</td>
-                <td style={{ padding: "8px" }}>£{cat.budget.toFixed(2)}</td>
-                <td style={{ padding: "8px" }}>£{cat.actual.toFixed(2)}</td>
-                <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
-                  {diff >= 0 ? `+£${diff.toFixed(2)}` : `-£${Math.abs(diff).toFixed(2)}`}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-
-    <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-      Snapshot created: {new Date(selectedSnapshot.createdAt).toLocaleString()}
-    </p>
-  </div>
-)}
 
       {/* Adzuna Tips Section */}
       {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
