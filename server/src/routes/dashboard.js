@@ -241,6 +241,7 @@ async function retrieveDashboardData(user_id) {
         name: item._id,
         value: item.total
     }));
+    const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.total, 0);
 
     let healthScore = 100;
     if (totalBudget > 0) {
