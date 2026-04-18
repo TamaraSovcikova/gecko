@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import {BsArrow90DegLeft, BsArrowLeft, BsBack} from "react-icons/bs";
+import { BsArrowLeft} from "react-icons/bs";
 
 type Answer = {
     text: string;
@@ -23,6 +23,8 @@ export default function QuizPage() {
     const [showResult, setShowResult] = useState(false);
     const [score, setScore] = useState(0);
     const [finished, setFinished] = useState(false);
+    const [completedCount, setCompletedCount] = useState(Number(localStorage.getItem("quizCount")) || 0);
+// currently not using counter because have to check ZOe's implemtnation first
 
     useEffect(() => {
         fetch(`${API_URL}/api/v1/quiz`)
@@ -141,6 +143,9 @@ export default function QuizPage() {
                         <button onClick={() => {
                             if (currentIndex + 1 >= questions.length) {
                                 setFinished(true);
+                                setCompletedCount(prev => {const next = prev + 1;
+                                    localStorage.setItem("quizCount", String(next));
+                                    return next;});
                                 return;
                             }
                             setSelected(null);
