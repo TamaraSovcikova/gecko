@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/auth");
-
 const { getQuiz , getTestQuiz} = require("../services/quizAPI");
 
 //removing authMiddleware for now as just wanting to test forntend mplementation
-router.get("/",async (req, res) => {
-    const quiz = await getQuiz("cmmdjgdzb004autgrtn29hcbk");//Add quiz id in parameter -- Currently testing using random Python quiz published on QuizAPI site
-    res.json(quiz);
-});
+router.get("/", async (req, res) => {
+    try {const quiz = await getQuiz(process.env.QUIZ_ID);
+        res.json(quiz);
+    } catch (error) {console.error("Failed to load quiz:", error.message);
+        res.status(500).json({ questions: [] });
+    }});
 
 module.exports = router;

@@ -5,12 +5,22 @@ const axios = require("axios");
 const QUIZ_API_KEY = process.env.QUIZ_API_KEY
 const BASE_URL = "https://quizapi.io/api/v1/questions"
 
+
+function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
 // Search for specific quiz using QuizID
 const getQuiz = async (quizID) => {
     try {
-        if (!QUIZ_API_KEY) {
+        if (!QUIZ_API_KEY || !quizID) {
             console.log("QuizAPI keys not configured");
-            return [];
+            return {questions: []};
         }
 
         // Search for specific quiz
@@ -21,32 +31,25 @@ const getQuiz = async (quizID) => {
             },
             headers: {
                 Authorization: `Bearer ${QUIZ_API_KEY}`,
+                "Content-Type": "application/json",
             },
             timeout: 5000,
         });
 
-        if (response.data) {
-            const questions = response.data.data.map((question) => ({
+        const questions = response.data.data.map((question) => ({
                 //Made two minor changes to correctly map answers, other quizAPI response items not necessarily needed?
-                id: question.id,
-                //quizId: question.quizId,
-                question: question.text,
-                type: question.type,
-                //difficulty: question,
-                //explanation: question.count,
-                //category: question.category,
-                answers: question.answers.map((a) => ({text: a.text, correct: a.isCorrect})),
-            }));
-            console.log(`Question search returned ${response.data.data.length} results for quiz: ${quizID}`);
-            let quizQs = new Object();
-            quizQs["questions"] = questions;
-            return quizQs;
-        }
+            id: question.id,
+            question: question.text,
+            type: question.type,
+            answers: shuffle(question.answers.map((a) => ({text: a.text, correct: a.isCorrect})))
+        }));
 
-        return [];
+        const selected_five = shuffle(questions).slice(0, 5);
+        return {questions: selected_five};
+
     } catch (error) {
         console.error("Error searching questions from QuizAPI:", error.message);
-        return [];
+        return {questions: []};
     }
 };
 
