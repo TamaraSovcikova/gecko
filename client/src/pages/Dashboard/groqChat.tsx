@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import {BsChatDots, BsSend} from "react-icons/bs";
 import {BiX} from "react-icons/bi";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
     role: "user" | "bot";
@@ -109,7 +110,7 @@ const GroqChat = () => {
                                       maxWidth: "80%",
                                       background: msg.role === "user" ? "red" : "white",
                                       color: msg.role === "user" ? "white" : "black" }}>
-                                {msg.content}
+                                  <ReactMarkdown>{msg.content}</ReactMarkdown>
                               </span>
                             </div>
                         ))}
