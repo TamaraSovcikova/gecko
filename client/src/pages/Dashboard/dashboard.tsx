@@ -525,33 +525,6 @@ const displayedData: DashboardData | null = selectedSnapshot
           </div>
       )}
 
-      {/* XP Progress Bar */}
-      <div style={{ marginBottom: "30px", marginLeft: "20px" }}>
-        <p style={{ margin: "0 0 6px 0", fontWeight: 600 }}>
-          Level {userLevel} — {userXp} / {xpToNextLevel} XP
-        </p>
-
-        <div
-          style={{
-            width: "320px",
-            height: "12px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "999px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: `${xpProgressPercent}%`,
-              height: "100%",
-              backgroundColor: "#4caf50",
-              transition: "width 0.3s ease",
-            }}
-          />
-        </div>
-      </div>
-      {/* XP Progress Bar */}
-
       {/* summary */}
       {isSnapshotMode && selectedSnapshot && (
         <div style={{ marginBottom: "30px" }}>

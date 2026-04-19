@@ -1,3 +1,4 @@
+// client/src/components/XPBar.tsx
 import { useGamification } from "../context/GamificationContext";
 
 const BASE_XP = 100;
@@ -9,36 +10,58 @@ const getXpForLevel = (level: number) =>
 export default function XPBar() {
   const { data } = useGamification();
 
-  if (!data) return null;
+  // DEBUGGING
+  console.log("gamification data:", data); //DEBUGGING
+
+  if (!data) {
+    return (
+      <div style={{ marginTop: "10px", marginRight: "20px" }}>
+        Loading XP...
+      </div>
+    );
+  }
 
   const xpNeeded = getXpForLevel(data.level);
-  const progress = Math.min((data.xp / xpNeeded) * 100, 100);
+  const xp = data.xp ?? 0;
+
+  const progress =
+    xpNeeded > 0 ? Math.min((xp / xpNeeded) * 100, 100) : 0;
 
   return (
     <div
       style={{
         position: "fixed",
-        top: 10,
+        bottom: 85,
         right: 20,
-        width: "260px",
-        background: "#fff",
-        padding: "10px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        width: "340px",
+        padding: "10px 12px",
+        background: "#ffffff",
+        borderRadius: "0", // no card feel
+        boxShadow: "none", // explicitly removed
+        border: "1px solid #ddd",
         zIndex: 9999,
       }}
     >
-      <div style={{ fontWeight: 600, marginBottom: "6px" }}>
-        Level {data.level}
-      </div>
-
-      <div style={{ fontSize: "12px", marginBottom: "6px" }}>
-        {data.xp} / {xpNeeded} XP
-      </div>
-
+      {/* LEVEL + XP INLINE */}
       <div
         style={{
-          height: "10px",
+          display: "flex",
+          justifyContent: "space-between",
+          fontWeight: 600,
+          fontSize: "13px",
+          marginBottom: "6px",
+        }}
+      >
+        <span>Level {data.level}</span>
+        <span>
+          {xp} / {xpNeeded} XP
+        </span>
+      </div>
+
+      {/* XP BAR */}
+      <div
+        style={{
+          height: "14px",
           background: "#e5e5e5",
           borderRadius: "999px",
           overflow: "hidden",
@@ -54,6 +77,14 @@ export default function XPBar() {
         />
       </div>
 
+      {/* EMPTY STATE TIP */}
+      {xp === 0 && (
+        <div style={{ fontSize: "11px", marginTop: "6px", color: "#999" }}>
+          Start completing quizzes to earn XP 🚀
+        </div>
+      )}
+
+      {/* STREAK */}
       <div style={{ fontSize: "11px", marginTop: "6px", color: "#666" }}>
         🔥 Streak: {data.weeklyStreak} weeks
       </div>
