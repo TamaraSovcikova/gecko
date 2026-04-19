@@ -127,7 +127,7 @@ const UserSchema = new mongoose.Schema(
 // e.g. 0 XP = level 1, 100 XP = level 2, 250 XP = level 3
 // virtuals are included when calling user.toJSON() or user.toObject()
 UserSchema.virtual('xpLevel').get(function () {
-  return Math.floor(this.xpTotal / 100) + 1;
+  return Math.floor(this.xp / 100) + 1;
 });
 
 // Ensure virtuals like xpLevel are included when the document is
