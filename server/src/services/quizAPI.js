@@ -37,7 +37,7 @@ const getQuiz = async (quizID) => {
         });
 
         const questions = response.data.data.map((question) => ({
-                //Made two minor changes to correctly map answers, other quizAPI response items not necessarily needed?
+            // Made two minor changes to correctly map answers, other quizAPI response items not necessarily needed?
             id: question.id,
             question: question.text,
             type: question.type,

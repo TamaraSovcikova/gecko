@@ -70,6 +70,7 @@ type MonthlySnapshot = {
   totalExpenses: number;
   savings: number;
   categories: SnapshotCategory[];
+  // gamification: TODO tasks
   xpEarned: number;
   quizzesCompleted: number;
   createdAt: string;
@@ -86,6 +87,10 @@ type DashboardData = {
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
   healthBreakdown?: HealthBreakdown;
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
 };
 
 // year, month select helper
@@ -96,7 +101,6 @@ const monthName = (month: number) => {
   ];
   return months[month - 1] || "Unknown";
 };
-
 
 const Dashboard = () => {
   // monthly snapshot popup states
@@ -120,6 +124,21 @@ const Dashboard = () => {
     completeGuide,
     goToStep,
   } = usePageOnboarding("/dashboard");
+
+  // states for XP bat
+  // ------------------------
+  // XP Progress Bar (TEMP)
+  // ------------------------
+  const userLevel = 3; // TODO: replace with backend value
+  const userXp = 120; // TODO: replace with backend value
+
+  const xpNeededForLevel = (level: number) => {
+    return Math.floor(100 * Math.pow(1.2, level - 1));
+  };
+
+  const xpToNextLevel = xpNeededForLevel(userLevel);
+  const xpProgressPercent = Math.min((userXp / xpToNextLevel) * 100, 100);
+  // states for XP bar
 
 // const for monthly snapshot
 const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
@@ -179,8 +198,9 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
   fetchSnapshots();
 }, [token, loading, currentUser]);
 
-const isSnapshotMode = snapshotIndex !== null;
 
+// states for monthly snapshot
+const isSnapshotMode = snapshotIndex !== null;
 const selectedSnapshot =
   snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
@@ -504,6 +524,33 @@ const displayedData: DashboardData | null = selectedSnapshot
               You don't have any snapshots yet
           </div>
       )}
+
+      {/* XP Progress Bar */}
+      <div style={{ marginBottom: "30px", marginLeft: "20px" }}>
+        <p style={{ margin: "0 0 6px 0", fontWeight: 600 }}>
+          Level {userLevel} — {userXp} / {xpToNextLevel} XP
+        </p>
+
+        <div
+          style={{
+            width: "320px",
+            height: "12px",
+            backgroundColor: "#e0e0e0",
+            borderRadius: "999px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${xpProgressPercent}%`,
+              height: "100%",
+              backgroundColor: "#4caf50",
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+      {/* XP Progress Bar */}
 
       {/* summary */}
       {isSnapshotMode && selectedSnapshot && (
