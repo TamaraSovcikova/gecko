@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
 import TopNav from "../../components/TopNav";
+// update XP bar
+import { useGamification } from "../../context/GamificationContext";
+
 
 type Answer = {
     text: string;
@@ -28,6 +31,8 @@ export default function QuizPage() {
     const { token } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
+    // update XP bar
+    const { refreshGamification } = useGamification();
 
     useEffect(() => {
         if (!token) return;
@@ -109,6 +114,31 @@ export default function QuizPage() {
                                     localStorage.setItem("quizCount", String(next));
                                     return next;
                                 });
+
+                                // sync backend gamification state
+                                const submitResults = async () => {
+                                    try {
+                                        await fetch(`${API_URL}/api/v1/quiz/complete`, {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                Authorization: `Bearer ${token}`,
+                                            },
+                                            body: JSON.stringify({
+                                                score,
+                                                difficulty: "medium", // or whatever you track
+                                            }),
+                                        });
+
+                                        // refresh XP bar globally
+                                        await refreshGamification();
+
+                                    } catch (err) {
+                                        console.error("Failed to sync gamification:", err);
+                                    }
+                                };
+
+                                submitResults();
                                 return;
                             }
                             setSelected(null);
