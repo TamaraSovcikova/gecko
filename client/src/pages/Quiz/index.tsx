@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
+import TopNav from "../../components/TopNav";
 
 type Answer = {
     text: string;
@@ -71,6 +72,9 @@ export default function QuizPage() {
 
     return (
         <>
+            <div style={{ padding: "20px", backgroundColor: "#fafaf8" }}>
+                <TopNav />
+            </div>
             <button onClick={() => navigate("/dashboard")}
                 style={{ marginTop: "20px", position: "fixed", borderColor: "white", padding: "5px", left: 20, borderRadius: "8px", background: "transparent", display: "flex", justifyContent: "center", color: "white", cursor: "pointer" }}>
                 <BsArrowLeft size={30} />
