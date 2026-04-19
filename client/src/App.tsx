@@ -14,9 +14,6 @@ import Dashboard from "./pages/Dashboard/dashboard.tsx";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
-
-{/* import Expenses from "./pages/Expenses/Expenses.tsx"; */}
-
 import Expenses from "./pages/Expenses/Expenses";
 import Learn from "./pages/Learn";
 import Quiz from "./pages/Quiz";
@@ -29,7 +26,6 @@ function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Login />} />
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -118,22 +114,7 @@ function App() {
         }
       />
 
-      {/* Protected routes — redirect to /login if not authenticated */}
-      {/* <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/payslip" element={
-        <ProtectedRoute>
-          <PayslipSetup />
-        </ProtectedRoute>
-      } />     
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } /> */}
+
     </Routes>
   );
 }
