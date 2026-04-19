@@ -5,12 +5,13 @@
 //
 // After a successful sign-in:
 //   - Calls the backend /api/v1/auth/register to ensure a User doc exists in MongoDB
-//   - If firstLogin is true  → redirect to /payslip-setup
+//   - If firstLogin is true  → redirect to /payslip
 //   - If firstLogin is false → redirect to /dashboard
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
+  fetchSignInMethodsForEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
@@ -33,7 +34,7 @@ const Login = () => {
     const token = await user.getIdToken();
     const data = await registerUser(token);
     if (data.firstLogin) {
-      navigate("/payslip-setup");
+      navigate("/payslip");
     } else {
       navigate("/dashboard");
     }
@@ -45,10 +46,28 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const result = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+
       await handlePostLogin(result.user);
     } catch (err: any) {
-      setError(err.message);
+      const errorCode = String(err?.code || "");
+      if (errorCode === "auth/invalid-credential") {
+        try {
+          const methods = await fetchSignInMethodsForEmail(auth, email.trim().toLowerCase());
+          if (methods.length === 0) {
+            setError("No account found for that email address.");
+          } else if (!methods.includes("password")) {
+            setError("This account does not use password sign-in. Try another sign-in method.");
+          } else {
+            setError("Invalid email or password.");
+          }
+        } catch {
+          setError("Invalid email or password.");
+        }
+      } else {
+        setError(err.message || "Unable to sign in.");
+      }
     } finally {
       setLoading(false);
     }
