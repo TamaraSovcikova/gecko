@@ -34,6 +34,23 @@ app.use(
 
 app.use(express.json());
 
+//
+// TEST ROUTES FOR CRON JOB
+//
+
+// !! ACTUAL SNAPSHOT TEST !!
+// IMPORTANT: Import the cron job so it runs automatically
+require("./jobs/monthlySnapshotJob");
+
+// Snapshots route
+const snapshotRoutes = require("./routes/snapshot");
+app.use("/api/snapshots", snapshotRoutes);
+// !! ACTUAL CRON JOB TEST !!
+
+//
+// TEST ROUTES FOR CRON JOB
+//
+
 app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use('/api/v1/expenses', expenseRoutes);

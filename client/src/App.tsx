@@ -27,7 +27,6 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Login />} />
-      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       {/* <Route path="/expenses" element={<Expenses />} /> 
@@ -115,22 +114,7 @@ function App() {
         }
       />
 
-      {/* Protected routes — redirect to /login if not authenticated */}
-      {/* <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/payslip" element={
-        <ProtectedRoute>
-          <PayslipSetup />
-        </ProtectedRoute>
-      } />     
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } /> */}
+
     </Routes>
   );
 }
