@@ -10,7 +10,7 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-//import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Learn from "./pages/Learn";
 
 function App() {
@@ -21,7 +21,11 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      <Route path="/quiz" element={<Learn />}/>
+      <Route path="/quiz" element={
+        <ProtectedRoute>
+          <Learn />
+        </ProtectedRoute>
+      }/>
 
 
         {/* Protected routes — redirect to /login if not authenticated */}

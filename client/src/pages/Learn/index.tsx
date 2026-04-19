@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BsArrowLeft} from "react-icons/bs";
+import { useAuth } from "../../context/AuthContext";
 
 type Answer = {
     text: string;
@@ -14,8 +16,6 @@ type Question = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-console.log("API_URL:", API_URL);
-
 export default function QuizPage() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,15 +25,24 @@ export default function QuizPage() {
     const [finished, setFinished] = useState(false);
     const [completedCount, setCompletedCount] = useState(Number(localStorage.getItem("quizCount")) || 0);
 // currently not using counter because have to check ZOe's implemtnation first
+    const { token } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch(`${API_URL}/api/v1/quiz`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("API RESPONSE:", data);
-                setQuestions(data.questions);});
-    }, []);
+        if (!token) return;
+        fetch(`${API_URL}/api/v1/quiz`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                return res.json();
+            })
+            .then(data => setQuestions(data.questions))
+            .catch(err => setError(err.message));
+    }, [token]);
 
+    if (error) return <p>Failed to load quiz: {error}</p>;
     if (questions.length === 0) return <p>Loading...</p>;
 
     const current = questions[currentIndex];
@@ -61,8 +70,7 @@ export default function QuizPage() {
                 <h1>Quiz Complete!!</h1>
                 <h2>Your Score: {score} / {questions.length}</h2>
 
-                {/*this will need to be changed to /dashboard before merging!!*/}
-                <button onClick={() => {window.location.href = "/";}}
+                <button onClick={() => navigate("/dashboard")}
                         style={{marginTop: "20px", padding: "12px 20px",
                             borderRadius: "8px",
                             border: "none",
@@ -78,8 +86,7 @@ export default function QuizPage() {
 
     return (
         <>
-            {/*this will need to be changed to /dashboard before merging!!*/}
-            <button onClick={() => {window.location.href = "/";}}
+            <button onClick={() => navigate("/dashboard")}
                     style={{marginTop: "20px",
                         position: "fixed",
                         borderColor: "white",

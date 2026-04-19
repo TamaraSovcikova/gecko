@@ -2,7 +2,6 @@
 
 const axios = require("axios");
 
-const QUIZ_API_KEY = process.env.QUIZ_API_KEY
 const BASE_URL = "https://quizapi.io/api/v1/questions"
 
 
@@ -17,6 +16,7 @@ function shuffle(array) {
 
 // Search for specific quiz using QuizID
 const getQuiz = async (quizID) => {
+    const QUIZ_API_KEY = process.env.QUIZ_API_KEY;
     try {
         if (!QUIZ_API_KEY || !quizID) {
             console.log("QuizAPI keys not configured");

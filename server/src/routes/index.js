@@ -14,7 +14,7 @@ router.get('/', (req, res) => res.send('<h1>Login</h1>'));
 // Auth routes — register/login handling (token verified inside these routes)
 router.use('/api/v1/auth', require('./auth'));
 
-router.use('/api/v1/quiz', require('./quiz')); //auth middleware removed for now
+router.use('/api/v1/quiz', require('./quiz'));
 // ---- Protected routes (token required) ----
 // All routes below this line require a valid Firebase token.
 
