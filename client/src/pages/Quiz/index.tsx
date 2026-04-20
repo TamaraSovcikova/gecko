@@ -139,11 +139,6 @@ export default function QuizPage() {
                                         */
                                         console.log("Submitting quiz results..."); //DEBUGGING
 
-                                        console.log("POST /api/v1/quiz/complete payload:", {
-                                        score,
-                                        difficulty: "medium",
-                                        }); //DEBUGGING
-
                                         const response = await fetch(`${API_URL}/api/v1/quiz/complete`, {
                                         method: "POST",
                                         headers: {
@@ -152,7 +147,6 @@ export default function QuizPage() {
                                         },
                                         body: JSON.stringify({
                                             score,
-                                            difficulty: "medium",
                                         }),
                                         });
 

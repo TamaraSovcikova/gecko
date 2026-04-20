@@ -60,7 +60,7 @@ const completeQuiz = async (req, res) => {
   console.log("COMPLETE QUIZ UID:", req.user.uid);
   try {
     const userId = req.user.uid;
-    const { score, difficulty } = req.body;
+    const { score } = req.body;
 
     //const user = await User.findById(userId);
     // will this fix XP live update?
@@ -79,10 +79,7 @@ const completeQuiz = async (req, res) => {
     // 1. XP CALCULATION
     // -----------------------------------
     const baseXp = 10;
-    const difficultyMultiplier =
-      difficulty === "hard" ? 2 : difficulty === "medium" ? 1.5 : 1;
-
-    const earnedXp = Math.floor(baseXp * difficultyMultiplier * (score / 100));
+    const earnedXp = Math.floor(score * 2 + baseXp);
 
     user.xp += earnedXp;
 
