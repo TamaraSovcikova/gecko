@@ -68,7 +68,7 @@ export default function TopicCard({ topic, onRead }: TopicCardProps) {
 
   const handleQuiz = (quizId: string) => {
     setModalOpen(false);
-    navigate(`/quiz?category=${quizId}`);
+    navigate(`/quiz?topic=${quizId}`);
   };
 
   // First sentence only to keep cards compact
