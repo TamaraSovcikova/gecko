@@ -137,30 +137,9 @@ const Dashboard = () => {
     goToStep,
   } = usePageOnboarding("/dashboard");
 
-<<<<<<< HEAD
-  // states for XP bat
-  // ------------------------
-  // XP Progress Bar (TEMP)
-  // ------------------------
-  const userLevel = 3; // TODO: replace with backend value
-  const userXp = 120; // TODO: replace with backend value
-
-  const xpNeededForLevel = (level: number) => {
-    return Math.floor(100 * Math.pow(1.2, level - 1));
-  };
-
-  const xpToNextLevel = xpNeededForLevel(userLevel);
-  const xpProgressPercent = Math.min((userXp / xpToNextLevel) * 100, 100);
-  // states for XP bar
-
-// const for monthly snapshot
-const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
-const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
-=======
   // const for monthly snapshot
   const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
   const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
->>>>>>> origin/feature/learning-hub
 
   //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
@@ -216,18 +195,10 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
     fetchSnapshots();
   }, [token, loading, currentUser]);
 
-<<<<<<< HEAD
-
-// states for monthly snapshot
-const isSnapshotMode = snapshotIndex !== null;
-const selectedSnapshot =
-  snapshotIndex !== null ? snapshots[snapshotIndex] : null;
-=======
   const isSnapshotMode = snapshotIndex !== null;
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
->>>>>>> origin/feature/learning-hub
 
   const displayedData: DashboardData | null = selectedSnapshot
     ? {
