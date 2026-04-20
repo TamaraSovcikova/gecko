@@ -1,3 +1,5 @@
+// controllers/gamificationController
+
 const User = require("../models/User");
 
 /**

@@ -1,4 +1,5 @@
 // client/src/components/XPBar.tsx
+
 import { useGamification } from "../context/GamificationContext";
 
 const BASE_XP = 100;

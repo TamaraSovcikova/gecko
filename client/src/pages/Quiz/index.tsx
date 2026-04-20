@@ -1,3 +1,5 @@
+// pages/Quiz/index.tsx
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
@@ -107,6 +109,7 @@ export default function QuizPage() {
                     ))}
                     {showResult && (
                         <button onClick={() => {
+                            console.log("CLICKED NEXT BUTTON"); //DEBUGGING
                             if (currentIndex + 1 >= questions.length) {
                                 setFinished(true);
                                 setCompletedCount(prev => {
@@ -118,6 +121,7 @@ export default function QuizPage() {
                                 // sync backend gamification state
                                 const submitResults = async () => {
                                     try {
+                                        /*
                                         await fetch(`${API_URL}/api/v1/quiz/complete`, {
                                             method: "POST",
                                             headers: {
@@ -132,6 +136,37 @@ export default function QuizPage() {
 
                                         // refresh XP bar globally
                                         await refreshGamification();
+                                        */
+                                        console.log("Submitting quiz results..."); //DEBUGGING
+
+                                        console.log("POST /api/v1/quiz/complete payload:", {
+                                        score,
+                                        difficulty: "medium",
+                                        }); //DEBUGGING
+
+                                        const response = await fetch(`${API_URL}/api/v1/quiz/complete`, {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            Authorization: `Bearer ${token}`,
+                                        },
+                                        body: JSON.stringify({
+                                            score,
+                                            difficulty: "medium",
+                                        }),
+                                        });
+
+                                        console.log("Quiz complete response status:", response.status); //DEBUGGING
+
+                                        const data = await response.json().catch(() => null);
+                                        console.log("Quiz complete response body:", data); //DEBUGGING
+
+                                        console.log("Refreshing gamification state..."); //DEBUGGING
+                                        await refreshGamification();
+                                        console.log("Gamification refreshed"); //DEBUGGING
+
+                                        // setFinished(true);
+                                        console.log("Quiz marked as finished"); //DEBUGGING
 
                                     } catch (err) {
                                         console.error("Failed to sync gamification:", err);
@@ -139,6 +174,7 @@ export default function QuizPage() {
                                 };
 
                                 submitResults();
+                                setFinished(true);
                                 return;
                             }
                             setSelected(null);

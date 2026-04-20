@@ -48,6 +48,7 @@ const UserSchema = new mongoose.Schema(
     // 2. user's level based on their total xp
     // 3. their weekly quiz streak
     // 4. date of last time they completed quiz (to calcualte 3.)
+    // 5. # of completed quizzes for the given month
     xp: {
       type: Number,
       default: 0,
@@ -66,6 +67,11 @@ const UserSchema = new mongoose.Schema(
     lastQuizCompletedAt: {
       type: Date,
       default: null,
+    },
+
+    completedQuizzesThisMonth: {
+      type: Number,
+      default:0,
     },
 
     // Drives post-login redirect:
