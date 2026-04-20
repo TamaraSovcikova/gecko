@@ -96,8 +96,18 @@ type DashboardData = {
 // year, month select helper
 const monthName = (month: number) => {
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   return months[month - 1] || "Unknown";
 };
@@ -105,7 +115,9 @@ const monthName = (month: number) => {
 const Dashboard = () => {
   // monthly snapshot popup states
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
-  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(null);
+  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(
+    null,
+  );
   // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
@@ -125,6 +137,7 @@ const Dashboard = () => {
     goToStep,
   } = usePageOnboarding("/dashboard");
 
+<<<<<<< HEAD
   // states for XP bat
   // ------------------------
   // XP Progress Bar (TEMP)
@@ -143,6 +156,11 @@ const Dashboard = () => {
 // const for monthly snapshot
 const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
 const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
+=======
+  // const for monthly snapshot
+  const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
+  const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
+>>>>>>> origin/feature/learning-hub
 
   //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
@@ -186,7 +204,7 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/snapshots/${currentUser.uid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         setSnapshots(res.data);
@@ -195,33 +213,43 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
       }
     };
 
-  fetchSnapshots();
-}, [token, loading, currentUser]);
+    fetchSnapshots();
+  }, [token, loading, currentUser]);
 
+<<<<<<< HEAD
 
 // states for monthly snapshot
 const isSnapshotMode = snapshotIndex !== null;
 const selectedSnapshot =
   snapshotIndex !== null ? snapshots[snapshotIndex] : null;
+=======
+  const isSnapshotMode = snapshotIndex !== null;
 
-const displayedData: DashboardData | null = selectedSnapshot
-  ? {
-      healthScore: selectedSnapshot.healthScore,
-      takeHome: selectedSnapshot.takeHomePay,
-      totalBudget: selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0),
-      budgetLeft:
-        selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0) -
-        selectedSnapshot.totalExpenses,
-      budgetAllocation: selectedSnapshot.categories.map((c) => ({
-        name: c.name,
-        value: c.budget,
-      })),
-      actualSpending: selectedSnapshot.categories.map((c) => ({
-        name: c.name,
-        value: c.actual,
-      })),
-    }
-  : data;
+  const selectedSnapshot =
+    snapshotIndex !== null ? snapshots[snapshotIndex] : null;
+>>>>>>> origin/feature/learning-hub
+
+  const displayedData: DashboardData | null = selectedSnapshot
+    ? {
+        healthScore: selectedSnapshot.healthScore,
+        takeHome: selectedSnapshot.takeHomePay,
+        totalBudget: selectedSnapshot.categories.reduce(
+          (sum, c) => sum + c.budget,
+          0,
+        ),
+        budgetLeft:
+          selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0) -
+          selectedSnapshot.totalExpenses,
+        budgetAllocation: selectedSnapshot.categories.map((c) => ({
+          name: c.name,
+          value: c.budget,
+        })),
+        actualSpending: selectedSnapshot.categories.map((c) => ({
+          name: c.name,
+          value: c.actual,
+        })),
+      }
+    : data;
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
@@ -236,7 +264,7 @@ const displayedData: DashboardData | null = selectedSnapshot
     const snapshotYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
     const latestSnapshot = snapshots.find(
-      (s) => s.month === snapshotMonth && s.year === snapshotYear
+      (s) => s.month === snapshotMonth && s.year === snapshotYear,
     );
 
     if (!latestSnapshot) return;
@@ -290,321 +318,410 @@ const displayedData: DashboardData | null = selectedSnapshot
           fontFamily: "Arial, sans-serif",
         }}
       >
-
-      {isSnapshotMode && selectedSnapshot && (
-      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
-        <h3>
-          Snapshot of {snapshots[snapshotIndex].month}/{snapshots[snapshotIndex].year}
-        </h3>
-      </div>
-      )}
-
-      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
-        <h3>
-          Take-home: £{displayedData.takeHome.toFixed(2)} | Budget: £{displayedData.totalBudget.toFixed(2)}
-        </h3>
-      </div>
-
-      <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
-        <div data-onboarding="dashboard-allocation">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
-            <h4 style={{ margin: 0 }}>Budget Allocation</h4>
-            {/*disable if snapshot mode*/}
-            {!isSnapshotMode && (
-              <button
-                type="button"
-                onClick={() => navigate("/payslip?mode=edit")}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "999px",
-                  border: "1px solid #bfd1c0",
-                  backgroundColor: "#eef5eb",
-                  color: "#37553e",
-                  fontWeight: 600,
-                }}
-              >
-                Edit Payslip/Budget
-              </button>
-          )}
-            {/*disable if snapshot mode*/}
+        {isSnapshotMode && selectedSnapshot && (
+          <div
+            style={{ marginBottom: "20px" }}
+            data-onboarding="dashboard-takehome"
+          >
+            <h3>
+              Snapshot of {snapshots[snapshotIndex].month}/
+              {snapshots[snapshotIndex].year}
+            </h3>
           </div>
-          <PieChart width={300} height={220}>
-            <Pie
-              data={displayedData.budgetAllocation || []} //fallback to empty array prevents runtime
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-            >
-              {/* different colours for each slice*/}
-              {(displayedData.budgetAllocation || []).map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
-              ))}
-            </Pie>
-            {/*tooltips and labels allow cool breakdowns when hovering*/}
-            <Tooltip />
-            <Legend />
-          </PieChart>
+        )}
+
+        <div
+          style={{ marginBottom: "20px" }}
+          data-onboarding="dashboard-takehome"
+        >
+          <h3>
+            Take-home: £{displayedData.takeHome.toFixed(2)} | Budget: £
+            {displayedData.totalBudget.toFixed(2)}
+          </h3>
         </div>
 
-        <div data-onboarding="dashboard-actual-spending">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
-            <h4 style={{ margin: 0 }}>Actual Spending</h4>
-            {/*disable if snapshot mode*/}
+        <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
+          <div data-onboarding="dashboard-allocation">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+                gap: "12px",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Budget Allocation</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/payslip?mode=edit")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Payslip/Budget
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
+            </div>
+            <PieChart width={300} height={220}>
+              <Pie
+                data={displayedData.budgetAllocation || []} //fallback to empty array prevents runtime
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+              >
+                {/* different colours for each slice*/}
+                {(displayedData.budgetAllocation || []).map((_, index) => (
+                  <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                ))}
+              </Pie>
+              {/*tooltips and labels allow cool breakdowns when hovering*/}
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+
+          <div data-onboarding="dashboard-actual-spending">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+                gap: "12px",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Actual Spending</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/expenses")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Expenses
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
+            </div>
+            <PieChart width={300} height={220}>
+              <Pie
+                data={displayedData.actualSpending || []}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+              >
+                {(displayedData.actualSpending || []).map((_, index) => (
+                  <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+
+          {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
+          {showExpenses && (
+            <div
+              style={{
+                flex: 1,
+                borderLeft: "1px solid #ccc",
+                paddingLeft: "20px",
+              }}
+              data-onboarding="dashboard-embedded-expenses"
+            >
+              <Expenses categories={displayedData.budgetAllocation} />
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "60px" }}>
+          <div data-onboarding="dashboard-health-score">
+            <p
+              style={{
+                margin: 0,
+                fontSize: "28px",
+                fontWeight: "bold",
+                color:
+                  displayedData.healthScore < 40
+                    ? "red"
+                    : displayedData.healthScore < 70
+                      ? "orange"
+                      : "green",
+              }}
+            >
+              {displayedData.healthScore}
+            </p>
+            {/*breakdown button test*/}
             {!isSnapshotMode && (
               <button
                 type="button"
-                onClick={() => navigate("/expenses")}
+                onClick={() => setShowBreakdown(true)}
+                data-onboarding="dashboard-health-breakdown-trigger"
                 style={{
-                  padding: "8px 12px",
-                  borderRadius: "999px",
-                  border: "1px solid #bfd1c0",
-                  backgroundColor: "#eef5eb",
-                  color: "#37553e",
+                  marginTop: "8px",
+                  border: "none",
+                  background: "none",
+                  color: "#2f6a4b",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
                   fontWeight: 600,
                 }}
               >
-                Edit Expenses
+                See breakdown
               </button>
             )}
-            {/*disable if snapshot mode*/}
           </div>
-          <PieChart width={300} height={220}>
-            <Pie
-              data={displayedData.actualSpending || []}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-            >
-              {(displayedData.actualSpending || []).map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
+          {/*breakdown button test*/}
 
-        {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
-        {showExpenses && (
-          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }} data-onboarding="dashboard-embedded-expenses">
-            <Expenses categories={displayedData.budgetAllocation} />
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: "flex", gap: "60px" }}>
-        <div data-onboarding="dashboard-health-score">
-          <p
-            style={{
-              margin: 0,
-              fontSize: "28px",
-              fontWeight: "bold",
-              color:
-                displayedData.healthScore < 40
-                  ? "red"
-                  : displayedData.healthScore < 70
-                    ? "orange"
-                    : "green",
-            }}
-          >
-            {displayedData.healthScore}
-          </p>
-        {/*breakdown button test*/}
-        {!isSnapshotMode && (
-          <button
-            type="button"
-            onClick={() => setShowBreakdown(true)}
-            data-onboarding="dashboard-health-breakdown-trigger"
-            style={{
-              marginTop: "8px",
-              border: "none",
-              background: "none",
-              color: "#2f6a4b",
-              textDecoration: "underline",
-              cursor: "pointer",
-              padding: 0,
-              fontWeight: 600,
-            }}
-          >
-            See breakdown
-          </button>
-        )}
-        </div>
-        {/*breakdown button test*/}
-
-        <div>
-          <h4>Take Home</h4>
-          <p style={{ fontSize: "20px" }}>£{displayedData.takeHome.toFixed(2)}</p>
-        </div>
-
-        <div>
-          <h4>Budget Left</h4>
-          <p style={{ fontSize: "20px" }}>£{displayedData.budgetLeft.toFixed(2)}</p>
-        </div>
-
-        <div data-onboarding="dashboard-budget-vs-actual">
-          <h4>Budget vs Actual</h4>
-          {displayedData.budgetLeft >= 0 ? (
-            <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
-          ) : (
-            <p>
-              {/*abs ensures displayed number is positive when showing overbudget*/}
-              Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
+          <div>
+            <h4>Take Home</h4>
+            <p style={{ fontSize: "20px" }}>
+              £{displayedData.takeHome.toFixed(2)}
             </p>
+          </div>
+
+          <div>
+            <h4>Budget Left</h4>
+            <p style={{ fontSize: "20px" }}>
+              £{displayedData.budgetLeft.toFixed(2)}
+            </p>
+          </div>
+
+          <div data-onboarding="dashboard-budget-vs-actual">
+            <h4>Budget vs Actual</h4>
+            {displayedData.budgetLeft >= 0 ? (
+              <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
+            ) : (
+              <p>
+                {/*abs ensures displayed number is positive when showing overbudget*/}
+                Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
+              </p>
+            )}
+          </div>
+
+          {displayedData.averageSalary && (
+            <div>
+              <h4>Market Salary</h4>
+              <p style={{ fontSize: "20px" }}>
+                £{displayedData.averageSalary.toLocaleString()}
+              </p>
+              <p style={{ fontSize: "12px", color: "#666" }}>
+                Average for your role
+              </p>
+            </div>
           )}
         </div>
 
-        {displayedData.averageSalary && (
-          <div>
-            <h4>Market Salary</h4>
-            <p style={{ fontSize: "20px" }}>£{displayedData.averageSalary.toLocaleString()}</p>
-            <p style={{ fontSize: "12px", color: "#666" }}>Average for your role</p>
+        {snapshots.length > 0 && (
+          <div
+            style={{
+              marginTop: "60px",
+              paddingTop: "20px",
+              borderTop: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) {
+                  setSnapshotIndex(0);
+                } else if (snapshotIndex < snapshots.length - 1) {
+                  setSnapshotIndex(snapshotIndex + 1);
+                }
+              }}
+              disabled={
+                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
+              }
+            >
+              ◀ Older
+            </button>
+
+            <div style={{ fontWeight: 600 }}>
+              {snapshotIndex === null
+                ? "Live (Current Month)"
+                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            </div>
+
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) return;
+                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
+                else setSnapshotIndex(null); // go back to live
+              }}
+            >
+              Newer ▶
+            </button>
           </div>
         )}
-      </div>
 
-      {snapshots.length > 0 && (
-        <div
-          style={{
-            marginTop: "60px",
-            paddingTop: "20px",
-            borderTop: "1px solid #ddd",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "16px",
-          }}
-        >
-          <button
-            onClick={() => {
-              if (snapshotIndex === null) {
-                setSnapshotIndex(0);
-              } else if (snapshotIndex < snapshots.length - 1) {
-                setSnapshotIndex(snapshotIndex + 1);
-              }
-            }}
-            disabled={snapshotIndex !== null && snapshotIndex >= snapshots.length - 1}
-          >
-            ◀ Older
-          </button>
+        {/* Calendar dropdown */}
+        {/* Only shows months with valid snapshots */}
+        <SnapshotMonthDropdown
+          snapshots={snapshots}
+          snapshotIndex={snapshotIndex}
+          setSnapshotIndex={setSnapshotIndex}
+        />
 
+        {/* If no snapshot yet */}
+        {snapshots.length == 0 && (
           <div style={{ fontWeight: 600 }}>
-            {snapshotIndex === null
-              ? "Live (Current Month)"
-              : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            You don't have any snapshots yet
           </div>
+        )}
 
-          <button
-            onClick={() => {
-              if (snapshotIndex === null) return;
-              if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-              else setSnapshotIndex(null); // go back to live
+        {/* summary */}
+        {isSnapshotMode && selectedSnapshot && (
+          <div style={{ marginBottom: "30px" }}>
+            <p>
+              <b>XP Earned:</b> {selectedSnapshot.xpEarned}
+            </p>
+            <p>
+              <b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}
+            </p>
+          </div>
+        )}
+
+        {/* budget adherence table */}
+        {isSnapshotMode && selectedSnapshot && (
+          <div>
+            <div style={{ marginTop: "20px" }}>
+              <h4>Budget Adherence</h4>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #ccc" }}>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Category
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Budget
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Actual
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Difference
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedSnapshot.categories.map((cat, idx) => {
+                    const diff = cat.budget - cat.actual;
+                    return (
+                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: "8px" }}>{cat.name}</td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.budget.toFixed(2)}
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.actual.toFixed(2)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px",
+                            color: diff >= 0 ? "green" : "red",
+                          }}
+                        >
+                          {diff >= 0
+                            ? `+£${diff.toFixed(2)}`
+                            : `-£${Math.abs(diff).toFixed(2)}`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
+              Snapshot created:{" "}
+              {new Date(selectedSnapshot.createdAt).toLocaleString()}
+            </p>
+          </div>
+        )}
+
+        {/* Adzuna Tips Section */}
+        {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
+          <div
+            style={{
+              marginTop: "50px",
+              borderTop: "2px solid #ddd",
+              paddingTop: "30px",
             }}
+            data-onboarding="dashboard-adzuna-tips"
           >
-            Newer ▶
-          </button>
-        </div>
-      )}
-
-      {/* Calendar dropdown */}
-      {/* Only shows months with valid snapshots */}
-      <SnapshotMonthDropdown
-        snapshots={snapshots}
-        snapshotIndex={snapshotIndex}
-        setSnapshotIndex={setSnapshotIndex}
-      />
-
-      {/* If no snapshot yet */}
-      {snapshots.length == 0 && (
-          <div style={{ fontWeight: 600 }}>
-              You don't have any snapshots yet
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>
+              💡 Financial Tips Based on Market Data
+            </h3>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            >
+              {displayedData.adzunaTips.map((tip, index) => (
+                <div
+                  key={`tip-${index}`}
+                  style={{
+                    padding: "16px",
+                    backgroundColor: getTipColor(tip.priority),
+                    borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
+                    borderRadius: "4px",
+                    transition: "transform 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateX(4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateX(0)";
+                  }}
+                >
+                  <h5
+                    style={{
+                      margin: "0 0 8px 0",
+                      color: "#333",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {tip.title}
+                  </h5>
+                  <p
+                    style={{
+                      margin: "0",
+                      color: "#555",
+                      fontSize: "14px",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    {tip.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-      )}
-
-      {/* summary */}
-      {isSnapshotMode && selectedSnapshot && (
-        <div style={{ marginBottom: "30px" }}>
-          <p><b>XP Earned:</b> {selectedSnapshot.xpEarned}</p>
-          <p><b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}</p>
-        </div>
-      )}
-
-      {/* budget adherence table */}
-      {isSnapshotMode && selectedSnapshot && (
-  <div>
-    <div style={{ marginTop: "20px" }}>
-      <h4>Budget Adherence</h4>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid #ccc" }}>
-            <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedSnapshot.categories.map((cat, idx) => {
-            const diff = cat.budget - cat.actual;
-            return (
-              <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "8px" }}>{cat.name}</td>
-                <td style={{ padding: "8px" }}>£{cat.budget.toFixed(2)}</td>
-                <td style={{ padding: "8px" }}>£{cat.actual.toFixed(2)}</td>
-                <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
-                  {diff >= 0 ? `+£${diff.toFixed(2)}` : `-£${Math.abs(diff).toFixed(2)}`}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-
-    <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-      Snapshot created: {new Date(selectedSnapshot.createdAt).toLocaleString()}
-    </p>
-  </div>
-)}
-
-      {/* Adzuna Tips Section */}
-      {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
-        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }} data-onboarding="dashboard-adzuna-tips">
-          <h3 style={{ marginBottom: "20px", color: "#333" }}>💡 Financial Tips Based on Market Data</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-            {displayedData.adzunaTips.map((tip, index) => (
-              <div
-                key={`tip-${index}`}
-                style={{
-                  padding: "16px",
-                  backgroundColor: getTipColor(tip.priority),
-                  borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
-                  borderRadius: "4px",
-                  transition: "transform 0.2s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateX(4px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateX(0)";
-                }}
-              >
-                <h5 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "16px", fontWeight: "600" }}>
-                  {tip.title}
-                </h5>
-                <p style={{ margin: "0", color: "#555", fontSize: "14px", lineHeight: "1.5" }}>
-                  {tip.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
       </div>
       <TooltipGuide
         isOpen={isOnboardingOpen}
@@ -626,12 +743,11 @@ const displayedData: DashboardData | null = selectedSnapshot
 
       {showSnapshotPopup && popupSnapshot && (
         <MonthlySnapshotPopup
-        snapshot={popupSnapshot}
-        onClose={() => setShowSnapshotPopup(false)}
+          snapshot={popupSnapshot}
+          onClose={() => setShowSnapshotPopup(false)}
         />
       )}
     </>
-  
   );
 };
 

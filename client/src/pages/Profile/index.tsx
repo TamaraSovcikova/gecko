@@ -117,6 +117,7 @@ const Profile = () => {
     }
   };
 
+  // TODO: FIX THIS SO THAT IT'S ONLY DONE IN quizController.js
   // XP system (same as XPBar)
   const BASE_XP = 100;
   const GROWTH_RATE = 1.2;
@@ -140,6 +141,7 @@ const Profile = () => {
   const xpNeeded = getXpForLevel(level);
   const xpProgressPercent =
     xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
+  // TODO: FIX THIS SO THAT IT'S ONLY DONE IN quizController.js
 
   if (loading || loadingData) {
     return (
