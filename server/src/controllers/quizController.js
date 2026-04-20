@@ -127,6 +127,22 @@ const completeQuiz = async (req, res) => {
     user.completedQuizzesThisMonth = (user.completedQuizzesThisMonth || 0) + 1;
 
     // -----------------------------------
+    // 5. XP PROGRESSION CALCULATION (FOR FRONTEND)
+    // -----------------------------------
+    const xp = user.xp;
+    const level = user.level;
+
+    // XP at start of current level
+    let xpAtLevelStart = 0;
+
+    for (let i = 0; i < level; i++) {
+      xpAtLevelStart += getXpForLevel(i);
+    }
+
+    const xpIntoLevel = xp - xpAtLevelStart;
+    const xpNeeded = getXpForLevel(level);
+
+    // -----------------------------------
     // SAVE USER
     // -----------------------------------
     await user.save();
@@ -134,13 +150,14 @@ const completeQuiz = async (req, res) => {
     return res.status(200).json({
       message: "Quiz completed successfully",
       gamification: {
-        xpEarned: earnedXp,
-        totalXp: user.xp,
-        level: user.level,
+        xp,
+        level,
         weeklyStreak: user.weeklyStreak,
-        completedThisMonth: user.completedQuizzesThisMonth[currentMonth],
+        xpIntoLevel,
+        xpNeeded,
       },
     });
+
   } catch (error) {
     console.error("Quiz completion error:", error);
     return res.status(500).json({ message: "Server error" });
