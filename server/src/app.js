@@ -13,7 +13,6 @@ const helmet = require('helmet');
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
-const gamificationRoutes = require("./routes/gamification");
 const quizRoutes = require("./routes/quiz");
 
 const app = express();
@@ -39,7 +38,6 @@ app.use("/api/v1/quiz", (req, res, next) => {
 
 //DEBUGGING
 console.log("Mounted quiz routes");
-app.use("/api/v1/user", gamificationRoutes);
 
 app.use(
   helmet({
