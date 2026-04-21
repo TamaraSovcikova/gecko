@@ -30,6 +30,7 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const { refreshGamification } = useGamification();
+  const [earnedXp, setEarnedXp] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState(
     Number(localStorage.getItem("quizCount")) || 0,
   );
@@ -91,6 +92,9 @@ export default function QuizPage() {
         <h2>
           Your Score: {score} / {questions.length}
         </h2>
+        <h3>
+          You earned {earnedXp} XP
+        </h3>
         <button
           onClick={() => navigate("/dashboard")}
           style={{
@@ -211,6 +215,9 @@ export default function QuizPage() {
                     console.log("Quiz complete response status:", response.status); //DEBUGGING
 
                     const data = await response.json().catch(() => null);
+                    // show earned XP
+                    setEarnedXp(data?.earnedXp ?? 0);
+              
                     console.log("Quiz complete response body:", data); //DEBUGGING
 
                     console.log("Refreshing gamification state..."); //DEBUGGING
@@ -224,6 +231,7 @@ export default function QuizPage() {
                       localStorage.setItem("quizCount", String(next));
                       return next;
                     });
+
 
                     setFinished(true);
                   } catch (err) {

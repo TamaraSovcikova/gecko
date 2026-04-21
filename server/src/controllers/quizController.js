@@ -140,10 +140,11 @@ const completeQuiz = async (req, res) => {
     // SAVE USER
     await user.save();
 
-    return res.status(200).json({
-      message: "Quiz completed successfully",
-      gamification: calculateGamification(user),
-    });
+  return res.status(200).json({
+    message: "Quiz completed successfully",
+    gamification: calculateGamification(user),
+    earnedXp
+  });
 
   } catch (error) {
     console.error("Quiz completion error:", error);
