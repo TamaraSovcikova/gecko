@@ -8,6 +8,7 @@ import TopNav from "../../components/TopNav";
 import ProfileAvatar from "../../components/ProfileAvatar";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
+import { useGamification } from "../../context/GamificationContext";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Profile = () => {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const { data: gamification } = useGamification();
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -117,39 +119,25 @@ const Profile = () => {
     }
   };
 
-  // TODO: FIX THIS SO THAT IT'S ONLY DONE IN quizController.js
+
   // XP system (same as XPBar)
-  const BASE_XP = 100;
-  const GROWTH_RATE = 1.2;
+  const xpTotal = gamification?.xp ?? 0;
+  const level = gamification?.level ?? 0;
+  const xpIntoLevel = gamification?.xpIntoLevel ?? 0;
+  const xpNeeded = gamification?.xpNeeded ?? 1;
 
-  const getXpForLevel = (level: number) =>
-    Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
-
-  // total accumulated XP (from backend)
-  const xpTotal = userData?.xp || 0;
-
-  // calculate level + progress
-  let level = 0;
-  let remainingXp = xpTotal;
-
-  while (remainingXp >= getXpForLevel(level)) {
-    remainingXp -= getXpForLevel(level);
-    level++;
-  }
-
-  const xpIntoLevel = remainingXp;
-  const xpNeeded = getXpForLevel(level);
   const xpProgressPercent =
-    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
-  // TODO: FIX THIS SO THAT IT'S ONLY DONE IN quizController.js
+    xpNeeded > 0
+      ? Math.min((xpIntoLevel / xpNeeded) * 100, 100)
+      : 0;
 
-  if (loading || loadingData) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
-        Loading profile...
-      </div>
-    );
-  }
+    if (loading || loadingData) {
+      return (
+        <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+          Loading profile...
+        </div>
+      );
+    }
 
   if (error) {
     return (
