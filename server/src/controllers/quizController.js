@@ -109,8 +109,14 @@ const completeQuiz = async (req, res) => {
       ? getWeekKey(user.lastQuizCompletedAt)
       : null;
 
+      const streakAtRisk =
+      !user.lastQuizCompletedAt ||
+      getWeekKey(user.lastQuizCompletedAt) !== currentWeek;
+
+  /*
     const streakAtRisk =
       !lastWeek || lastWeek !== currentWeek;
+  */
 
     // 4. MONTHLY QUIZ COUNT
     const currentMonth = getMonthKey(now);
