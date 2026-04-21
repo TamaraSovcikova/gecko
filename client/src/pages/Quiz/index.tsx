@@ -29,6 +29,7 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  const { refreshGamification } = useGamification();
   const [completedCount, setCompletedCount] = useState(
     Number(localStorage.getItem("quizCount")) || 0,
   );
@@ -186,36 +187,73 @@ export default function QuizPage() {
             </button>
           ))}
           {showResult && (
-            <button
-              onClick={() => {
-                if (currentIndex + 1 >= questions.length) {
-                  setFinished(true);
-                  setCompletedCount((prev) => {
-                    const next = prev + 1;
-                    localStorage.setItem("quizCount", String(next));
-                    return next;
-                  });
-                  return;
-                }
-                setSelected(null);
-                setShowResult(false);
-                setCurrentIndex((prev) => prev + 1);
-              }}
-              style={{
-                marginTop: "20px",
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "none",
-                background: "lightblue",
-                color: "black",
-                fontSize: "16px",
-                cursor: "pointer",
-              }}
-            >
-              Next
-            </button>
-          )}
+          <button
+            onClick={() => {
+              console.log("CLICKED NEXT BUTTON"); //DEBUGGING
+
+              if (currentIndex + 1 >= questions.length) {
+                // sync backend gamification state
+                const submitResults = async () => {
+                  try {
+                    console.log("Submitting quiz results..."); //DEBUGGING
+
+                    const response = await fetch(`${API_URL}/api/v1/quiz/complete`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        score,
+                      }),
+                    });
+
+                    console.log("Quiz complete response status:", response.status); //DEBUGGING
+
+                    const data = await response.json().catch(() => null);
+                    console.log("Quiz complete response body:", data); //DEBUGGING
+
+                    console.log("Refreshing gamification state..."); //DEBUGGING
+                    await refreshGamification();
+                    console.log("Gamification refreshed"); //DEBUGGING
+
+                    console.log("Quiz marked as finished"); //DEBUGGING
+
+                    setCompletedCount((prev) => {
+                      const next = prev + 1;
+                      localStorage.setItem("quizCount", String(next));
+                      return next;
+                    });
+
+                    setFinished(true);
+                  } catch (err) {
+                    console.error("Failed to sync gamification:", err);
+                  }
+                };
+
+                submitResults();
+                return;
+              }
+
+              setSelected(null);
+              setShowResult(false);
+              setCurrentIndex((prev) => prev + 1);
+            }}
+            style={{
+              marginTop: "20px",
+              width: "100%",
+              padding: "12px",
+              borderRadius: "8px",
+              border: "none",
+              background: "lightblue",
+              color: "black",
+              fontSize: "16px",
+              cursor: "pointer",
+            }}
+          >
+            Next
+          </button>
+        )}
         </div>
       </div>
     </>
