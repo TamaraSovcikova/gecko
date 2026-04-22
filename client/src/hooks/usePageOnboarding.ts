@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { saveOnboardingCompletions } from "../api/onboardingApi";
-import { getStepByNumber, getStepsForRoute, ONBOARDING_PAGES, ONBOARDING_STEPS, OnboardingPageKey } from "../onboarding/content";
-import { getLocalCompletedOnboardingPages, markLocalOnboardingPageComplete, markLocalOnboardingPagesComplete } from "../utils/onboardingState";
+import { getStepsForRoute, ONBOARDING_STEPS, OnboardingPageKey } from "../onboarding/content";
+import { getLocalCompletedOnboardingPages, markLocalOnboardingPageComplete } from "../utils/onboardingState";
 
 type State = {
   isOpen: boolean;
@@ -45,7 +44,6 @@ const storeActiveStep = (stepNumber: number | null) => {
 };
 
 export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): State => {
-  const navigate = useNavigate();
   const { token, loading, profile, setProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [activeStepNumber, setActiveStepNumber] = useState<number>(1);
@@ -60,11 +58,19 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
     }
 
     const forcedStepNumber = readActiveStep();
-    if (forcedStepNumber !== null && getStepByNumber(forcedStepNumber)) {
+    const hasForcedStepOnCurrentPage =
+      forcedStepNumber !== null &&
+      routeSteps.some((step) => step.number === forcedStepNumber);
+
+    if (hasForcedStepOnCurrentPage && forcedStepNumber !== null) {
       setIsOpen(true);
       setActiveStepNumber(forcedStepNumber);
       persistActiveStepRef.current = true;
       return;
+    }
+
+    if (forcedStepNumber !== null) {
+      storeActiveStep(null);
     }
 
     const completedPages = token
@@ -92,15 +98,13 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
       return;
     }
 
-    const step = getStepByNumber(activeStepNumber);
+    const step = routeSteps.find((candidate) => candidate.number === activeStepNumber) || null;
     if (!step) {
       return;
     }
 
-    if (step.route === page) {
-      storeActiveStep(step.number);
-    }
-  }, [activeStepNumber, page]);
+    storeActiveStep(step.number);
+  }, [activeStepNumber, routeSteps]);
 
   const persistCompletionForPage = async () => {
     const localPages = markLocalOnboardingPageComplete(page);
@@ -111,21 +115,6 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
 
     try {
       const serverPages = await saveOnboardingCompletions(token, [page]);
-      return serverPages;
-    } catch {
-      return localPages;
-    }
-  };
-
-  const persistCompletionForAll = async () => {
-    const localPages = markLocalOnboardingPagesComplete(ONBOARDING_PAGES);
-
-    if (!token) {
-      return localPages;
-    }
-
-    try {
-      const serverPages = await saveOnboardingCompletions(token, ONBOARDING_PAGES);
       return serverPages;
     } catch {
       return localPages;
@@ -144,7 +133,7 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
   };
 
   const completeGuide = async () => {
-    const completedPages = await persistCompletionForAll();
+    const completedPages = await persistCompletionForPage();
     setProfile((previous) => ({
       ...(previous || {}),
       onboardingCompletedPages: completedPages,
@@ -155,37 +144,13 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
   };
 
   const goToStep = (stepNumber: number) => {
-    const step = getStepByNumber(stepNumber);
+    const step = routeSteps.find((candidate) => candidate.number === stepNumber) || null;
     if (!step) {
       return;
     }
 
     persistActiveStepRef.current = true;
     storeActiveStep(step.number);
-    if (step.route !== page) {
-      const localPages = markLocalOnboardingPageComplete(page);
-      setProfile((previous) => ({
-        ...(previous || {}),
-        onboardingCompletedPages: localPages,
-      }));
-
-      if (token) {
-        void saveOnboardingCompletions(token, [page])
-          .then((serverPages) => {
-            setProfile((previous) => ({
-              ...(previous || {}),
-              onboardingCompletedPages: serverPages,
-            }));
-          })
-          .catch(() => {
-            // Keep local completion state when server persistence fails.
-          });
-      }
-
-      navigate(step.route);
-      return;
-    }
-
     setIsOpen(true);
     setActiveStepNumber(step.number);
   };
@@ -194,7 +159,7 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
     isOpen,
     activeStepNumber,
     currentRoute: page,
-    steps: ONBOARDING_STEPS,
+    steps: routeSteps,
     closeGuide,
     completeGuide,
     goToStep,

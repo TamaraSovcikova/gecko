@@ -45,32 +45,23 @@ const authMiddleware = async (req, res, next) => {
       const fallbackName = String(decodedToken.name || normalizedEmail.split('@')[0] || 'User').trim() || 'User';
       const existingUser = await User.findById(normalizedUid).select('_id email displayName');
 
-      if (!existingUser) {
+      if (existingUser && existingUser.email !== normalizedEmail) { //removing automatic recreation
         await User.create({
           _id: normalizedUid,
           email: normalizedEmail,
           displayName: fallbackName,
         });
-      } else if (existingUser.email !== normalizedEmail || !existingUser.displayName) {
-        const nextDisplayName = String(existingUser.displayName || fallbackName).trim() || 'User';
-        const updateDoc = {
-          $set: {
-            email: normalizedEmail,
-            displayName: nextDisplayName,
-          },
-        };
-
-        if (existingUser.email !== normalizedEmail) {
-          updateDoc.$push = {
-            accountChangeLog: {
-              $each: [{ action: 'email_changed', changedAt: new Date() }],
-            },
-          };
-        }
-
+      } else if (existingUser.email !== normalizedEmail) {
         await User.updateOne(
           { _id: normalizedUid },
-          updateDoc
+          {
+            $set: { email: normalizedEmail },
+            $push: {
+              accountChangeLog: {
+                $each: [{ action: 'email_changed', changedAt: new Date() }],
+              },
+            },
+          }
         );
       }
     }

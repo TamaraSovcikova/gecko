@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import TooltipGuide from "../../components/TooltipGuide";
-import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 type Props = {
   categories?: { name: string; value: number }[];
@@ -10,7 +8,6 @@ type Props = {
 
 const Expenses = ({ categories }: Props) => {
   const { token } = useAuth();
-  const isStandalonePage = !categories;
 
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -24,15 +21,6 @@ const Expenses = ({ categories }: Props) => {
   const [availableCategories, setAvailableCategories] = useState<string[]>(
     categories?.map((item) => item.name) || [],
   );
-
-  const {
-    isOpen,
-    activeStepNumber,
-    steps,
-    closeGuide,
-    completeGuide,
-    goToStep,
-  } = usePageOnboarding("/expenses", isStandalonePage);
 
   // Sync categories from dashboard → form
   useEffect(() => {
@@ -201,15 +189,6 @@ const Expenses = ({ categories }: Props) => {
         {/* Submit */}
         <button className="btn btn-success w-100 mt-2">Save expense</button>
       </form>
-
-      <TooltipGuide
-        isOpen={isOpen}
-        activeStepNumber={activeStepNumber}
-        steps={steps}
-        onClose={closeGuide}
-        onComplete={completeGuide}
-        onGoToStep={goToStep}
-      />
     </div>
   );
 };
