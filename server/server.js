@@ -6,13 +6,14 @@
 //   4. Attach Socket.io to the HTTP server for real-time features
 //   5. Start listening on the configured port
 
-require('dotenv/config');
+require('dotenv').config();
 
 const http = require('http');
 const { Server } = require('socket.io');
 
 const connectDB = require('./src/config/db');
 const app = require('./src/app');
+const { startNewsletterScheduler } = require('./src/jobs/newsletterJob');
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -28,10 +29,21 @@ const io = new Server(server, {
   },
 });
 
+// Allowing the expense controller to emit events
+app.set('io', io);
+
 // Socket.io connection handler
 // Each new browser tab / device that connects gets a unique socket.id
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
+
+  // Triggering a join event when a user connects
+  socket.on('join', (userId) => {
+    // Placing the user in a room named after their userId
+    const roomId = userId.toString();
+    socket.join(roomId);
+    console.log(`User ${roomId} joined room`);
+  });
 
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
@@ -42,4 +54,5 @@ const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startNewsletterScheduler();
 });
