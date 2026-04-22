@@ -90,7 +90,7 @@ type DashboardData = {
     _id: string;
     category: string;
     amount: number;
-    day: number,
+    day: number;
     month: number;
     year: number;
     date: string;
@@ -102,17 +102,28 @@ type DashboardData = {
 // year, month select helper
 const monthName = (month: number) => {
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   return months[month - 1] || "Unknown";
 };
 
-
 const Dashboard = () => {
   // monthly snapshot popup states
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
-  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(null);
+  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(
+    null,
+  );
   // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
@@ -134,9 +145,9 @@ const Dashboard = () => {
     goToStep,
   } = usePageOnboarding("/dashboard");
 
-// const for monthly snapshot
-const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
-const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
+  // const for monthly snapshot
+  const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
+  const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
 
   //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
@@ -180,7 +191,7 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/snapshots/${currentUser.uid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         setSnapshots(res.data);
@@ -189,50 +200,53 @@ const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
       }
     };
 
-  fetchSnapshots();
-}, [token, loading, currentUser]);
+    fetchSnapshots();
+  }, [token, loading, currentUser]);
 
-const isSnapshotMode = snapshotIndex !== null;
+  const isSnapshotMode = snapshotIndex !== null;
 
-const selectedSnapshot =
-  snapshotIndex !== null ? snapshots[snapshotIndex] : null;
+  const selectedSnapshot =
+    snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
-// use state for 7 expenses per table page
-const [expensePage, setExpensePage] = useState(1);
-const EXPENSES_PER_PAGE = 7;
+  // use state for 7 expenses per table page
+  const [expensePage, setExpensePage] = useState(1);
+  const EXPENSES_PER_PAGE = 7;
 
-const displayedData: DashboardData | null = selectedSnapshot
-  ? {
-      healthScore: selectedSnapshot.healthScore,
-      takeHome: selectedSnapshot.takeHomePay,
-      totalBudget: selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0),
-      budgetLeft:
-        selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0) -
-        selectedSnapshot.totalExpenses,
-      budgetAllocation: selectedSnapshot.categories.map((c) => ({
-        name: c.name,
-        value: c.budget,
-      })),
-      actualSpending: selectedSnapshot.categories.map((c) => ({
-        name: c.name,
-        value: c.actual,
-      })),
-    }
-  : data;
+  const displayedData: DashboardData | null = selectedSnapshot
+    ? {
+        healthScore: selectedSnapshot.healthScore,
+        takeHome: selectedSnapshot.takeHomePay,
+        totalBudget: selectedSnapshot.categories.reduce(
+          (sum, c) => sum + c.budget,
+          0,
+        ),
+        budgetLeft:
+          selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0) -
+          selectedSnapshot.totalExpenses,
+        budgetAllocation: selectedSnapshot.categories.map((c) => ({
+          name: c.name,
+          value: c.budget,
+        })),
+        actualSpending: selectedSnapshot.categories.map((c) => ({
+          name: c.name,
+          value: c.actual,
+        })),
+      }
+    : data;
 
   // delete expense
   const deleteExpense = async (expenseId: string) => {
-  try {
-    await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      }
-    );
+      );
 
-    // socket connection updates automatically
+      // socket connection updates automatically
     } catch (error) {
       console.error(error);
     }
@@ -265,7 +279,7 @@ const displayedData: DashboardData | null = selectedSnapshot
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       console.log("Expense updated successfully:", res.data);
@@ -287,7 +301,7 @@ const displayedData: DashboardData | null = selectedSnapshot
                   month: new Date(editForm.date).getMonth() + 1,
                   year: new Date(editForm.date).getFullYear(),
                 }
-              : exp
+              : exp,
           ),
         };
       });
@@ -311,7 +325,6 @@ const displayedData: DashboardData | null = selectedSnapshot
     });
   };
 
-
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
     if (!currentUser || snapshots.length === 0) return;
@@ -325,7 +338,7 @@ const displayedData: DashboardData | null = selectedSnapshot
     const snapshotYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
     const latestSnapshot = snapshots.find(
-      (s) => s.month === snapshotMonth && s.year === snapshotYear
+      (s) => s.month === snapshotMonth && s.year === snapshotYear,
     );
 
     if (!latestSnapshot) return;
@@ -379,11 +392,11 @@ const displayedData: DashboardData | null = selectedSnapshot
   const expenseStartIndex = (expensePage - 1) * EXPENSES_PER_PAGE;
   const expenseEndIndex = expenseStartIndex + EXPENSES_PER_PAGE;
 
-  const pagedExpenses = displayedData?.expenses?.slice(expenseStartIndex, expenseEndIndex) || [];
+  const pagedExpenses =
+    displayedData?.expenses?.slice(expenseStartIndex, expenseEndIndex) || [];
 
   if (error) return <div>{error}</div>;
   if (!displayedData) return <div>Loading...</div>;
-
 
   return (
     <>
@@ -395,590 +408,698 @@ const displayedData: DashboardData | null = selectedSnapshot
           fontFamily: "Arial, sans-serif",
         }}
       >
-
-      {isSnapshotMode && selectedSnapshot && (
-      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
-        <h3>
-          Snapshot of {snapshots[snapshotIndex].month}/{snapshots[snapshotIndex].year}
-        </h3>
-      </div>
-      )}
-
-      <div style={{ marginBottom: "20px" }} data-onboarding="dashboard-takehome">
-        <h3>
-          Take-home: £{displayedData.takeHome.toFixed(2)} | Budget: £{displayedData.totalBudget.toFixed(2)}
-        </h3>
-      </div>
-
-      <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
-        <div data-onboarding="dashboard-allocation">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
-            <h4 style={{ margin: 0 }}>Budget Allocation</h4>
-            {/*disable if snapshot mode*/}
-            {!isSnapshotMode && (
-              <button
-                type="button"
-                onClick={() => navigate("/payslip?mode=edit")}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "999px",
-                  border: "1px solid #bfd1c0",
-                  backgroundColor: "#eef5eb",
-                  color: "#37553e",
-                  fontWeight: 600,
-                }}
-              >
-                Edit Payslip/Budget
-              </button>
-          )}
-            {/*disable if snapshot mode*/}
-          </div>
-          <PieChart width={300} height={220}>
-            <Pie
-              data={displayedData.budgetAllocation || []} //fallback to empty array prevents runtime
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-            >
-              {/* different colours for each slice*/}
-              {(displayedData.budgetAllocation || []).map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
-              ))}
-            </Pie>
-            {/*tooltips and labels allow cool breakdowns when hovering*/}
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
-
-        <div data-onboarding="dashboard-actual-spending">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "12px" }}>
-            <h4 style={{ margin: 0 }}>Actual Spending</h4>
-            {/*disable if snapshot mode*/}
-            {!isSnapshotMode && (
-              <button
-                type="button"
-                onClick={() => navigate("/expenses")}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "999px",
-                  border: "1px solid #bfd1c0",
-                  backgroundColor: "#eef5eb",
-                  color: "#37553e",
-                  fontWeight: 600,
-                }}
-              >
-                Edit Expenses
-              </button>
-            )}
-            {/*disable if snapshot mode*/}
-          </div>
-          <PieChart width={300} height={220}>
-            <Pie
-              data={displayedData.actualSpending || []}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-            >
-              {(displayedData.actualSpending || []).map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
-
-        {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
-        {showExpenses && (
-          <div style={{ flex: 1, borderLeft: "1px solid #ccc", paddingLeft: "20px" }} data-onboarding="dashboard-embedded-expenses">
-            <Expenses categories={displayedData.budgetAllocation} />
+        {isSnapshotMode && selectedSnapshot && (
+          <div
+            style={{ marginBottom: "20px" }}
+            data-onboarding="dashboard-takehome"
+          >
+            <h3>
+              Snapshot of {snapshots[snapshotIndex].month}/
+              {snapshots[snapshotIndex].year}
+            </h3>
           </div>
         )}
-      </div>
 
-      <div style={{ display: "flex", gap: "60px" }}>
-        <div data-onboarding="dashboard-health-score">
-          <p
-            style={{
-              margin: 0,
-              fontSize: "28px",
-              fontWeight: "bold",
-              color:
-                displayedData.healthScore < 40
-                  ? "red"
-                  : displayedData.healthScore < 70
-                    ? "orange"
-                    : "green",
-            }}
-          >
-            {displayedData.healthScore}
-          </p>
+        <div
+          style={{ marginBottom: "20px" }}
+          data-onboarding="dashboard-takehome"
+        >
+          <h3>
+            Take-home: £{displayedData.takeHome.toFixed(2)} | Budget: £
+            {displayedData.totalBudget.toFixed(2)}
+          </h3>
+        </div>
 
-        {/*breakdown button test*/}
+        <div style={{ display: "flex", gap: "40px", marginBottom: "40px" }}>
+          <div data-onboarding="dashboard-allocation">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+                gap: "12px",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Budget Allocation</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/payslip?mode=edit")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Payslip/Budget
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
+            </div>
+            <PieChart width={300} height={220}>
+              <Pie
+                data={displayedData.budgetAllocation || []} //fallback to empty array prevents runtime
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+              >
+                {/* different colours for each slice*/}
+                {(displayedData.budgetAllocation || []).map((_, index) => (
+                  <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                ))}
+              </Pie>
+              {/*tooltips and labels allow cool breakdowns when hovering*/}
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+
+          <div data-onboarding="dashboard-actual-spending">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+                gap: "12px",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Actual Spending</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/expenses")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Expenses
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
+            </div>
+            <PieChart width={300} height={220}>
+              <Pie
+                data={displayedData.actualSpending || []}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+              >
+                {(displayedData.actualSpending || []).map((_, index) => (
+                  <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+
+          {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
+          {showExpenses && (
+            <div
+              style={{
+                flex: 1,
+                borderLeft: "1px solid #ccc",
+                paddingLeft: "20px",
+              }}
+              data-onboarding="dashboard-embedded-expenses"
+            >
+              <Expenses categories={displayedData.budgetAllocation} />
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "60px" }}>
+          <div data-onboarding="dashboard-health-score">
+            <p
+              style={{
+                margin: 0,
+                fontSize: "28px",
+                fontWeight: "bold",
+                color:
+                  displayedData.healthScore < 40
+                    ? "red"
+                    : displayedData.healthScore < 70
+                      ? "orange"
+                      : "green",
+              }}
+            >
+              {displayedData.healthScore}
+            </p>
+
+            {/*breakdown button test*/}
+            {!isSnapshotMode && (
+              <button
+                type="button"
+                onClick={() => setShowBreakdown(true)}
+                data-onboarding="dashboard-health-breakdown-trigger"
+                style={{
+                  marginTop: "8px",
+                  border: "none",
+                  background: "none",
+                  color: "#2f6a4b",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
+                  fontWeight: 600,
+                }}
+              >
+                See breakdown
+              </button>
+            )}
+          </div>
+          {/*breakdown button test*/}
+
+          <div>
+            <h4>Take Home</h4>
+            <p style={{ fontSize: "20px" }}>
+              £{displayedData.takeHome.toFixed(2)}
+            </p>
+          </div>
+
+          <div>
+            <h4>Budget Left</h4>
+            <p style={{ fontSize: "20px" }}>
+              £{displayedData.budgetLeft.toFixed(2)}
+            </p>
+          </div>
+
+          <div data-onboarding="dashboard-budget-vs-actual">
+            <h4>Budget vs Actual</h4>
+            {displayedData.budgetLeft >= 0 ? (
+              <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
+            ) : (
+              <p>
+                {/* tabs ensures displayed number is positive when showing overbudget*/}
+                Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
+              </p>
+            )}
+          </div>
+
+          {displayedData.averageSalary && (
+            <div>
+              <h4>Market Salary</h4>
+              <p style={{ fontSize: "20px" }}>
+                £{displayedData.averageSalary.toLocaleString()}
+              </p>
+              <p style={{ fontSize: "12px", color: "#666" }}>
+                Average for your role
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* expense breakdown button */}
         {!isSnapshotMode && (
           <button
             type="button"
-            onClick={() => setShowBreakdown(true)}
+            onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
             data-onboarding="dashboard-health-breakdown-trigger"
             style={{
-              marginTop: "8px",
-              border: "none",
-              background: "none",
-              color: "#2f6a4b",
-              textDecoration: "underline",
-              cursor: "pointer",
-              padding: 0,
+              padding: "8px 12px",
+              borderRadius: "999px",
+              border: "1px solid #bfd1c0",
+              backgroundColor: "#eef5eb",
+              color: "#37553e",
               fontWeight: 600,
             }}
           >
-            See breakdown
+            {showExpenseBreakdown
+              ? "Hide expense breakdown"
+              : "See expense breakdown"}
           </button>
         )}
-        </div>
-        {/*breakdown button test*/}
 
-        <div>
-          <h4>Take Home</h4>
-          <p style={{ fontSize: "20px" }}>£{displayedData.takeHome.toFixed(2)}</p>
-        </div>
+        {/* expense table but make it live */}
+        {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
+          <div style={{ marginTop: "30px" }}>
+            <h4>Expense Breakdown</h4>
 
-        <div>
-          <h4>Budget Left</h4>
-          <p style={{ fontSize: "20px" }}>£{displayedData.budgetLeft.toFixed(2)}</p>
-        </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #ccc" }}>
+                  <th style={{ textAlign: "left", padding: "8px" }}>
+                    Category
+                  </th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>
+                    dd/mm/yyyy
+                  </th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
+                </tr>
+              </thead>
 
-        <div data-onboarding="dashboard-budget-vs-actual">
-          <h4>Budget vs Actual</h4>
-          {displayedData.budgetLeft >= 0 ? (
-            <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
-          ) : (
-            <p>
-              {/* tabs ensures displayed number is positive when showing overbudget*/}
-              Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
-            </p>
-          )}
-        </div>
+              <tbody>
+                {pagedExpenses.map((exp, idx) => {
+                  const isEditing = editingExpenseId === exp._id;
 
-        {displayedData.averageSalary && (
-          <div>
-            <h4>Market Salary</h4>
-            <p style={{ fontSize: "20px" }}>£{displayedData.averageSalary.toLocaleString()}</p>
-            <p style={{ fontSize: "12px", color: "#666" }}>Average for your role</p>
-          </div>
-        )}
-      </div>
+                  return (
+                    <tr
+                      key={exp._id || idx}
+                      style={{ borderBottom: "1px solid #eee" }}
+                    >
+                      {/* CATEGORY */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <select
+                            value={editForm.category}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                category: e.target.value,
+                              }))
+                            }
+                            style={{
+                              padding: "6px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              width: "100%",
+                            }}
+                          >
+                            {(displayedData.budgetAllocation || []).map(
+                              (cat) => (
+                                <option key={cat.name} value={cat.name}>
+                                  {cat.name}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        ) : (
+                          exp.category
+                        )}
+                      </td>
 
-      {/* expense breakdown button */}
-      {!isSnapshotMode && (
-        <button
-            type="button"
-            onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
-            data-onboarding="dashboard-health-breakdown-trigger"
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "999px",
-                  border: "1px solid #bfd1c0",
-                  backgroundColor: "#eef5eb",
-                  color: "#37553e",
-                  fontWeight: 600,
-                }}
-          >
-            {showExpenseBreakdown ? "Hide expense breakdown" : "See expense breakdown"}
-        </button>
-      )}
+                      {/* VALUE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            value={editForm.amount}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                amount: Number(e.target.value),
+                              }))
+                            }
+                          />
+                        ) : (
+                          `£${exp.amount.toFixed(2)}`
+                        )}
+                      </td>
 
-      {/* expense table but make it live */}
-      {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
-        <div style={{ marginTop: "30px" }}>
-          <h4>Expense Breakdown</h4>
+                      {/* DATE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            type="date"
+                            value={editForm.date}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                date: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          new Date(exp.date).toLocaleDateString("en-GB")
+                        )}
+                      </td>
 
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #ccc" }}>
-                <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>dd/mm/yyyy</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
-              </tr>
-            </thead>
+                      {/* NOTE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            value={editForm.note}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                note: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          exp.note || "-"
+                        )}
+                      </td>
 
-            <tbody>
-              {pagedExpenses.map((exp, idx) => {
-                const isEditing = editingExpenseId === exp._id;
+                      {/* EDIT / SAVE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={() => updateExpense(exp._id)}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Save
+                            </button>
 
-                return (
-                  <tr key={exp._id || idx} style={{ borderBottom: "1px solid #eee" }}>
-                    {/* CATEGORY */}
-                    <td style={{ padding: "8px" }}>
-                      {isEditing ? (
-                        <select
-                          value={editForm.category}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              category: e.target.value,
-                            }))
-                          }
-                          style={{
-                            padding: "6px",
-                            borderRadius: "6px",
-                            border: "1px solid #ccc",
-                            width: "100%",
-                          }}
-                        >
-                          {(displayedData.budgetAllocation || []).map((cat) => (
-                            <option key={cat.name} value={cat.name}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        exp.category
-                      )}
-                    </td>
-
-                    {/* VALUE */}
-                    <td style={{ padding: "8px" }}>
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={editForm.amount}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              amount: Number(e.target.value),
-                            }))
-                          }
-                        />
-                      ) : (
-                        `£${exp.amount.toFixed(2)}`
-                      )}
-                    </td>
-
-                    {/* DATE */}
-                    <td style={{ padding: "8px" }}>
-                      {isEditing ? (
-                        <input
-                          type="date"
-                          value={editForm.date}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({ ...prev, date: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        new Date(exp.date).toLocaleDateString("en-GB")
-                      )}
-                    </td>
-
-                    {/* NOTE */}
-                    <td style={{ padding: "8px" }}>
-                      {isEditing ? (
-                        <input
-                          value={editForm.note}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({ ...prev, note: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        exp.note || "-"
-                      )}
-                    </td>
-
-                    {/* EDIT / SAVE */}
-                    <td style={{ padding: "8px" }}>
-                    {isEditing ? (
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <button
-                          onClick={() => updateExpense(exp._id)}
-                          style={{
-                            padding: "4px 10px",
-                            borderRadius: "6px",
-                            border: "1px solid #ccc",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Save
-                        </button>
-
-                        <button
-                          onClick={cancelEditing}
-                          style={{
-                            padding: "4px 10px",
-                            borderRadius: "6px",
-                            border: "1px solid #ccc",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setEditingExpenseId(exp._id);
-                          setPendingDeleteId(null);
-                          setEditForm({
-                            category: exp.category,
-                            amount: exp.amount,
-                            date: exp.date,
-                            note: exp.note || "",
-                          });
-                        }}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid #ccc",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </td>
-
-                    {/* DELETE */}
-                    <td style={{ padding: "8px" }}>
-                      {pendingDeleteId === exp._id ? (
-                        <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={cancelEditing}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             onClick={() => {
-                              deleteExpense(exp._id);
+                              setEditingExpenseId(exp._id);
                               setPendingDeleteId(null);
+                              setEditForm({
+                                category: exp.category,
+                                amount: exp.amount,
+                                date: exp.date,
+                                note: exp.note || "",
+                              });
                             }}
                             style={{
                               padding: "4px 10px",
                               borderRadius: "6px",
                               border: "1px solid #ccc",
                               cursor: "pointer",
-                              backgroundColor: "#dc3545",
-                              color: "white",
                             }}
                           >
-                            Confirm
+                            Edit
                           </button>
+                        )}
+                      </td>
+
+                      {/* DELETE */}
+                      <td style={{ padding: "8px" }}>
+                        {pendingDeleteId === exp._id ? (
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={() => {
+                                deleteExpense(exp._id);
+                                setPendingDeleteId(null);
+                              }}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                              }}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setPendingDeleteId(null)}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => setPendingDeleteId(null)}
+                            onClick={() => setPendingDeleteId(exp._id)}
                             style={{
                               padding: "4px 10px",
                               borderRadius: "6px",
                               border: "1px solid #ccc",
                               cursor: "pointer",
+                              color: "red",
                             }}
                           >
-                            Cancel
+                            Delete
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setPendingDeleteId(exp._id)}
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* expense breakdown table nav buttons */}
+        {showExpenseBreakdown && totalExpensePages > 1 && (
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <button
+              onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
+              disabled={expensePage === 1}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ◀
+            </button>
+
+            <span style={{ fontSize: "13px", fontWeight: 600 }}>
+              Page {expensePage}/{totalExpensePages}
+            </span>
+
+            <button
+              onClick={() =>
+                setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))
+              }
+              disabled={expensePage === totalExpensePages}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ▶
+            </button>
+          </div>
+        )}
+
+        {/* summary */}
+        {isSnapshotMode && selectedSnapshot && (
+          <div style={{ marginBottom: "30px" }}>
+            <p>
+              <b>XP Earned:</b> {selectedSnapshot.xpEarned}
+            </p>
+            <p>
+              <b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}
+            </p>
+          </div>
+        )}
+
+        {/* budget adherence table */}
+        {isSnapshotMode && selectedSnapshot && (
+          <div>
+            <div style={{ marginTop: "20px" }}>
+              <h4>Budget Adherence</h4>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #ccc" }}>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Category
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Budget
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Actual
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Difference
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedSnapshot.categories.map((cat, idx) => {
+                    const diff = cat.budget - cat.actual;
+                    return (
+                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: "8px" }}>{cat.name}</td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.budget.toFixed(2)}
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.actual.toFixed(2)}
+                        </td>
+                        <td
                           style={{
-                            padding: "4px 10px",
-                            borderRadius: "6px",
-                            border: "1px solid #ccc",
-                            cursor: "pointer",
-                            color: "red",
+                            padding: "8px",
+                            color: diff >= 0 ? "green" : "red",
                           }}
                         >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                          {diff >= 0
+                            ? `+£${diff.toFixed(2)}`
+                            : `-£${Math.abs(diff).toFixed(2)}`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-      {/* expense breakdown table nav buttons */}
-      {showExpenseBreakdown && totalExpensePages > 1 && (
-        <div
-          style={{
-            marginTop: "12px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <button
-            onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
-            disabled={expensePage === 1}
+            <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
+              Snapshot created:{" "}
+              {new Date(selectedSnapshot.createdAt).toLocaleString()}
+            </p>
+          </div>
+        )}
+
+        {snapshots.length > 0 && (
+          <div
             style={{
-              padding: "4px 10px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              cursor: "pointer",
+              marginTop: "60px",
+              paddingTop: "20px",
+              borderTop: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "16px",
             }}
           >
-            ◀
-          </button>
-
-          <span style={{ fontSize: "13px", fontWeight: 600 }}>
-            Page {expensePage}/{totalExpensePages}
-          </span>
-
-          <button
-            onClick={() => setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))}
-            disabled={expensePage === totalExpensePages}
-            style={{
-              padding: "4px 10px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              cursor: "pointer",
-            }}
-          >
-            ▶
-          </button>
-        </div>
-      )}
-
-      {/* summary */}
-      {isSnapshotMode && selectedSnapshot && (
-        <div style={{ marginBottom: "30px" }}>
-          <p><b>XP Earned:</b> {selectedSnapshot.xpEarned}</p>
-          <p><b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}</p>
-        </div>
-      )}
-
-      {/* budget adherence table */}
-      {isSnapshotMode && selectedSnapshot && (
-  <div>
-    <div style={{ marginTop: "20px" }}>
-      <h4>Budget Adherence</h4>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid #ccc" }}>
-            <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedSnapshot.categories.map((cat, idx) => {
-            const diff = cat.budget - cat.actual;
-            return (
-              <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "8px" }}>{cat.name}</td>
-                <td style={{ padding: "8px" }}>£{cat.budget.toFixed(2)}</td>
-                <td style={{ padding: "8px" }}>£{cat.actual.toFixed(2)}</td>
-                <td style={{ padding: "8px", color: diff >= 0 ? "green" : "red" }}>
-                  {diff >= 0 ? `+£${diff.toFixed(2)}` : `-£${Math.abs(diff).toFixed(2)}`}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-
-    <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-      Snapshot created: {new Date(selectedSnapshot.createdAt).toLocaleString()}
-    </p>
-  </div>
-)}
-
-      {snapshots.length > 0 && (
-        <div
-          style={{
-            marginTop: "60px",
-            paddingTop: "20px",
-            borderTop: "1px solid #ddd",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "16px",
-          }}
-        >
-          <button
-            onClick={() => {
-              if (snapshotIndex === null) {
-                setSnapshotIndex(0);
-              } else if (snapshotIndex < snapshots.length - 1) {
-                setSnapshotIndex(snapshotIndex + 1);
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) {
+                  setSnapshotIndex(0);
+                } else if (snapshotIndex < snapshots.length - 1) {
+                  setSnapshotIndex(snapshotIndex + 1);
+                }
+              }}
+              disabled={
+                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
               }
-            }}
-            disabled={snapshotIndex !== null && snapshotIndex >= snapshots.length - 1}
-          >
-            ◀ Older
-          </button>
+            >
+              ◀ Older
+            </button>
 
+            <div style={{ fontWeight: 600 }}>
+              {snapshotIndex === null
+                ? "Live (Current Month)"
+                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            </div>
+
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) return;
+                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
+                else setSnapshotIndex(null); // go back to live
+              }}
+            >
+              Newer ▶
+            </button>
+          </div>
+        )}
+
+        {/* Calendar dropdown */}
+        {/* Only shows months with valid snapshots */}
+        <SnapshotMonthDropdown
+          snapshots={snapshots}
+          snapshotIndex={snapshotIndex}
+          setSnapshotIndex={setSnapshotIndex}
+        />
+
+        {/* If no snapshot yet */}
+        {snapshots.length == 0 && (
           <div style={{ fontWeight: 600 }}>
-            {snapshotIndex === null
-              ? "Live (Current Month)"
-              : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            You don't have any snapshots yet
           </div>
+        )}
 
-          <button
-            onClick={() => {
-              if (snapshotIndex === null) return;
-              if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-              else setSnapshotIndex(null); // go back to live
+        {/* Adzuna Tips Section */}
+        {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
+          <div
+            style={{
+              marginTop: "50px",
+              borderTop: "2px solid #ddd",
+              paddingTop: "30px",
             }}
+            data-onboarding="dashboard-adzuna-tips"
           >
-            Newer ▶
-          </button>
-        </div>
-      )}
-
-      {/* Calendar dropdown */}
-      {/* Only shows months with valid snapshots */}
-      <SnapshotMonthDropdown
-        snapshots={snapshots}
-        snapshotIndex={snapshotIndex}
-        setSnapshotIndex={setSnapshotIndex}
-      />
-
-      {/* If no snapshot yet */}
-      {snapshots.length == 0 && (
-          <div style={{ fontWeight: 600 }}>
-              You don't have any snapshots yet
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>
+              💡 Financial Tips Based on Market Data
+            </h3>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            >
+              {displayedData.adzunaTips.map((tip, index) => (
+                <div
+                  key={`tip-${index}`}
+                  style={{
+                    padding: "16px",
+                    backgroundColor: getTipColor(tip.priority),
+                    borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
+                    borderRadius: "4px",
+                    transition: "transform 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateX(4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateX(0)";
+                  }}
+                >
+                  <h5
+                    style={{
+                      margin: "0 0 8px 0",
+                      color: "#333",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {tip.title}
+                  </h5>
+                  <p
+                    style={{
+                      margin: "0",
+                      color: "#555",
+                      fontSize: "14px",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    {tip.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-      )}
-
-      {/* Adzuna Tips Section */}
-      {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
-        <div style={{ marginTop: "50px", borderTop: "2px solid #ddd", paddingTop: "30px" }} data-onboarding="dashboard-adzuna-tips">
-          <h3 style={{ marginBottom: "20px", color: "#333" }}>💡 Financial Tips Based on Market Data</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-            {displayedData.adzunaTips.map((tip, index) => (
-              <div
-                key={`tip-${index}`}
-                style={{
-                  padding: "16px",
-                  backgroundColor: getTipColor(tip.priority),
-                  borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
-                  borderRadius: "4px",
-                  transition: "transform 0.2s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateX(4px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateX(0)";
-                }}
-              >
-                <h5 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "16px", fontWeight: "600" }}>
-                  {tip.title}
-                </h5>
-                <p style={{ margin: "0", color: "#555", fontSize: "14px", lineHeight: "1.5" }}>
-                  {tip.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
       </div>
       <TooltipGuide
         isOpen={isOnboardingOpen}
@@ -1000,12 +1121,11 @@ const displayedData: DashboardData | null = selectedSnapshot
 
       {showSnapshotPopup && popupSnapshot && (
         <MonthlySnapshotPopup
-        snapshot={popupSnapshot}
-        onClose={() => setShowSnapshotPopup(false)}
+          snapshot={popupSnapshot}
+          onClose={() => setShowSnapshotPopup(false)}
         />
       )}
     </>
-  
   );
 };
 
