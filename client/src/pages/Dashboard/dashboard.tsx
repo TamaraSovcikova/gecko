@@ -92,6 +92,17 @@ type DashboardData = {
   // xpEarned: number;
   // quizzesCompleted: number;
   // createdAt: string;
+  expenses?: {
+    _id: string;
+    category: string;
+    amount: number;
+    day: number;
+    month: number;
+    year: number;
+    date: string;
+    note?: string;
+    createdAt: string;
+  }[];
 };
 
 // year, month select helper
@@ -129,6 +140,8 @@ const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  // expense breakdown toggle
+  const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
   const showExpenses = true;
   const {
     isOpen: isOnboardingOpen,
@@ -202,6 +215,10 @@ const Dashboard = () => {
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
+  // use state for 7 expenses per table page
+  const [expensePage, setExpensePage] = useState(1);
+  const EXPENSES_PER_PAGE = 7;
+
   const displayedData: DashboardData | null = selectedSnapshot
     ? {
         healthScore: selectedSnapshot.healthScore,
@@ -223,6 +240,97 @@ const Dashboard = () => {
         })),
       }
     : data;
+
+  // delete expense
+  const deleteExpense = async (expenseId: string) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // socket connection updates automatically
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // expense edit button
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  const [editForm, setEditForm] = useState({
+    category: "",
+    amount: 0,
+    date: "",
+    note: "",
+  });
+
+  // pending delete state
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const updateExpense = async (expenseId: string) => {
+    try {
+      console.log("Updating expense:", expenseId, editForm);
+
+      const res = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        {
+          category: editForm.category,
+          amount: editForm.amount,
+          date: editForm.date,
+          note: editForm.note,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      console.log("Expense updated successfully:", res.data);
+
+      // update frontend immediately (without waiting for socket)
+      setData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          expenses: prev.expenses?.map((exp) =>
+            exp._id === expenseId
+              ? {
+                  ...exp,
+                  category: editForm.category,
+                  amount: editForm.amount,
+                  date: editForm.date,
+                  note: editForm.note,
+                  month: new Date(editForm.date).getMonth() + 1,
+                  year: new Date(editForm.date).getFullYear(),
+                }
+              : exp,
+          ),
+        };
+      });
+
+      setEditingExpenseId(null);
+      setPendingDeleteId(null);
+    } catch (err) {
+      console.error("Failed to update expense:", err);
+    }
+  };
+
+  // cancel expense edit
+  const cancelEditing = () => {
+    setEditingExpenseId(null);
+    setPendingDeleteId(null);
+    setEditForm({
+      category: "",
+      amount: 0,
+      date: "",
+      note: "",
+    });
+  };
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
@@ -277,6 +385,22 @@ const Dashboard = () => {
         return "#6c757d"; // gray
     }
   };
+
+  // DEBUGGING
+  console.log("expenses:", displayedData?.expenses);
+  console.log("showExpenseBreakdown:", showExpenseBreakdown);
+  console.log("isSnapshotMode:", isSnapshotMode);
+
+  // calculate number of expenses
+  // 7 expenses (rows) per expense breakdown table page
+  const totalExpenses = displayedData?.expenses?.length || 0;
+  const totalExpensePages = Math.ceil(totalExpenses / EXPENSES_PER_PAGE);
+
+  const expenseStartIndex = (expensePage - 1) * EXPENSES_PER_PAGE;
+  const expenseEndIndex = expenseStartIndex + EXPENSES_PER_PAGE;
+
+  const pagedExpenses =
+    displayedData?.expenses?.slice(expenseStartIndex, expenseEndIndex) || [];
 
   if (error) return <div>{error}</div>;
   if (!displayedData) return <div>Loading...</div>;
@@ -461,6 +585,7 @@ const Dashboard = () => {
             >
               {displayedData.healthScore}
             </p>
+
             {/*breakdown button test*/}
             {!isSnapshotMode && (
               <button
@@ -504,7 +629,7 @@ const Dashboard = () => {
               <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
             ) : (
               <p>
-                {/*abs ensures displayed number is positive when showing overbudget*/}
+                {/* tabs ensures displayed number is positive when showing overbudget*/}
                 Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
               </p>
             )}
@@ -523,63 +648,290 @@ const Dashboard = () => {
           )}
         </div>
 
-        {snapshots.length > 0 && (
-          <div
+        {/* expense breakdown button */}
+        {!isSnapshotMode && (
+          <button
+            type="button"
+            onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
+            data-onboarding="dashboard-health-breakdown-trigger"
             style={{
-              marginTop: "60px",
-              paddingTop: "20px",
-              borderTop: "1px solid #ddd",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "16px",
+              padding: "8px 12px",
+              borderRadius: "999px",
+              border: "1px solid #bfd1c0",
+              backgroundColor: "#eef5eb",
+              color: "#37553e",
+              fontWeight: 600,
             }}
           >
-            <button
-              onClick={() => {
-                if (snapshotIndex === null) {
-                  setSnapshotIndex(0);
-                } else if (snapshotIndex < snapshots.length - 1) {
-                  setSnapshotIndex(snapshotIndex + 1);
-                }
-              }}
-              disabled={
-                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
-              }
-            >
-              ◀ Older
-            </button>
+            {showExpenseBreakdown
+              ? "Hide expense breakdown"
+              : "See expense breakdown"}
+          </button>
+        )}
 
-            <div style={{ fontWeight: 600 }}>
-              {snapshotIndex === null
-                ? "Live (Current Month)"
-                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
-            </div>
+        {/* expense table but make it live */}
+        {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
+          <div style={{ marginTop: "30px" }}>
+            <h4>Expense Breakdown</h4>
 
-            <button
-              onClick={() => {
-                if (snapshotIndex === null) return;
-                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-                else setSnapshotIndex(null); // go back to live
-              }}
-            >
-              Newer ▶
-            </button>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #ccc" }}>
+                  <th style={{ textAlign: "left", padding: "8px" }}>
+                    Category
+                  </th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>
+                    dd/mm/yyyy
+                  </th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
+                  <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {pagedExpenses.map((exp, idx) => {
+                  const isEditing = editingExpenseId === exp._id;
+
+                  return (
+                    <tr
+                      key={exp._id || idx}
+                      style={{ borderBottom: "1px solid #eee" }}
+                    >
+                      {/* CATEGORY */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <select
+                            value={editForm.category}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                category: e.target.value,
+                              }))
+                            }
+                            style={{
+                              padding: "6px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              width: "100%",
+                            }}
+                          >
+                            {(displayedData.budgetAllocation || []).map(
+                              (cat) => (
+                                <option key={cat.name} value={cat.name}>
+                                  {cat.name}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        ) : (
+                          exp.category
+                        )}
+                      </td>
+
+                      {/* VALUE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            value={editForm.amount}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                amount: Number(e.target.value),
+                              }))
+                            }
+                          />
+                        ) : (
+                          `£${exp.amount.toFixed(2)}`
+                        )}
+                      </td>
+
+                      {/* DATE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            type="date"
+                            value={editForm.date}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                date: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          new Date(exp.date).toLocaleDateString("en-GB")
+                        )}
+                      </td>
+
+                      {/* NOTE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <input
+                            value={editForm.note}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                note: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          exp.note || "-"
+                        )}
+                      </td>
+
+                      {/* EDIT / SAVE */}
+                      <td style={{ padding: "8px" }}>
+                        {isEditing ? (
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={() => updateExpense(exp._id)}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Save
+                            </button>
+
+                            <button
+                              onClick={cancelEditing}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingExpenseId(exp._id);
+                              setPendingDeleteId(null);
+                              setEditForm({
+                                category: exp.category,
+                                amount: exp.amount,
+                                date: exp.date,
+                                note: exp.note || "",
+                              });
+                            }}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </td>
+
+                      {/* DELETE */}
+                      <td style={{ padding: "8px" }}>
+                        {pendingDeleteId === exp._id ? (
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={() => {
+                                deleteExpense(exp._id);
+                                setPendingDeleteId(null);
+                              }}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                              }}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setPendingDeleteId(null)}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                border: "1px solid #ccc",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setPendingDeleteId(exp._id)}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              cursor: "pointer",
+                              color: "red",
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
-        {/* Calendar dropdown */}
-        {/* Only shows months with valid snapshots */}
-        <SnapshotMonthDropdown
-          snapshots={snapshots}
-          snapshotIndex={snapshotIndex}
-          setSnapshotIndex={setSnapshotIndex}
-        />
+        {/* expense breakdown table nav buttons */}
+        {showExpenseBreakdown && totalExpensePages > 1 && (
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <button
+              onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
+              disabled={expensePage === 1}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ◀
+            </button>
 
-        {/* If no snapshot yet */}
-        {snapshots.length == 0 && (
-          <div style={{ fontWeight: 600 }}>
-            You don't have any snapshots yet
+            <span style={{ fontSize: "13px", fontWeight: 600 }}>
+              Page {expensePage}/{totalExpensePages}
+            </span>
+
+            <button
+              onClick={() =>
+                setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))
+              }
+              disabled={expensePage === totalExpensePages}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ▶
+            </button>
           </div>
         )}
 
@@ -650,6 +1002,66 @@ const Dashboard = () => {
               Snapshot created:{" "}
               {new Date(selectedSnapshot.createdAt).toLocaleString()}
             </p>
+          </div>
+        )}
+
+        {snapshots.length > 0 && (
+          <div
+            style={{
+              marginTop: "60px",
+              paddingTop: "20px",
+              borderTop: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) {
+                  setSnapshotIndex(0);
+                } else if (snapshotIndex < snapshots.length - 1) {
+                  setSnapshotIndex(snapshotIndex + 1);
+                }
+              }}
+              disabled={
+                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
+              }
+            >
+              ◀ Older
+            </button>
+
+            <div style={{ fontWeight: 600 }}>
+              {snapshotIndex === null
+                ? "Live (Current Month)"
+                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            </div>
+
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) return;
+                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
+                else setSnapshotIndex(null); // go back to live
+              }}
+            >
+              Newer ▶
+            </button>
+          </div>
+        )}
+
+        {/* Calendar dropdown */}
+        {/* Only shows months with valid snapshots */}
+        <SnapshotMonthDropdown
+          snapshots={snapshots}
+          snapshotIndex={snapshotIndex}
+          setSnapshotIndex={setSnapshotIndex}
+        />
+
+        {/* If no snapshot yet */}
+        {snapshots.length == 0 && (
+          <div style={{ fontWeight: 600 }}>
+            You don't have any snapshots yet
           </div>
         )}
 

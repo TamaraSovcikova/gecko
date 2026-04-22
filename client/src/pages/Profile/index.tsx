@@ -82,7 +82,7 @@ const Profile = () => {
   const handleDeleteProfile = async () => {
     if (
       window.confirm(
-        "Are you sure you want to delete your profile? This cannot be undone."
+        "Deleting your account is irreversible. This will permanently remove your profile and associated data, including monthly snapshots and newsletter subscriptions "
       )
     ) {
       setDeleting(true);

@@ -5,6 +5,8 @@ const Expense = require("../models/Expense");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const PDFDocument = require("pdfkit");
 const admin = require("../config/firebase");
+const MonthlySnapshot = require("../models/MonthlySnapshot");
+const NewsletterSnapshot = require("../models/NewsletterSnapshot");
 const { searchJobTitles, searchLocations } = require("../services/adzunaCalculator");
 const {
   hashToken,
@@ -47,13 +49,7 @@ const getUserProfile = async (req, res) => {
     let user = await User.findById(userId);
 
     // Some Google-auth users may exist in Firebase before a Mongo user is created.
-    if (!user) {
-      user = await User.create({
-        _id: userId,
-        email: String(req.user.email || "").toLowerCase().trim() || "unknown@example.com",
-        displayName: buildFallbackDisplayName(req.user),
-      });
-    }
+    if (!user) {return res.status(404).json({ error: "User not found" })} //this also had automatic user create so removed
 
     const [expenses, budgets] = await Promise.all([
       Expense.find({ userId }).sort({ date: -1, createdAt: -1 }),
@@ -239,17 +235,22 @@ const deleteUserProfile = async (req, res) => {
   try {
     const userId = req.user.uid;
 
+    // Delete database data first
+    await Promise.all([
+      Expense.deleteMany({ userId }),
+      MonthlyBudget.deleteMany({ userId }),
+      MonthlySnapshot.deleteMany({ userId }),
+      NewsletterSnapshot.deleteMany({ userId }),
+      User.findByIdAndDelete(userId),
+    ]);
+
+    // Delete Firebase auth account last
     try {
       await admin.auth().deleteUser(userId);
     } catch (firebaseError) {
       console.error("Error deleting Firebase auth user:", firebaseError);
       return res.status(500).json({ error: "Failed to delete authentication account" });
     }
-
-    // Delete all associated data
-    await Expense.deleteMany({ userId });
-    await MonthlyBudget.deleteMany({ userId });
-    await User.findByIdAndDelete(userId);
 
     res.json({ message: "Profile deleted successfully" });
   } catch (err) {

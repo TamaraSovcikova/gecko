@@ -41,6 +41,10 @@ async function computeDashboard(userId, month = null, year = null) {
   }));
   const totalBudget = budgetAllocation.reduce((sum, cat) => sum + cat.value, 0);
 
+  // individual expenses sorted by date
+  const expenses = await Expense.find({ userId, month, year })
+  .sort({ date: -1, createdAt: -1 });
+
   // Fetch actual expenses for the specified month/year
   const categoryTotals = await Expense.aggregate([
     { $match: { userId, month, year } },
@@ -92,6 +96,7 @@ async function computeDashboard(userId, month = null, year = null) {
     healthBreakdown,
     averageSalary,
     grossSalary,
+    expenses,
   };
 }
 
