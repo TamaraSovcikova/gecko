@@ -31,20 +31,10 @@ const clamp = (value: number, min: number, max: number) => {
 const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, onGoToStep }: Props) => {
   const [anchorRect, setAnchorRect] = useState<AnchorRect>(null);
   const [panelMode, setPanelMode] = useState<"open" | "minimized" | "closed">("open");
-  const [panelPosition, setPanelPosition] = useState(() => {
-    if (typeof window === "undefined") {
-      return { left: 16, top: 96 };
-    }
-
-    return {
-      left: Math.max(16, window.innerWidth - TOOLTIP_WIDTH - 16),
-      top: 96,
-    };
-  });
+  const [panelPosition, setPanelPosition] = useState({ left: 16, top: 88 });
   const [panelSize, setPanelSize] = useState({ width: 320, height: 300 });
   const dragRef = useRef<{ offsetX: number; offsetY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
-  const autoScrolledStepRef = useRef<number | null>(null);
 
   const activeIndex = useMemo(() => steps.findIndex((step) => step.number === activeStepNumber), [activeStepNumber, steps]);
   const activeStep = activeIndex >= 0 ? steps[activeIndex] : null;
@@ -64,8 +54,6 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
       if (!Number.isFinite(panelPosition.left)) {
         setPanelPosition({ left: defaultLeft, top: 88 });
       }
-    } else {
-      autoScrolledStepRef.current = null;
     }
   }, [isOpen, panelPosition.left, panelSize.width]);
 
@@ -130,15 +118,6 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
       }
 
       const rect = targetElement.getBoundingClientRect();
-
-      if (autoScrolledStepRef.current !== activeStep.number) {
-        const isOffscreen = rect.top < 72 || rect.bottom > window.innerHeight - 24;
-        if (isOffscreen) {
-          targetElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-        }
-        autoScrolledStepRef.current = activeStep.number;
-      }
-
       setAnchorRect({
         top: rect.top,
         left: rect.left,
