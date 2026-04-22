@@ -8,14 +8,6 @@ type Props = {
   categories?: { name: string; value: number }[];
 };
 
-type ExpenseRecord = {
-  _id: string;
-  amount: number;
-  category: string;
-  date: string;
-  note?: string;
-};
-
 const Expenses = ({ categories }: Props) => {
   const { token } = useAuth();
   const isStandalonePage = !categories;
@@ -148,7 +140,7 @@ const Expenses = ({ categories }: Props) => {
               </option>
             ))}
 
-            <option value="create-new">+ Create new category</option>
+            <option value="create-new">+ Create New</option>
           </select>
         </div>
 
