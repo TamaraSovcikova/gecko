@@ -379,11 +379,6 @@ const Dashboard = () => {
     }
   };
 
-  // DEBUGGING
-  console.log("expenses:", displayedData?.expenses);
-  console.log("showExpenseBreakdown:", showExpenseBreakdown);
-  console.log("isSnapshotMode:", isSnapshotMode);
-
   // calculate number of expenses
   // 7 expenses (rows) per expense breakdown table page
   const totalExpenses = displayedData?.expenses?.length || 0;
@@ -492,25 +487,6 @@ const Dashboard = () => {
               }}
             >
               <h4 style={{ margin: 0 }}>Actual Spending</h4>
-              {/*disable if snapshot mode*/}
-              {!isSnapshotMode && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/expenses")}
-                  data-onboarding="dashboard-expenses-button"
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "999px",
-                    border: "1px solid #bfd1c0",
-                    backgroundColor: "#eef5eb",
-                    color: "#37553e",
-                    fontWeight: 600,
-                  }}
-                >
-                  Edit Expenses
-                </button>
-              )}
-              {/*disable if snapshot mode*/}
             </div>
             <PieChart width={300} height={220}>
               <Pie
@@ -1053,7 +1029,7 @@ const Dashboard = () => {
             data-onboarding="dashboard-adzuna-tips"
           >
             <h3 style={{ marginBottom: "20px", color: "#333" }}>
-              💡 Financial Tips Based on Market Data
+              Financial Tips Based on Market Data
             </h3>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "15px" }}
