@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getStepByNumber, OnboardingStep } from "../onboarding/content";
+import { OnboardingStep } from "../onboarding/content";
 
 type Props = {
   isOpen: boolean;
@@ -166,10 +166,16 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   }, [anchorRect]);
 
   if (!isOpen || steps.length === 0 || !activeStep) {
+    const firstStepNumber = steps[0]?.number;
+
     return (
       <button
         type="button"
-        onClick={() => onGoToStep(1)}
+        onClick={() => {
+          if (firstStepNumber !== undefined) {
+            onGoToStep(firstStepNumber);
+          }
+        }}
         style={{
           position: "fixed",
           right: "16px",
@@ -209,7 +215,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   };
 
   const goToFirstStep = () => {
-    const firstStep = getStepByNumber(1);
+    const firstStep = steps[0] || null;
     if (firstStep) {
       onGoToStep(firstStep.number);
     }
