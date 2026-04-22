@@ -338,7 +338,39 @@ const Expenses = ({categories}: Props) => {
             </div>
           </div>
         </div>
-        ) : null}
+        ) : (
+          <div data-onboarding="dashboard-embedded-expenses">
+            <h2 style={{ marginTop: 0, color: "#355f46", fontSize: "18px", marginBottom: "12px" }}>Log Expense</h2>
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Amount</label>
+                <input value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d6d0c8", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Category</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d6d0c8", boxSizing: "border-box" }}>
+                  <option value="">Select category</option>
+                  {formCategories.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Date</label>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d6d0c8", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Note</label>
+                <input value={note} onChange={(e) => setNote(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d6d0c8", boxSizing: "border-box" }} />
+              </div>
+              {formSuccess && <p style={{ color: "#3c7b52", margin: "6px 0" }}>{formSuccess}</p>}
+              {formError && <p style={{ color: "#b54848", margin: "6px 0" }}>{formError}</p>}
+              <button type="submit" style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600, marginTop: "4px" }}>
+                Save expense
+              </button>
+            </form>
+          </div>
+        )}
 
 
       <TooltipGuide
