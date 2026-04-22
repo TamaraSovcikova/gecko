@@ -840,53 +840,51 @@ const Dashboard = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
 
-            {/* expense breakdown table nav buttons */}
-            {showExpenseBreakdown && totalExpensePages > 1 && (
-              <div
-                style={{
-                  marginTop: "12px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <button
-                  onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
-                  disabled={expensePage === 1}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    cursor: "pointer",
-                  }}
-                >
-                  ◀
-                </button>
+        {/* expense breakdown table nav buttons */}
+        {showExpenseBreakdown && totalExpensePages > 1 && (
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <button
+              onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
+              disabled={expensePage === 1}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ◀
+            </button>
 
-                <span style={{ fontSize: "13px", fontWeight: 600 }}>
-                  Page {expensePage}/{totalExpensePages}
-                </span>
+            <span style={{ fontSize: "13px", fontWeight: 600 }}>
+              Page {expensePage}/{totalExpensePages}
+            </span>
 
-                <button
-                  onClick={() =>
-                    setExpensePage((prev) =>
-                      Math.min(prev + 1, totalExpensePages),
-                    )
-                  }
-                  disabled={expensePage === totalExpensePages}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    cursor: "pointer",
-                  }}
-                >
-                  ▶
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() =>
+                setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))
+              }
+              disabled={expensePage === totalExpensePages}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+              }}
+            >
+              ▶
+            </button>
           </div>
         )}
 
@@ -904,52 +902,54 @@ const Dashboard = () => {
 
         {/* budget adherence table */}
         {isSnapshotMode && selectedSnapshot && (
-          <div style={{ marginTop: "20px" }}>
-            <h4>Budget Adherence</h4>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #ccc" }}>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Category
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Budget
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Actual
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Difference
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedSnapshot.categories.map((cat, idx) => {
-                  const diff = cat.budget - cat.actual;
-                  return (
-                    <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                      <td style={{ padding: "8px" }}>{cat.name}</td>
-                      <td style={{ padding: "8px" }}>
-                        £{cat.budget.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "8px" }}>
-                        £{cat.actual.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          padding: "8px",
-                          color: diff >= 0 ? "green" : "red",
-                        }}
-                      >
-                        {diff >= 0
-                          ? `+£${diff.toFixed(2)}`
-                          : `-£${Math.abs(diff).toFixed(2)}`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div>
+            <div style={{ marginTop: "20px" }}>
+              <h4>Budget Adherence</h4>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #ccc" }}>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Category
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Budget
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Actual
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Difference
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedSnapshot.categories.map((cat, idx) => {
+                    const diff = cat.budget - cat.actual;
+                    return (
+                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: "8px" }}>{cat.name}</td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.budget.toFixed(2)}
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          £{cat.actual.toFixed(2)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px",
+                            color: diff >= 0 ? "green" : "red",
+                          }}
+                        >
+                          {diff >= 0
+                            ? `+£${diff.toFixed(2)}`
+                            : `-£${Math.abs(diff).toFixed(2)}`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
             <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
               Snapshot created:{" "}
