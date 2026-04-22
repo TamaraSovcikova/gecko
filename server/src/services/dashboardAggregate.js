@@ -15,77 +15,88 @@ async function computeDashboard(userId) {
   }
 */
 
-const Expense = require('../models/Expense');
-const MonthlyBudget = require('../models/MonthlyBudget');
+// services/computeDashboard.js
+// UPDATE:
+// Take in month and year as arguments
+// Logic can be re-used by cron job "../jobs/monthlySnapshot.js"
 
-async function computeDashboard(userId) {
+const Expense = require("../models/Expense");
+const MonthlyBudget = require("../models/MonthlyBudget");
+const User = require("../models/User");
+const { getAverageSalary } = require("../services/adzunaCalculator");
+const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
+
+async function computeDashboard(userId, month = null, year = null) {
+  // Default to current month/year if not provided
   const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
+  month = month || now.getMonth() + 1;
+  year = year || now.getFullYear();
 
-  // 1. Get payslip (same as dashboard route)
-  const payslip = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
-
-  const takeHome = payslip?.takeHomePay || 0;
-
-  const budgetAllocation = (payslip?.categories || []).map(category => ({
-    name: category.name,
-    value: category.budget 
+  // Fetch latest monthly budget for the user
+  const budget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+  const takeHome = budget?.takeHomePay || 0;
+  const budgetAllocation = (budget?.categories || []).map(cat => ({
+    name: cat.name,
+    value: cat.budget,
   }));
+  const totalBudget = budgetAllocation.reduce((sum, cat) => sum + cat.value, 0);
 
-  const totalBudget = (payslip?.categories || []).reduce(
-    (sum, category) => sum + category.budget,
-    0
-  );
+  // individual expenses sorted by date
+  const expenses = await Expense.find({ userId, month, year })
+  .sort({ date: -1, createdAt: -1 });
 
-  // 2. Aggregate expenses
+  // Fetch actual expenses for the specified month/year
   const categoryTotals = await Expense.aggregate([
-    {
-      $match: {
-        userId: userId,   // matching the schema field name
-        month,
-        year
-      }
-    },
-    {
-      $group: {
-        _id: "$category",
-        total: { $sum: "$amount" }
-      }
-    }
+    { $match: { userId, month, year } },
+    { $group: { _id: "$category", total: { $sum: "$amount" } } },
   ]);
 
   const actualSpending = categoryTotals.map(item => ({
     name: item._id,
-    value: item.total
+    value: item.total,
   }));
 
-  const totalExpenses = categoryTotals.reduce(
-    (sum, e) => sum + e.total,
-    0
-  );
+  const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.total, 0);
 
-  // 3. Health score (same logic)
-  let healthScore = 100;
-
-  if (totalBudget > 0) {
-    const score = (1 - totalExpenses / totalBudget) * 100;
-    healthScore = Math.round(Math.min(100, Math.max(0, score)));
-  }
+  // Compute health score
+  const healthBreakdown = computeHealthScoreBreakdown({
+    takeHome,
+    totalBudget,
+    totalExpenses,
+    budgetAllocation,
+    actualSpending,
+  });
+  const healthScore = healthBreakdown.healthScore;
 
   const budgetLeft = totalBudget - totalExpenses;
 
-  console.log("TOTAL EXPENSES:", totalExpenses);
-  console.log("TOTAL BUDGET:", totalBudget);
+  // Fetch user info for Adzuna
+  const currentUser = await User.findById(userId);
+  let averageSalary = null;
+  let grossSalary = budget?.grossSalary || 0;
 
-  // Return Structure 
+  if (currentUser?.payslipData?.jobTitle && currentUser?.payslipData?.location) {
+    try {
+      averageSalary = await getAverageSalary(
+        currentUser.payslipData.jobTitle,
+        currentUser.payslipData.location
+      );
+    } catch (err) {
+      console.error(`Error fetching average salary for user ${userId}:`, err);
+    }
+  }
+
   return {
     healthScore,
     takeHome,
     budgetLeft,
     totalBudget,
     actualSpending,
-    budgetAllocation
+    budgetAllocation,
+    healthBreakdown,
+    averageSalary,
+    grossSalary,
+    expenses,
   };
 }
 

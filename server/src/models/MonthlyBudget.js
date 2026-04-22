@@ -35,4 +35,14 @@ const MonthlyBudgetSchema = new mongoose.Schema(
   }
 );
 
+// Pre-save hook to automatically set month and year
+MonthlyBudgetSchema.pre('save', function (next) {
+  if (!this.month || !this.year) {
+    const now = new Date();
+    this.month = now.getMonth() + 1; // 1-12
+    this.year = now.getFullYear();
+  }
+  next();
+});
+
 module.exports = mongoose.model('MonthlyBudget', MonthlyBudgetSchema);
