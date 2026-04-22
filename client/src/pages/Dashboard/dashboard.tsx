@@ -248,6 +248,9 @@ const displayedData: DashboardData | null = selectedSnapshot
     note: "",
   });
 
+  // pending delete state
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   const updateExpense = async (expenseId: string) => {
     try {
       console.log("Updating expense:", expenseId, editForm);
@@ -290,6 +293,7 @@ const displayedData: DashboardData | null = selectedSnapshot
       });
 
       setEditingExpenseId(null);
+      setPendingDeleteId(null);
     } catch (err) {
       console.error("Failed to update expense:", err);
     }
@@ -298,6 +302,7 @@ const displayedData: DashboardData | null = selectedSnapshot
   // cancel expense edit
   const cancelEditing = () => {
     setEditingExpenseId(null);
+    setPendingDeleteId(null);
     setEditForm({
       category: "",
       amount: 0,
@@ -718,6 +723,7 @@ const displayedData: DashboardData | null = selectedSnapshot
                       <button
                         onClick={() => {
                           setEditingExpenseId(exp._id);
+                          setPendingDeleteId(null);
                           setEditForm({
                             category: exp.category,
                             amount: exp.amount,
@@ -739,18 +745,50 @@ const displayedData: DashboardData | null = selectedSnapshot
 
                     {/* DELETE */}
                     <td style={{ padding: "8px" }}>
-                      <button
-                        onClick={() => deleteExpense(exp._id)}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid #ccc",
-                          cursor: "pointer",
-                          color: "red",
-                        }}
-                      >
-                        Delete
-                      </button>
+                      {pendingDeleteId === exp._id ? (
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            onClick={() => {
+                              deleteExpense(exp._id);
+                              setPendingDeleteId(null);
+                            }}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              cursor: "pointer",
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                            }}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #ccc",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setPendingDeleteId(exp._id)}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            border: "1px solid #ccc",
+                            cursor: "pointer",
+                            color: "red",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
