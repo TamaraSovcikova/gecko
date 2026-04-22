@@ -28,7 +28,7 @@ const TopNav = () => {
             letterSpacing: "1px",
           }}
         >
-          BANK TREE BUDGETING
+          G.E.C.K.O
         </Link>
         <div
           style={{

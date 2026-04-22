@@ -22,7 +22,7 @@ const Terms = () => {
         <section style={{ color: "#4d504f", lineHeight: 1.7 }}>
           <h2 style={{ color: "#355f46", fontSize: "22px" }}>Using the service</h2>
           <p>
-            Bank Tree Budgeting is a student project that aims to help users understand payslips,
+            G.E.C.K.O is a student project that aims to help users understand payslips,
             manage budgets, and review spending habits. You agree to use the app lawfully and not
             to misuse the service, interfere with other users, or attempt to access data that is
             not yours.
@@ -59,7 +59,7 @@ const Terms = () => {
 
           <h2 style={{ color: "#355f46", fontSize: "22px" }}>Disclaimer</h2>
           <p>
-            Bank Tree Budgeting is not financial, tax, legal, or employment advice. It is intended
+            G.E.C.K.O is not financial, tax, legal, or employment advice. It is intended
             as an educational budgeting tool, and you should verify important decisions using trusted
             official sources.
           </p>

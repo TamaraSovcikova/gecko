@@ -380,7 +380,7 @@ const buildMonthlyNewsletterHtml = ({ user, unsubscribeUrl, data }) => {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 640px; background-color: #ffffff; border: 1px solid #e2ddd3; border-radius: 12px; overflow: hidden;">
                 <tr>
                   <td style="padding: 24px; background-color: #edf4ea; border-bottom: 1px solid #dce5d8;">
-                    <p style="margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #5f6f61;">Bank Tree Budgeting</p>
+                    <p style="margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #5f6f61;">G.E.C.K.O</p>
                     <h1 style="margin: 8px 0 0; font-size: 26px; color: #2c5b3f; font-weight: 400;">Monthly snapshot: ${data.period.label}</h1>
                   </td>
                 </tr>
