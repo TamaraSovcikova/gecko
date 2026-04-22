@@ -102,7 +102,7 @@ const SettingsPage = () => {
   useEffect(() => {
     setUsername(profile?.displayName || "");
     setEmail(profile?.email || currentUser?.email || "");
-    setConfirmEmail(profile?.email || currentUser?.email || "");
+    setConfirmEmail("");
     setNewsletterOptIn(Boolean(profile?.newsletterOptIn));
   }, [profile, currentUser]);
 
@@ -369,23 +369,36 @@ const SettingsPage = () => {
 
           <form onSubmit={handleEmailSave} style={cardStyle}>
             <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Email address</h2>
-            <label style={labelStyle} htmlFor="email">Email</label>
-            <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="confirm-email">Confirm new email</label>
-            <input id="confirm-email" type="email" value={confirmEmail} onChange={(event) => setConfirmEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="email-password">Current password</label>
-            <input id="email-password" type="password" value={emailPassword} onChange={(event) => setEmailPassword(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <p style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}>
-              Firebase may require recent sign-in before sensitive email changes.
-            </p>
-            <button
-              type="button"
-              onClick={handleEmailSync}
-              disabled={emailSyncState.syncing || isGoogleOnlyAccount}
-              style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d6d0c8", backgroundColor: "#fff", color: "#355f46", fontWeight: 600 }}
-            >
-              {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
-            </button>
+            {isGoogleOnlyAccount ? (
+              <>
+                <p style={{ margin: 0, color: "#5f625c", lineHeight: 1.6 }}>
+                  Email changes are managed by your Google account for this sign-in method.
+                </p>
+                <p style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}>
+                  Current account email: <strong>{profile?.email || currentUser?.email || "Not available"}</strong>
+                </p>
+              </>
+            ) : (
+              <>
+                <label style={labelStyle} htmlFor="email">Email</label>
+                <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} style={inputStyle} />
+                <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="confirm-email">Confirm new email</label>
+                <input id="confirm-email" type="email" value={confirmEmail} onChange={(event) => setConfirmEmail(event.target.value)} style={inputStyle} />
+                <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="email-password">Current password</label>
+                <input id="email-password" type="password" value={emailPassword} onChange={(event) => setEmailPassword(event.target.value)} style={inputStyle} />
+                <p style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}>
+                  Firebase may require recent sign-in before sensitive email changes.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleEmailSync}
+                  disabled={emailSyncState.syncing}
+                  style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d6d0c8", backgroundColor: "#fff", color: "#355f46", fontWeight: 600 }}
+                >
+                  {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
+                </button>
+              </>
+            )}
             {emailState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailState.message}</p>}
             {emailState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{emailState.error}</p>}
             {emailSyncState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailSyncState.message}</p>}
