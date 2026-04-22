@@ -659,13 +659,6 @@ const PayslipSetup = () => {
                   <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Payslip" : "Save Payslip")}
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => navigate("/dashboard")}
-                  >
-                    Go to Dashboard
-                  </button>
                 </div>
               </form>
             </div>

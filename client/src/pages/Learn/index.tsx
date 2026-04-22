@@ -1,15 +1,212 @@
-import TopNav from "../../components/TopNav";
+// client/src/pages/Learn/index.tsx
 
-const Learn = () => {
-  return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "20px" }}>
-      <TopNav />
-      <div style={{ maxWidth: "900px", margin: "24px auto", background: "#fff", padding: "24px", borderRadius: "10px", border: "1px solid #e8e3dc" }}>
-        <h1>Educational Resources</h1>
-        <p>Welcome to Bank Tree Budgeting learning center. Add your educational content here.</p>
-      </div>
-    </div>
-  );
+import { useState, useEffect, useMemo } from "react";
+import TopNav from "../../components/TopNav";
+import {
+  LEARNING_CONTENT,
+  LEARNING_CATEGORIES,
+  type LearningCategory,
+} from "../../constants/learningContent";
+import TopicCard from "./TopicCard";
+import { useAuth } from "../../context/AuthContext";
+
+const CATEGORY_META: Record<
+  LearningCategory,
+  { icon: string; color: string; dotColor: string; description: string }
+> = {
+  "Understanding Your Payslip": {
+    icon: "bi-receipt-cutoff",
+    color: "#6366F1",
+    dotColor: "#818CF8",
+    description:
+      "Break down every line - gross pay, tax, NI, pension, and take-home.",
+  },
+  "Budgeting Basics": {
+    icon: "bi-wallet2",
+    color: "#0D9488",
+    dotColor: "#34D399",
+    description:
+      "Simple frameworks for managing money without tracking every penny.",
+  },
+  "Tax Fundamentals": {
+    icon: "bi-building-fill-gear",
+    color: "#F97316",
+    dotColor: "#FB923C",
+    description: "How tax codes, personal allowance, and self-assessment work.",
+  },
+  "Saving and Financial Goals": {
+    icon: "bi-piggy-bank-fill",
+    color: "#D97706",
+    dotColor: "#FBBF24",
+    description:
+      "From emergency funds to ISAs — savings that work for your goals.",
+  },
 };
 
-export default Learn;
+// ---------- helpers ----------
+function getStorageKey(userId?: string) {
+  return userId ? `learn_read_topics_${userId}` : null;
+}
+
+function loadRead(userId?: string): Set<string> {
+  try {
+    const key = getStorageKey(userId);
+    if (!key) return new Set();
+
+    const raw = localStorage.getItem(key);
+    if (!raw) return new Set();
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+
+    return new Set(parsed.filter((x) => typeof x === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveRead(userId: string, set: Set<string>) {
+  try {
+    const key = getStorageKey(userId);
+    if (!key) return;
+
+    localStorage.setItem(key, JSON.stringify([...set]));
+  } catch {}
+}
+
+// ---------- component ----------
+export default function Learn() {
+  const { currentUser } = useAuth();
+  const userId = currentUser?.uid;
+
+  const [activeCategory, setActiveCategory] = useState<
+    LearningCategory | "all"
+  >("all");
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [readTopics, setReadTopics] = useState<Set<string>>(() =>
+    loadRead(userId),
+  );
+
+  useEffect(() => {
+    setReadTopics(loadRead(userId));
+  }, [userId]);
+
+  const totalTopics = LEARNING_CONTENT.length;
+
+  // only count valid topics (prevents fake "100% complete" bug)
+  const validTopicIds = useMemo(
+    () => new Set(LEARNING_CONTENT.map((t) => t.id)),
+    [],
+  );
+
+  const readCount = useMemo(() => {
+    return [...readTopics].filter((id) => validTopicIds.has(id)).length;
+  }, [readTopics, validTopicIds]);
+
+  const progressPct = totalTopics > 0 ? (readCount / totalTopics) * 100 : 0;
+
+  const handleRead = (id: string) => {
+    if (!userId) return;
+
+    setReadTopics((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      saveRead(userId, next);
+      return next;
+    });
+  };
+
+  const filteredTopics = LEARNING_CONTENT.filter((topic) => {
+    const matchesCat =
+      activeCategory === "all" || topic.category === activeCategory;
+
+    const q = searchQuery.toLowerCase();
+
+    const matchesSearch =
+      !q ||
+      topic.title.toLowerCase().includes(q) ||
+      topic.summary.toLowerCase().includes(q) ||
+      topic.category.toLowerCase().includes(q);
+
+    return matchesCat && matchesSearch;
+  });
+
+  const groupedTopics =
+    activeCategory === "all"
+      ? LEARNING_CATEGORIES.map((cat) => ({
+          category: cat,
+          topics: filteredTopics.filter((t) => t.category === cat),
+        })).filter((g) => g.topics.length > 0)
+      : [{ category: activeCategory, topics: filteredTopics }];
+
+  return (
+    <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
+      <TopNav />
+
+      {/* HERO */}
+      <div
+        style={{
+          background: "#EEF2FF",
+          borderRadius: 10,
+          padding: "1.75rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <h1 style={{ fontSize: 18, fontWeight: 600 }}>
+          Financial Education Hub
+        </h1>
+
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 11, color: "#818CF8", marginBottom: 5 }}>
+            {readCount} of {totalTopics} topics explored
+          </div>
+
+          <div
+            style={{
+              height: 6,
+              background: "#C7D2FE",
+              borderRadius: 99,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                background: "#6366F1",
+                width: `${progressPct}%`,
+                transition: "width 0.4s ease",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* TOPICS */}
+      {groupedTopics.map(({ category, topics }) => {
+        const meta = CATEGORY_META[category as LearningCategory];
+
+        return (
+          <div key={category} style={{ marginBottom: "2rem" }}>
+            <h3 style={{ fontSize: 12, color: "#6B7280" }}>
+              {category} ({topics.length})
+            </h3>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+                gap: 12,
+              }}
+            >
+              {topics.map((topic) => (
+                <TopicCard key={topic.id} topic={topic} onRead={handleRead} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

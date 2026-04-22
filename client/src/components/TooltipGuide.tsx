@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getStepByNumber, OnboardingStep } from "../onboarding/content";
+import { OnboardingStep } from "../onboarding/content";
 
 type Props = {
   isOpen: boolean;
@@ -19,10 +19,13 @@ type AnchorRect = {
 
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_ESTIMATED_HEIGHT = 200;
+const TOOLTIP_VERTICAL_GAP = 24;
+const TOOLTIP_MIN_TOP = 32;
 const PANEL_MIN_WIDTH = 220;
 const PANEL_MIN_HEIGHT = 170;
 const PANEL_MAX_WIDTH = 560;
 const PANEL_MAX_HEIGHT = 620;
+const PANEL_DEFAULT_TOP = 196;
 
 const clamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
@@ -31,7 +34,7 @@ const clamp = (value: number, min: number, max: number) => {
 const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, onGoToStep }: Props) => {
   const [anchorRect, setAnchorRect] = useState<AnchorRect>(null);
   const [panelMode, setPanelMode] = useState<"open" | "minimized" | "closed">("open");
-  const [panelPosition, setPanelPosition] = useState({ left: 16, top: 88 });
+  const [panelPosition, setPanelPosition] = useState({ left: 16, top: PANEL_DEFAULT_TOP });
   const [panelSize, setPanelSize] = useState({ width: 320, height: 300 });
   const dragRef = useRef<{ offsetX: number; offsetY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
@@ -45,14 +48,15 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
       setPanelMode("open");
 
       const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
       const defaultLeft = Math.max(16, viewportWidth - panelSize.width - 16);
       setPanelPosition((prev) => ({
         left: clamp(prev.left, 16, Math.max(16, viewportWidth - panelSize.width - 16)),
-        top: prev.top || 88,
+        top: clamp(prev.top || PANEL_DEFAULT_TOP, PANEL_DEFAULT_TOP, Math.max(PANEL_DEFAULT_TOP, viewportHeight - 56)),
       }));
 
       if (!Number.isFinite(panelPosition.left)) {
-        setPanelPosition({ left: defaultLeft, top: 88 });
+        setPanelPosition({ left: defaultLeft, top: PANEL_DEFAULT_TOP });
       }
     }
   }, [isOpen, panelPosition.left, panelSize.width]);
@@ -142,7 +146,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   const tooltipPosition = useMemo(() => {
     if (!anchorRect) {
       return {
-        top: 16,
+        top: TOOLTIP_MIN_TOP,
         left: 16,
       };
     }
@@ -152,10 +156,10 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
     const maxLeft = Math.max(16, viewportWidth - TOOLTIP_WIDTH - 16);
 
     let left = Math.min(maxLeft, Math.max(16, anchorRect.left));
-    let top = anchorRect.top + anchorRect.height + 12;
+    let top = anchorRect.top + anchorRect.height + TOOLTIP_VERTICAL_GAP;
 
     if (top + TOOLTIP_ESTIMATED_HEIGHT > viewportHeight - 16) {
-      top = Math.max(16, anchorRect.top - TOOLTIP_ESTIMATED_HEIGHT - 12);
+      top = Math.max(TOOLTIP_MIN_TOP, anchorRect.top - TOOLTIP_ESTIMATED_HEIGHT - TOOLTIP_VERTICAL_GAP);
     }
 
     if (anchorRect.width > TOOLTIP_WIDTH) {
@@ -166,10 +170,16 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   }, [anchorRect]);
 
   if (!isOpen || steps.length === 0 || !activeStep) {
+    const firstStepNumber = steps[0]?.number;
+
     return (
       <button
         type="button"
-        onClick={() => onGoToStep(1)}
+        onClick={() => {
+          if (firstStepNumber !== undefined) {
+            onGoToStep(firstStepNumber);
+          }
+        }}
         style={{
           position: "fixed",
           right: "16px",
@@ -209,7 +219,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   };
 
   const goToFirstStep = () => {
-    const firstStep = getStepByNumber(1);
+    const firstStep = steps[0] || null;
     if (firstStep) {
       onGoToStep(firstStep.number);
     }
