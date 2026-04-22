@@ -46,12 +46,34 @@ exports.listExpenses = async (req, res) => {
 exports.createExpense = async (req, res) => {
   try {
     const userId = req.user?.uid;
-    const { category, amount, date, note } = req.body;
+    const { category, amount, date, note, newCategoryName, newCategoryBudget } = req.body;
     const normalizedCategory = String(category || '').trim();
 
     // Throwing an error for integral missing fields
     if (!normalizedCategory || !amount || !date) {
       return res.status(400).json({ error: 'Missing fields' });
+    }
+
+    // Handle new category
+    if (newCategoryName) {
+      const normalizedNewName = String(newCategoryName).trim();
+      if (!normalizedNewName) {
+        return res.status(400).json({ error: 'New category name is required' });
+      }
+
+      const latestBudget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+      if (latestBudget) {
+        const existingNames = new Set(latestBudget.categories.map(cat => cat.name.toLowerCase()));
+        if (existingNames.has(normalizedNewName.toLowerCase())) {
+          return res.status(400).json({ error: 'Category name already exists' });
+        }
+
+        latestBudget.categories.push({
+          name: normalizedNewName,
+          budget: Number(newCategoryBudget) || 0
+        });
+        await latestBudget.save();
+      }
     }
 
     const categoryError = await validateExpenseCategory(userId, normalizedCategory);
