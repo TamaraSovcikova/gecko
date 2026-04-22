@@ -163,6 +163,25 @@ export const usePageOnboarding = (page: OnboardingPageKey, enabled = true): Stat
     persistActiveStepRef.current = true;
     storeActiveStep(step.number);
     if (step.route !== page) {
+      const localPages = markLocalOnboardingPageComplete(page);
+      setProfile((previous) => ({
+        ...(previous || {}),
+        onboardingCompletedPages: localPages,
+      }));
+
+      if (token) {
+        void saveOnboardingCompletions(token, [page])
+          .then((serverPages) => {
+            setProfile((previous) => ({
+              ...(previous || {}),
+              onboardingCompletedPages: serverPages,
+            }));
+          })
+          .catch(() => {
+            // Keep local completion state when server persistence fails.
+          });
+      }
+
       navigate(step.route);
       return;
     }
