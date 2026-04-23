@@ -11,8 +11,11 @@ import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 import MonthlySnapshotPopup from "../../components/SnapshotPopup";
+import ForecastWarningPopup from "../../components/ForecastWarningPopup";
+import { ForecastPayload } from "../../types/forecast";
+import { dismissForecastWarning, getForecast } from "../../api/forecastApi";
 
-const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+const COLOURS = ["red", "green", "turquoise", "blue"]; // could probably do with a colour re-work (actual hex). this makes things very ugly
 
 /* Full Real-time Update Flow
 1. Frontend loads
@@ -21,7 +24,7 @@ const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with 
 4. Backend joins room
 5. User submits a new expense
 6. Backend emits 'budget:update'
-7. Frontend recieves the event
+7. Frontend receives the event
 8. New dashboard data is set
 9. React automatically re-renders the UI
 */
@@ -75,7 +78,7 @@ type MonthlySnapshot = {
   createdAt: string;
 };
 
-//defined exact data as expected from backend endpoint...
+// defined exact data as expected from backend endpoint...
 type DashboardData = {
   healthScore: number;
   takeHome: number;
@@ -97,6 +100,12 @@ type DashboardData = {
     note?: string;
     createdAt: string;
   }[];
+};
+
+// socket payload shape from backend
+type BudgetUpdatePayload = {
+  dashboard?: DashboardData;
+  forecast?: ForecastPayload;
 };
 
 // year, month select helper
@@ -124,18 +133,24 @@ const Dashboard = () => {
   const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(
     null,
   );
+
   // dashboard states
+  const userId = useAuth().currentUser?.uid;
   const navigate = useNavigate();
   const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
-  //react state which stores dashboard data, initially null
+
+  // react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
+  const [forecast, setForecast] = useState<ForecastPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
+
   // expense breakdown toggle
   const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
   const showExpenses = true;
+
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -149,37 +164,74 @@ const Dashboard = () => {
   const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
   const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
 
-  //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
+  // useEffect runs on every navigation to /dashboard (location.key changes on each visit)
   useEffect(() => {
-    if (loading || !token) return; //wait for auth to finish and token to be available before fetching data
+    if (loading || !token) return; // wait for auth to finish and token to be available before fetching data
+
     const fetchDashboard = async () => {
       try {
+        console.log("[Dashboard] Fetching dashboard data");
+
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/v1/dashboard`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
+
+        console.log("[Dashboard] Dashboard response =", res.data);
         setData(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("[Dashboard] Error fetching dashboard data:", err);
         setError("error fetching dashboard data");
       }
     };
 
     fetchDashboard();
-  }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
+  }, [token, loading, location.key]);
 
-  // useEffect() for real-time updates to the dashboard
+  // Initial forecast fetch on dashboard load
+  useEffect(() => {
+    if (loading || !token) return;
+
+    const loadForecast = async () => {
+      try {
+        console.log("[Dashboard] Fetching forecast on mount");
+
+        const forecastData = await getForecast();
+
+        console.log("[Dashboard] Forecast response =", forecastData);
+        setForecast(forecastData);
+      } catch (err) {
+        console.error("[Dashboard] Failed to fetch forecast:", err);
+      }
+    };
+
+    loadForecast();
+  }, [token, loading, location.key]);
+
+  // useEffect() for real-time updates to the dashboard + forecast
   // Runs when the socket is available
   useEffect(() => {
     if (!socket) return;
-    // Listens for an emission from the backend of the dashboard
-    socket.on("budget:update", (updatedData: DashboardData) => {
-      console.log("Recieved real-time update:", updatedData);
-      setData(updatedData);
-    });
+
+    const handleBudgetUpdate = (payload: BudgetUpdatePayload) => {
+      console.log("[Dashboard] Received real-time update:", payload);
+
+      if (payload.dashboard) {
+        console.log("[Dashboard] Updating dashboard state from socket");
+        setData(payload.dashboard);
+      }
+
+      if (payload.forecast) {
+        console.log("[Dashboard] Updating forecast state from socket");
+        setForecast(payload.forecast);
+      }
+    };
+
+    socket.on("budget:update", handleBudgetUpdate);
+
     return () => {
-      // Switches off the socket to prevent duplicate listeners
-      socket.off("budget:update");
+      // Switches off the socket listener to prevent duplicate listeners
+      socket.off("budget:update", handleBudgetUpdate);
     };
   }, [socket]);
 
@@ -189,14 +241,17 @@ const Dashboard = () => {
 
     const fetchSnapshots = async () => {
       try {
+        console.log("[Dashboard] Fetching monthly snapshots");
+
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/snapshots/${currentUser.uid}`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
+        console.log("[Dashboard] Snapshots response =", res.data);
         setSnapshots(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("[Dashboard] Failed to fetch snapshots:", err);
       }
     };
 
@@ -237,7 +292,9 @@ const Dashboard = () => {
   // delete expense
   const deleteExpense = async (expenseId: string) => {
     try {
-      await axios.delete(
+      console.log("[Dashboard] Deleting expense:", expenseId);
+
+      const res = await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
         {
           headers: {
@@ -246,9 +303,20 @@ const Dashboard = () => {
         },
       );
 
-      // socket connection updates automatically
+      console.log("[Dashboard] Delete expense response =", res.data);
+
+      // Update immediately as well as via socket
+      if (res.data?.dashboard) {
+        console.log("[Dashboard] Updating dashboard state from delete response");
+        setData(res.data.dashboard);
+      }
+
+      if (res.data?.forecast) {
+        console.log("[Dashboard] Updating forecast state from delete response");
+        setForecast(res.data.forecast);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("[Dashboard] Failed to delete expense:", error);
     }
   };
 
@@ -267,7 +335,7 @@ const Dashboard = () => {
 
   const updateExpense = async (expenseId: string) => {
     try {
-      console.log("Updating expense:", expenseId, editForm);
+      console.log("[Dashboard] Updating expense:", expenseId, editForm);
 
       const res = await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
@@ -282,34 +350,46 @@ const Dashboard = () => {
         },
       );
 
-      console.log("Expense updated successfully:", res.data);
+      console.log("[Dashboard] Expense updated successfully:", res.data);
 
-      // update frontend immediately (without waiting for socket)
-      setData((prev) => {
-        if (!prev) return prev;
+      // Update dashboard immediately if backend returns it
+      if (res.data?.dashboard) {
+        console.log("[Dashboard] Updating dashboard state from patch response");
+        setData(res.data.dashboard);
+      } else {
+        // fallback to old local-only update
+        setData((prev) => {
+          if (!prev) return prev;
 
-        return {
-          ...prev,
-          expenses: prev.expenses?.map((exp) =>
-            exp._id === expenseId
-              ? {
-                  ...exp,
-                  category: editForm.category,
-                  amount: editForm.amount,
-                  date: editForm.date,
-                  note: editForm.note,
-                  month: new Date(editForm.date).getMonth() + 1,
-                  year: new Date(editForm.date).getFullYear(),
-                }
-              : exp,
-          ),
-        };
-      });
+          return {
+            ...prev,
+            expenses: prev.expenses?.map((exp) =>
+              exp._id === expenseId
+                ? {
+                    ...exp,
+                    category: editForm.category,
+                    amount: editForm.amount,
+                    date: editForm.date,
+                    note: editForm.note,
+                    month: new Date(editForm.date).getMonth() + 1,
+                    year: new Date(editForm.date).getFullYear(),
+                  }
+                : exp,
+            ),
+          };
+        });
+      }
+
+      // Update forecast immediately if backend returns it
+      if (res.data?.forecast) {
+        console.log("[Dashboard] Updating forecast state from patch response");
+        setForecast(res.data.forecast);
+      }
 
       setEditingExpenseId(null);
       setPendingDeleteId(null);
     } catch (err) {
-      console.error("Failed to update expense:", err);
+      console.error("[Dashboard] Failed to update expense:", err);
     }
   };
 
@@ -323,6 +403,29 @@ const Dashboard = () => {
       date: "",
       note: "",
     });
+  };
+
+  // dismiss forecast warning
+  const handleDismissForecastWarning = async (warningId: string) => {
+    try {
+      console.log("[Dashboard] Dismissing forecast warning:", warningId);
+
+      // optimistic UI update
+      setForecast((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          warnings: prev.warnings.filter((warning) => warning.id !== warningId),
+        };
+      });
+
+      await dismissForecastWarning(warningId);
+
+      console.log("[Dashboard] Forecast warning dismissed successfully");
+    } catch (err) {
+      console.error("[Dashboard] Failed to dismiss forecast warning:", err);
+    }
   };
 
   // useEffect for pop-up on first log-in of the month
@@ -396,6 +499,15 @@ const Dashboard = () => {
   return (
     <>
       <TopNav />
+
+      {/* Forecast warning popup only in live mode, not snapshot mode */}
+      {!isSnapshotMode && (
+        <ForecastWarningPopup
+          warnings={forecast?.warnings || []}
+          onDismiss={handleDismissForecastWarning}
+        />
+      )}
+
       <div
         style={{
           maxWidth: "1000px",
@@ -437,7 +549,6 @@ const Dashboard = () => {
               }}
             >
               <h4 style={{ margin: 0 }}>Budget Allocation</h4>
-              {/*disable if snapshot mode*/}
               {!isSnapshotMode && (
                 <button
                   type="button"
@@ -454,23 +565,20 @@ const Dashboard = () => {
                   Edit Payslip/Budget
                 </button>
               )}
-              {/*disable if snapshot mode*/}
             </div>
             <PieChart width={300} height={220}>
               <Pie
-                data={displayedData.budgetAllocation || []} //fallback to empty array prevents runtime
+                data={displayedData.budgetAllocation || []}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
                 outerRadius={70}
               >
-                {/* different colours for each slice*/}
                 {(displayedData.budgetAllocation || []).map((_, index) => (
                   <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
                 ))}
               </Pie>
-              {/*tooltips and labels allow cool breakdowns when hovering*/}
               <Tooltip />
               <Legend />
             </PieChart>
@@ -506,7 +614,6 @@ const Dashboard = () => {
             </PieChart>
           </div>
 
-          {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
           {showExpenses && (
             <div
               style={{
@@ -539,7 +646,6 @@ const Dashboard = () => {
               {displayedData.healthScore}
             </p>
 
-            {/*breakdown button test*/}
             {!isSnapshotMode && (
               <button
                 type="button"
@@ -560,7 +666,6 @@ const Dashboard = () => {
               </button>
             )}
           </div>
-          {/*breakdown button test*/}
 
           <div>
             <h4>Take Home</h4>
@@ -582,7 +687,6 @@ const Dashboard = () => {
               <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
             ) : (
               <p>
-                {/* tabs ensures displayed number is positive when showing overbudget*/}
                 Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
               </p>
             )}
@@ -601,7 +705,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* expense breakdown button */}
         {!isSnapshotMode && (
           <button
             type="button"
@@ -622,7 +725,6 @@ const Dashboard = () => {
           </button>
         )}
 
-        {/* expense table but make it live */}
         {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
           <div style={{ marginTop: "30px" }}>
             <h4>Expense Breakdown</h4>
@@ -652,7 +754,6 @@ const Dashboard = () => {
                       key={exp._id || idx}
                       style={{ borderBottom: "1px solid #eee" }}
                     >
-                      {/* CATEGORY */}
                       <td style={{ padding: "8px" }}>
                         {isEditing ? (
                           <select
@@ -683,7 +784,6 @@ const Dashboard = () => {
                         )}
                       </td>
 
-                      {/* VALUE */}
                       <td style={{ padding: "8px" }}>
                         {isEditing ? (
                           <input
@@ -701,7 +801,6 @@ const Dashboard = () => {
                         )}
                       </td>
 
-                      {/* DATE */}
                       <td style={{ padding: "8px" }}>
                         {isEditing ? (
                           <input
@@ -719,7 +818,6 @@ const Dashboard = () => {
                         )}
                       </td>
 
-                      {/* NOTE */}
                       <td style={{ padding: "8px" }}>
                         {isEditing ? (
                           <input
@@ -736,7 +834,6 @@ const Dashboard = () => {
                         )}
                       </td>
 
-                      {/* EDIT / SAVE */}
                       <td style={{ padding: "8px" }}>
                         {isEditing ? (
                           <div style={{ display: "flex", gap: "8px" }}>
@@ -788,7 +885,6 @@ const Dashboard = () => {
                         )}
                       </td>
 
-                      {/* DELETE */}
                       <td style={{ padding: "8px" }}>
                         {pendingDeleteId === exp._id ? (
                           <div style={{ display: "flex", gap: "8px" }}>
@@ -843,7 +939,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* expense breakdown table nav buttons */}
         {showExpenseBreakdown && totalExpensePages > 1 && (
           <div
             style={{
@@ -888,7 +983,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* summary */}
         {isSnapshotMode && selectedSnapshot && (
           <div style={{ marginBottom: "30px" }}>
             <p>
@@ -900,7 +994,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* budget adherence table */}
         {isSnapshotMode && selectedSnapshot && (
           <div>
             <div style={{ marginTop: "20px" }}>
@@ -995,7 +1088,7 @@ const Dashboard = () => {
               onClick={() => {
                 if (snapshotIndex === null) return;
                 if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-                else setSnapshotIndex(null); // go back to live
+                else setSnapshotIndex(null);
               }}
             >
               Newer ▶
@@ -1003,22 +1096,18 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Calendar dropdown */}
-        {/* Only shows months with valid snapshots */}
         <SnapshotMonthDropdown
           snapshots={snapshots}
           snapshotIndex={snapshotIndex}
           setSnapshotIndex={setSnapshotIndex}
         />
 
-        {/* If no snapshot yet */}
         {snapshots.length == 0 && (
           <div style={{ fontWeight: 600 }}>
             You don't have any snapshots yet
           </div>
         )}
 
-        {/* Adzuna Tips Section */}
         {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
           <div
             style={{
@@ -1078,6 +1167,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
       <TooltipGuide
         isOpen={isOnboardingOpen}
         activeStepNumber={activeStepNumber}
@@ -1086,7 +1176,7 @@ const Dashboard = () => {
         onComplete={completeGuide}
         onGoToStep={goToStep}
       />
-      {/*breakdown disable for snapshot test*/}
+
       {!isSnapshotMode && (
         <BreakdownPanel
           isOpen={showBreakdown}
@@ -1094,7 +1184,6 @@ const Dashboard = () => {
           breakdown={displayedData.healthBreakdown || null}
         />
       )}
-      {/*breakdown disable for snapshot test*/}
 
       {showSnapshotPopup && popupSnapshot && (
         <MonthlySnapshotPopup

@@ -2,6 +2,20 @@
 
 const mongoose = require('mongoose');
 
+const ForecastWarningStateSchema = new mongoose.Schema(
+  {
+    monthKey: {
+      type: String,
+      default: "",
+    },
+    dismissedWarningIds: {
+      type: [String],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     // Firebase UID used as the primary key instead of MongoDB ObjectId
@@ -81,6 +95,14 @@ const UserSchema = new mongoose.Schema(
     newsletterUnsubscribeTokenCreatedAt: {
       type: Date,
       default: null,
+    },
+
+    forecastWarningState: {
+      type: ForecastWarningStateSchema,
+      default: () => ({
+        monthKey: "",
+        dismissedWarningIds: []
+      }),
     },
 
     accountChangeLog: [

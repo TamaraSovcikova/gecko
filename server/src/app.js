@@ -13,6 +13,7 @@ const helmet = require('helmet');
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
+const forecastRoutes = require("./routes/forecast");
 
 const app = express();
 
@@ -52,6 +53,8 @@ app.use("/api/snapshots", snapshotRoutes);
 app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use('/api/v1/expenses', expenseRoutes);
+
+app.use("/api/v1/forecast", forecastRoutes);
 
 app.use('/', router);
 

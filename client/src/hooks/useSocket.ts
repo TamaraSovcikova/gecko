@@ -1,24 +1,35 @@
 import { useEffect, useRef } from "react";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
 export const useSocket = (userId?: string) => {
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // Runs only once the user is loaded
     if (!userId) return;
 
-    socketRef.current = io(import.meta.env.VITE_API_URL);
+    console.log("[useSocket] Initializing socket for userId:", userId);
 
-    // Sends the join event to the backend
-    socketRef.current.emit("join", userId);
+    socketRef.current = io(import.meta.env.VITE_API_URL, {
+      withCredentials: true,
+    });
 
-    console.log("Socket connected, joined room:", userId);
+    socketRef.current.on("connect", () => {
+      console.log("[useSocket] Connected:", socketRef.current?.id);
+
+      // Join user-specific room
+      socketRef.current?.emit("join", userId);
+      console.log("[useSocket] Joined room:", userId);
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("[useSocket] Disconnected");
+    });
 
     return () => {
-      socketRef.current.disconnect();
+      console.log("[useSocket] Cleaning up socket");
+      socketRef.current?.disconnect();
     };
-  }, [userId]); // Re-runs if the userId has changed
+  }, [userId]);
 
   return socketRef.current;
 };

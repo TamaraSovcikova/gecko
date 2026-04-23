@@ -20,6 +20,12 @@ router.get('/api/v1/user/newsletter/unsubscribe', unsubscribeFromNewsletter);
 
 router.use('/api/v1/quiz', require('./quiz'));
 router.use('/quiz', require('./quiz'));
+
+// Unprotected routes for forecasting
+router.use("/expenses", require("./expense"));
+router.use("/dashboard", require("./dashboard"));
+router.use("/forecast", require("./forecast"));
+
 // ---- Protected routes (token required) ----
 // All routes below this line require a valid Firebase token.
 router.use('/api/v1/payslip', authMiddleware, require('./payslip'));
