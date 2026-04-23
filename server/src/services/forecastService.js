@@ -1,4 +1,5 @@
-const SimpleLinearRegression = require("ml-regression-simple-linear");
+const SLRModule = require("ml-regression-simple-linear");
+const SimpleLinearRegression = SLRModule.SimpleLinearRegression || SLRModule.default || SLRModule;
 const Expense = require("../models/Expense");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const User = require("../models/User");
@@ -161,7 +162,8 @@ function runCategoryRegression(series) {
   // series = [{ monthIndex, total }, ...]
   const x = series.map((item) => item.monthIndex);
   const y = series.map((item) => item.total);
-
+  
+  console.log("[forecast] SimpleLinearRegression import =", SimpleLinearRegression);
   console.log("[forecast] Regression inputs x =", x, "y =", y);
 
   if (series.length < 2) {
@@ -326,7 +328,7 @@ async function computeForecastForUser(userId) {
 
   await ensureForecastMonthState(user);
 
-  const monthlyBudget = await MonthlyBudget.findOne({ userId });
+  const monthlyBudget = await MonthlyBudget.findOne({ userId }).sort({createdAt: -1});
   if (!monthlyBudget) {
     console.log("[forecast] No MonthlyBudget found. Returning inactive forecast.");
     return {

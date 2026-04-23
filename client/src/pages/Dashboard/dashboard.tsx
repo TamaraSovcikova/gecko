@@ -623,7 +623,22 @@ const Dashboard = () => {
               }}
               data-onboarding="dashboard-embedded-expenses"
             >
-              <Expenses categories={displayedData.budgetAllocation} />
+              <Expenses
+                categories={displayedData.budgetAllocation}
+                onExpenseCreated={(dashboard, forecastPayload) => {
+                  console.log("[Dashboard] onExpenseCreated callback fired");
+
+                  if (dashboard) {
+                    console.log("[Dashboard] Updating dashboard state from Expenses callback");
+                    setData(dashboard);
+                  }
+
+                  if (forecastPayload) {
+                    console.log("[Dashboard] Updating forecast state from Expenses callback");
+                    setForecast(forecastPayload);
+                  }
+                }}
+              />
             </div>
           )}
         </div>

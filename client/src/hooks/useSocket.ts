@@ -1,35 +1,36 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 export const useSocket = (userId?: string) => {
-  const socketRef = useRef<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     if (!userId) return;
 
-    console.log("[useSocket] Initializing socket for userId:", userId);
+    console.log("[useSocket] Creating socket for user:", userId);
 
-    socketRef.current = io(import.meta.env.VITE_API_URL, {
+    const newSocket = io(import.meta.env.VITE_API_URL, {
       withCredentials: true,
     });
 
-    socketRef.current.on("connect", () => {
-      console.log("[useSocket] Connected:", socketRef.current?.id);
-
-      // Join user-specific room
-      socketRef.current?.emit("join", userId);
-      console.log("[useSocket] Joined room:", userId);
+    newSocket.on("connect", () => {
+      console.log("[useSocket] Connected:", newSocket.id);
+      newSocket.emit("join", userId);
+      console.log("[useSocket] Sent join event for user:", userId);
     });
 
-    socketRef.current.on("disconnect", () => {
-      console.log("[useSocket] Disconnected");
+    newSocket.on("disconnect", () => {
+      console.log("[useSocket] Disconnected:", newSocket.id);
     });
+
+    setSocket(newSocket);
 
     return () => {
-      console.log("[useSocket] Cleaning up socket");
-      socketRef.current?.disconnect();
+      console.log("[useSocket] Cleaning up socket for user:", userId);
+      newSocket.disconnect();
+      setSocket(null);
     };
   }, [userId]);
 
-  return socketRef.current;
+  return socket;
 };
