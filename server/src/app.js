@@ -49,8 +49,6 @@ app.use("/api/snapshots", snapshotRoutes);
 // TEST ROUTES FOR CRON JOB
 //
 
-app.use("/api/v1/dashboard", dashboardRouter);
-
 app.use('/api/v1/expenses', expenseRoutes);
 
 app.use('/', router);
