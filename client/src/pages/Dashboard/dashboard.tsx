@@ -11,6 +11,7 @@ import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 import MonthlySnapshotPopup from "../../components/SnapshotPopup";
+import GroqChat from "./groqChat.tsx";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -161,10 +162,17 @@ const Dashboard = () => {
         setData(res.data);
       } catch (err) {
         console.error(err);
-        setError("error fetching dashboard data");
+        setError("error fetching dashboard data, using fallback");
+        setData({
+          healthScore: 100,
+          takeHome: 100,
+          budgetLeft: 100,
+          totalBudget: 100,
+          actualSpending: [{ name: "Fallback", value: 100 }],
+          budgetAllocation: [{ name: "Fallback", value: 100 }],
+        });
       }
     };
-
     fetchDashboard();
   }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
@@ -1078,6 +1086,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <GroqChat />
       <TooltipGuide
         isOpen={isOnboardingOpen}
         activeStepNumber={activeStepNumber}
