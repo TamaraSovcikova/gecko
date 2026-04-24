@@ -1,6 +1,7 @@
 # Slowly changing it to match our project specs
 # Stages - lint, build, deploy
-# Build - 
+# Lint - re-installs npm dependencies and runs lint
+# unit test stage - commented out for now
 #
 # To contribute improvements to CI/CD templates, please follow the Development guide at:
 # https://docs.gitlab.com/development/cicd/templates/
@@ -25,12 +26,12 @@ build-job:       # This job runs in the build stage, which runs first.
     - echo "Compiling the code..."
     - echo "Compile complete."
 
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
-  script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+#unit-test-job:   # This job runs in the test stage.
+#  stage: test    # It only starts when the job in the build stage completes successfully.
+#  script:
+#    - echo "Running unit tests... This will take about 60 seconds."
+#    - sleep 60
+#    - echo "Code coverage is 90%"
 
 lint-test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
