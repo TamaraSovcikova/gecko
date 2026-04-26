@@ -15,6 +15,7 @@ import MonthlySnapshot, {
 } from "../../components/MonthlySnapshot";
 import GroqChat from "./groqChat.tsx";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
+import { attachDashboardDebug } from "../../dev/dashboardDebug";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -189,6 +190,14 @@ const Dashboard = () => {
 
     fetchSnapshots();
   }, [token, loading, currentUser]);
+
+  useEffect(() => {
+    attachDashboardDebug({
+      snapshots,
+      setPopupSnapshot,
+      setShowSnapshotPopup,
+    });
+  }, [snapshots]);
 
   const isSnapshotMode = snapshotIndex !== null;
   const showExpenses = !isSnapshotMode;
