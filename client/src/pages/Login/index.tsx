@@ -89,12 +89,26 @@ const Login = () => {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+    <div
+      className="container d-flex justify-content-center align-items-center min-vh-100"
+      style={{
+        maxWidth: "100%",
+        background:
+          "radial-gradient(circle at 14% 10%, #eaf4e5 0%, rgba(234, 244, 229, 0) 32%), radial-gradient(circle at 90% 88%, #e8f0f6 0%, rgba(232, 240, 246, 0) 36%), #f7f5ef",
+      }}
+    >
       <div
         className="card p-4 shadow"
-        style={{ width: "100%", maxWidth: "420px" }}
+        style={{
+          width: "100%",
+          maxWidth: "440px",
+          borderRadius: "18px",
+          border: "1px solid #d8d3c7",
+          background: "linear-gradient(145deg, #fdfaf7 0%, #f7f4ee 62%, #f2eee6 100%)",
+          boxShadow: "0 20px 30px rgba(55, 63, 51, 0.12)",
+        }}
       >
-        <h2 className="text-center mb-4">Login</h2>
+        <h2 className="text-center mb-4" style={{ color: "#2b5127", fontWeight: 700, letterSpacing: "0.6px" }}>Login</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
@@ -110,6 +124,7 @@ const Login = () => {
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              style={{ borderColor: "#c6d3c8", backgroundColor: "#fcfdfb" }}
               required
             />
           </div>
@@ -123,12 +138,14 @@ const Login = () => {
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              style={{ borderColor: "#c6d3c8", backgroundColor: "#fcfdfb" }}
               required
             />
           </div>
           <button
             type="submit"
-            className="btn btn-primary w-100"
+            className="btn w-100"
+            style={{ backgroundColor: "#2f5a3a", color: "#fffdf8", border: "1px solid #2a5034", fontWeight: 700 }}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
@@ -139,7 +156,8 @@ const Login = () => {
         <div className="text-center my-3 text-muted">or</div>
 
         <button
-          className="btn btn-outline-danger w-100"
+          className="btn w-100"
+          style={{ border: "1px solid #b7cbb8", color: "#2f5a3a", backgroundColor: "#f4f8f1", fontWeight: 600 }}
           onClick={handleGoogleLogin}
           disabled={loading}
         >

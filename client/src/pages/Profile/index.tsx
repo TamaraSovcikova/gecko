@@ -92,7 +92,7 @@ const Profile = () => {
 
         // Sign out
         await signOut(auth);
-        navigate("/login");
+        navigate("/");
       } catch (err) {
         console.error("Error deleting profile:", err);
         const message = axios.isAxiosError(err)
@@ -108,7 +108,7 @@ const Profile = () => {
     try {
       setLoggingOut(true);
       await signOut(auth);
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       console.error("Error logging out:", err);
       setError("Failed to log out");
