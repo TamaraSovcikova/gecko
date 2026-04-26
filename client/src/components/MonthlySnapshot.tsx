@@ -10,7 +10,7 @@ type SnapshotCategory = {
   actual: number;
 };
 
-export type MonthlySnapshot = {
+export type MonthlySnapshotData = {
   month: number;
   year: number;
   healthScore: number;
@@ -43,14 +43,12 @@ const monthName = (month: number) => {
 };
 
 type Props = {
-  snapshot: MonthlySnapshot;
+  snapshot: MonthlySnapshotData;
 };
 
 export default function MonthlySnapshot({ snapshot }: Props) {
   return (
-    <div
-
-    >
+    <div>
       <p style={{ marginTop: "10px", color: "#555" }}>
         Snapshot created: {new Date(snapshot.createdAt).toLocaleString()}
       </p>
