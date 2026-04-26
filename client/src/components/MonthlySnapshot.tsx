@@ -1,8 +1,13 @@
-// components/MonthlySnapshot.tsx
-
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
-const COLOURS = ["red", "green", "turquoise", "blue", "orange", "purple"];
+const COLOURS = [
+  "#e74c3c",
+  "#2ecc71",
+  "#3498db",
+  "#9b59b6",
+  "#f1c40f",
+  "#1abc9c",
+];
 
 type SnapshotCategory = {
   name: string;
@@ -24,84 +29,108 @@ export type MonthlySnapshotData = {
   createdAt: string;
 };
 
-const monthName = (month: number) => {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return months[month - 1] || "Unknown";
-};
-
 type Props = {
   snapshot: MonthlySnapshotData;
 };
 
+const cardStyle: React.CSSProperties = {
+  padding: "12px",
+  borderRadius: "10px",
+  border: "1px solid #eee",
+  background: "#fafafa",
+};
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export default function MonthlySnapshot({ snapshot }: Props) {
+  const monthLabel = MONTHS[snapshot.month - 1] || "Unknown";
+
   return (
     <div>
+      {/* HEADER */}
+      <h2 style={{ margin: 0 }}>
+        Monthly Snapshot: {monthLabel} {snapshot.year}
+      </h2>
+
       <p style={{ marginTop: "10px", color: "#555" }}>
         Snapshot created: {new Date(snapshot.createdAt).toLocaleString()}
       </p>
 
-      <div style={{ marginTop: "25px", marginBottom: "30px" }}>
-        <h3 style={{ marginBottom: "10px" }}>Summary</h3>
-        <p>
-          <b>Health Score:</b> {snapshot.healthScore}
-        </p>
-        <p>
-          <b>Gross Salary:</b> £{snapshot.grossSalary.toFixed(2)}
-        </p>
-        <p>
-          <b>Take Home Pay:</b> £{snapshot.takeHomePay.toFixed(2)}
-        </p>
-        <p>
-          <b>Total Expenses:</b> £{snapshot.totalExpenses.toFixed(2)}
-        </p>
-        <p>
-          <b>Savings:</b> £{snapshot.savings.toFixed(2)}
-        </p>
-        <p>
-          <b>XP Earned:</b> {snapshot.xpEarned}
-        </p>
-        <p>
-          <b>Quizzes Completed:</b> {snapshot.quizzesCompleted}
-        </p>
-      </div>
+      <p style={{ marginTop: "10px", color: "#000" }}>
+        This is your monthly summary for the past month.
+      </p>
 
+      {/* SUMMARY GRID */}
       <div
         style={{
-          display: "flex",
-          gap: "40px",
+          marginTop: "20px",
+          marginBottom: "30px",
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "12px",
+        }}
+      >
+        <div style={cardStyle}>
+          <b>Health Score:</b> {snapshot.healthScore}
+        </div>
+        <div style={cardStyle}>
+          <b>Gross Salary:</b> £{snapshot.grossSalary.toFixed(2)}
+        </div>
+        <div style={cardStyle}>
+          <b>Take Home:</b> £{snapshot.takeHomePay.toFixed(2)}
+        </div>
+        <div style={cardStyle}>
+          <b>Expenses:</b> £{snapshot.totalExpenses.toFixed(2)}
+        </div>
+        <div style={cardStyle}>
+          <b>Savings:</b> £{snapshot.savings.toFixed(2)}
+        </div>
+        <div style={cardStyle}>
+          <b>XP:</b> {snapshot.xpEarned}
+        </div>
+        <div style={cardStyle}>
+          <b>Quizzes:</b> {snapshot.quizzesCompleted}
+        </div>
+      </div>
+
+      {/* CHARTS */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "30px",
           marginBottom: "40px",
-          flexWrap: "wrap",
         }}
       >
         <div>
           <h4>Budget Allocation</h4>
           <PieChart width={320} height={240}>
             <Pie
-              data={snapshot.categories.map((cat) => ({
-                name: cat.name,
-                value: cat.budget,
+              data={snapshot.categories.map((c) => ({
+                name: c.name,
+                value: c.budget,
               }))}
               dataKey="value"
               nameKey="name"
+              outerRadius={80}
               cx="50%"
               cy="50%"
-              outerRadius={80}
             >
-              {snapshot.categories.map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+              {snapshot.categories.map((_, i) => (
+                <Cell key={i} fill={COLOURS[i % COLOURS.length]} />
               ))}
             </Pie>
             <Tooltip />
@@ -113,18 +142,18 @@ export default function MonthlySnapshot({ snapshot }: Props) {
           <h4>Actual Spending</h4>
           <PieChart width={320} height={240}>
             <Pie
-              data={snapshot.categories.map((cat) => ({
-                name: cat.name,
-                value: cat.actual,
+              data={snapshot.categories.map((c) => ({
+                name: c.name,
+                value: c.actual,
               }))}
               dataKey="value"
               nameKey="name"
+              outerRadius={80}
               cx="50%"
               cy="50%"
-              outerRadius={80}
             >
-              {snapshot.categories.map((_, index) => (
-                <Cell key={index} fill={COLOURS[index % COLOURS.length]} />
+              {snapshot.categories.map((_, i) => (
+                <Cell key={i} fill={COLOURS[i % COLOURS.length]} />
               ))}
             </Pie>
             <Tooltip />
@@ -133,37 +162,31 @@ export default function MonthlySnapshot({ snapshot }: Props) {
         </div>
       </div>
 
-      <div style={{ marginTop: "20px" }}>
+      {/* TABLE */}
+      <div style={{ borderTop: "1px solid #eee", paddingTop: "20px" }}>
         <h4>Budget Adherence</h4>
 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #ccc" }}>
-              <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-              <th style={{ textAlign: "left", padding: "8px" }}>Budget</th>
-              <th style={{ textAlign: "left", padding: "8px" }}>Actual</th>
-              <th style={{ textAlign: "left", padding: "8px" }}>Difference</th>
+            <tr>
+              <th align="left">Category</th>
+              <th align="left">Budget</th>
+              <th align="left">Actual</th>
+              <th align="left">Difference</th>
             </tr>
           </thead>
 
           <tbody>
-            {snapshot.categories.map((cat, idx) => {
+            {snapshot.categories.map((cat, i) => {
               const diff = cat.budget - cat.actual;
 
               return (
-                <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "8px" }}>{cat.name}</td>
-                  <td style={{ padding: "8px" }}>£{cat.budget.toFixed(2)}</td>
-                  <td style={{ padding: "8px" }}>£{cat.actual.toFixed(2)}</td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      color: diff >= 0 ? "green" : "red",
-                    }}
-                  >
-                    {diff >= 0
-                      ? `+£${diff.toFixed(2)}`
-                      : `-£${Math.abs(diff).toFixed(2)}`}
+                <tr key={i}>
+                  <td>{cat.name}</td>
+                  <td>£{cat.budget.toFixed(2)}</td>
+                  <td>£{cat.actual.toFixed(2)}</td>
+                  <td style={{ color: diff >= 0 ? "green" : "red" }}>
+                    {diff >= 0 ? `+£${diff}` : `-£${Math.abs(diff)}`}
                   </td>
                 </tr>
               );
