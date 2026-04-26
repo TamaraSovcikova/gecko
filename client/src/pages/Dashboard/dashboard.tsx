@@ -10,7 +10,7 @@ import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
-import MonthlySnapshotPopup from "../../components/SnapshotPopup";
+import MonthlySnapshot from "../../components/MonthlySnapshot";
 import GroqChat from "./groqChat.tsx";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
@@ -51,29 +51,6 @@ type HealthBreakdown = {
   hasEnoughData: boolean;
   summary: string;
   factors: HealthFactor[];
-};
-
-// types for monthly snapshot
-type SnapshotCategory = {
-  name: string;
-  budget: number;
-  actual: number;
-};
-
-type MonthlySnapshot = {
-  _id: string;
-  userId: string;
-  month: number;
-  year: number;
-  healthScore: number;
-  grossSalary: number;
-  takeHomePay: number;
-  totalExpenses: number;
-  savings: number;
-  categories: SnapshotCategory[];
-  xpEarned: number;
-  quizzesCompleted: number;
-  createdAt: string;
 };
 
 //defined exact data as expected from backend endpoint...
@@ -359,6 +336,7 @@ const Dashboard = () => {
       setShowSnapshotPopup(true);
       localStorage.setItem(key, "true");
     }
+
   }, [snapshots, currentUser]);
 
   const getTipColor = (priority: string) => {
@@ -896,73 +874,10 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* summary */}
+        {/* Monthly Snapshot Section */}
         {isSnapshotMode && selectedSnapshot && (
-          <div style={{ marginBottom: "30px" }}>
-            <p>
-              <b>XP Earned:</b> {selectedSnapshot.xpEarned}
-            </p>
-            <p>
-              <b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}
-            </p>
-          </div>
-        )}
-
-        {/* budget adherence table */}
-        {isSnapshotMode && selectedSnapshot && (
-          <div>
-            <div style={{ marginTop: "20px" }}>
-              <h4>Budget Adherence</h4>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #ccc" }}>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Category
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Budget
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Actual
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Difference
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSnapshot.categories.map((cat, idx) => {
-                    const diff = cat.budget - cat.actual;
-                    return (
-                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                        <td style={{ padding: "8px" }}>{cat.name}</td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.budget.toFixed(2)}
-                        </td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.actual.toFixed(2)}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px",
-                            color: diff >= 0 ? "green" : "red",
-                          }}
-                        >
-                          {diff >= 0
-                            ? `+£${diff.toFixed(2)}`
-                            : `-£${Math.abs(diff).toFixed(2)}`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-              Snapshot created:{" "}
-              {new Date(selectedSnapshot.createdAt).toLocaleString()}
-            </p>
+          <div style={{ marginTop: "30px" }}>
+            <MonthlySnapshot snapshot={selectedSnapshot} />
           </div>
         )}
 
@@ -1105,11 +1020,72 @@ const Dashboard = () => {
       )}
       {/*breakdown disable for snapshot test*/}
 
+      {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
-        <MonthlySnapshotPopup
-          snapshot={popupSnapshot}
-          onClose={() => setShowSnapshotPopup(false)}
-        />
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "14px",
+              width: "900px",
+              maxWidth: "100%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              padding: "30px",
+              fontFamily: "Arial, sans-serif",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+              position: "relative",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowSnapshotPopup(false)}
+              style={{
+                position: "absolute",
+                top: "16px",
+                right: "16px",
+                border: "none",
+                background: "transparent",
+                fontSize: "20px",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              ✕
+            </button>
+
+            {/* EXTRA LINES */}
+            {/* Moved from component to popup */}
+            <h2 style={{ margin: 0 }}>
+              Monthly Snapshot: {monthName(popupSnapshot.month)} {popupSnapshot.year}
+            </h2>
+
+            <p style={{ marginTop: "10px", color: "#555" }}>
+              Snapshot created: {new Date(popupSnapshot.createdAt).toLocaleString()}
+            </p>
+
+            <p style={{ marginTop: "10px", color: "#000" }}>
+              This is your monthly summary for the past month. Past snapshots can be
+              found on your dashboard page using nav buttons and a dropdown.
+            </p>
+            {/* Reuse snapshot component */}
+            <MonthlySnapshot snapshot={popupSnapshot} />
+          </div>
+        </div>
       )}
     </>
   );
