@@ -147,14 +147,14 @@ describe("Frontend journey: login → payslip → dashboard", () => {
     fireEvent.change(grossSalaryInput, { target: { value: "60000" } });
 
     const savePayslipButton = screen.getByRole("button", {
-      name: /Go to Dashboard/i,
+      name: /Save Payslip/i,
     });
     fireEvent.click(savePayslipButton);
 
     // THEN: the router should redirect to /dashboard
     // AND the dashboard should render the expected UI based on mocked dashboard data
     await waitFor(() => {
-      expect(screen.getByText(/Edit Expenses/i)).toBeInTheDocument();
+      expect(screen.getByText(/Show breakdown/i)).toBeInTheDocument();
     });
 
     // THEN: the dashboard should display the correct take-home section
