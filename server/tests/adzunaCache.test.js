@@ -18,14 +18,14 @@ describe("Backend: Adzuna cache hit", () => {
         });
         const { getAverageSalary } = require("../src/services/adzunaCalculator");
         // WHEN: The benchmark is requested for the first time
-        const firstResult = await getAverageSalary("software engineer intern", "Anywehere");
+        const firstResult = await getAverageSalary("Software Engineer Intern", "London");
 
         // THEN: The Adzuna API should be called
         expect(firstResult).toBe(6000);
         expect(axios.get).toHaveBeenCalledTimes(1);
 
         // WHEN: The same benchmark is requested again immediately
-        const secondResult = await getAverageSalary("software engineer intern", "anywehere");
+        const secondResult = await getAverageSalary("Software Engineer Intern", "London");
 
         // THEN: cached value should be returned and no scond call to adzuna
         expect(secondResult).toBe(6000);
