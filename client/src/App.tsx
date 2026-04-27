@@ -22,6 +22,7 @@ import Terms from "./pages/Terms";
 import SettingsPage from "./pages/Settings";
 import ChangePasswordPage from "./pages/ChangePassword";
 import DataPolicyPage from "./pages/DataPolicy";
+import MainLayout from "./MainLayout";
 
 function App() {
   return (
@@ -34,81 +35,28 @@ function App() {
       {/* <Route path="/expenses" element={<Expenses />} /> 
       Route commented out -> choosing to embed the expenses form in the /Dashboard route*/}
 
+      {/* LAYOUT WRAPPER (XP BAR LIVES HERE) */}
       <Route
-        path="/payslip"
         element={
           <ProtectedRoute>
-            <PayslipSetup />
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* PROTECTED ROUTES INSIDE LAYOUT */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/payslip" element={<PayslipSetup />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+      </Route>
 
-      <Route
-        path="/expenses"
-        element={
-          <ProtectedRoute>
-            <Expenses />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/learn"
-        element={
-          <ProtectedRoute>
-            <Learn />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/quiz"
-        element={
-          <ProtectedRoute>
-            <Quiz />
-          </ProtectedRoute>
-        }
-      />
-
+      {/* NON-LAYOUT PROTECTED ROUTES */}
       <Route path="/terms" element={<Terms />} />
-
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/change-password"
-        element={
-          <ProtectedRoute>
-            <ChangePasswordPage />
-          </ProtectedRoute>
-        }
-      />
-
       <Route path="/data-policy" element={<DataPolicyPage />} />
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
     </Routes>
   );
 }

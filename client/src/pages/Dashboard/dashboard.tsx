@@ -9,6 +9,9 @@ import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
+import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
+import MonthlySnapshotPopup from "../../components/SnapshotPopup";
+import { useStreakWarning } from "../../hooks/useStreakWarning";
 import SnapshotNavigator from "../../components/SnapshotNavigator";
 import MonthlySnapshot, {
   type MonthlySnapshotData,
@@ -69,6 +72,10 @@ type DashboardData = {
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
   healthBreakdown?: HealthBreakdown;
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
   expenses?: {
     _id: string;
     category: string;
@@ -112,6 +119,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
+  const { showStreakWarning } = useStreakWarning();
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -206,6 +214,10 @@ const Dashboard = () => {
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
+  // use state for 7 expenses per table page
+  const [expensePage, setExpensePage] = useState(1);
+  const EXPENSES_PER_PAGE = 7;
+
   const displayedData: DashboardData | null = selectedSnapshot
     ? {
         healthScore: selectedSnapshot.healthScore,
@@ -279,6 +291,18 @@ const Dashboard = () => {
     }
   };
 
+  // cancel expense edit
+  const cancelEditing = () => {
+    setEditingExpenseId(null);
+    setPendingDeleteId(null);
+    setEditForm({
+      category: "",
+      amount: 0,
+      date: "",
+      note: "",
+    });
+  };
+
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
     if (!currentUser || snapshots.length === 0) return;
@@ -346,6 +370,23 @@ const Dashboard = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
+
+        {showStreakWarning && (
+        <div
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            background: "#fff3cd",
+            border: "1px solid #ffeeba",
+            borderRadius: "6px",
+            fontSize: "13px",
+            color: "#856404",
+          }}
+        >
+          ⚠️ Complete a quiz this week to keep your streak alive
+        </div>
+      )}
+      
         {isSnapshotMode && selectedSnapshot && (
           <div
             style={{ marginBottom: "20px" }}
@@ -430,6 +471,24 @@ const Dashboard = () => {
               }}
             >
               <h4 style={{ margin: 0 }}>Actual Spending</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/expenses")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Expenses
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
             </div>
             <PieChart width={300} height={220}>
               <Pie

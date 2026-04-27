@@ -8,6 +8,7 @@ import TopNav from "../../components/TopNav";
 import ProfileAvatar from "../../components/ProfileAvatar";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
+import { useGamification } from "../../context/GamificationContext";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Profile = () => {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const { data: gamification } = useGamification();
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -117,20 +119,25 @@ const Profile = () => {
     }
   };
 
-  // Calculate XP level and progress
-  const xpTotal = userData?.xpTotal || 0;
-  const xpPerLevel = 100;
-  const currentLevel = Math.floor(xpTotal / xpPerLevel) + 1;
-  const xpInCurrentLevel = xpTotal % xpPerLevel;
-  const xpProgressPercent = (xpInCurrentLevel / xpPerLevel) * 100;
 
-  if (loading || loadingData) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
-        Loading profile...
-      </div>
-    );
-  }
+  // XP system (same as XPBar)
+  const xpTotal = gamification?.xp ?? 0;
+  const level = gamification?.level ?? 0;
+  const xpIntoLevel = gamification?.xpIntoLevel ?? 0;
+  const xpNeeded = gamification?.xpNeeded ?? 1;
+
+  const xpProgressPercent =
+    xpNeeded > 0
+      ? Math.min((xpIntoLevel / xpNeeded) * 100, 100)
+      : 0;
+
+    if (loading || loadingData) {
+      return (
+        <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+          Loading profile...
+        </div>
+      );
+    }
 
   if (error) {
     return (
@@ -379,7 +386,7 @@ const Profile = () => {
                   color: "#6ba3d9",
                 }}
               >
-                {currentLevel}
+                {level}
               </h2>
 
               {/* XP Bar */}
@@ -404,7 +411,11 @@ const Profile = () => {
               </div>
 
               <p style={{ margin: "0", fontSize: "11px", color: "#999" }}>
-                {xpInCurrentLevel} / {xpPerLevel} XP
+                {xpIntoLevel} / {xpNeeded} XP
+              </p>
+
+              <p style={{ margin: "6px 0 0 0", fontSize: "11px", color: "#999" }}>
+                Total XP: {xpTotal}
               </p>
             </div>
           </div>

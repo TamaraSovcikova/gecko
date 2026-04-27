@@ -1,3 +1,5 @@
+// server/src/routes/quiz.js
+/*
 const express = require("express");
 const router = express.Router();
 const { getQuiz } = require("../services/quizService");
@@ -16,5 +18,30 @@ router.get("/", authMiddleware, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
+*/
+
+// server/src/routes/quiz.js
+// DEBUGGING
+console.log("QUIZ ROUTES FILE LOADED");
+
+const express = require("express");
+const router = express.Router();
+const authMiddleware = require("../middleware/auth");
+
+// trying to merge gamificationController into quizController
+const {
+  fetchQuiz,
+  fetchTestQuiz,
+  completeQuiz,
+  getGamification,
+} = require("../controllers/quizController");
+
+router.get("/", authMiddleware, fetchQuiz);
+router.post("/complete", authMiddleware, completeQuiz);
+router.get("/gamification", authMiddleware, getGamification);
+
+
 
 module.exports = router;
