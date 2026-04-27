@@ -1,6 +1,8 @@
 // auth.js — Authentication middleware.
 // This runs on every protected route BEFORE the route handler.
 
+// don't initialise firebase here
+// it fails testing
 const admin = require('../config/firebase');
 const User = require('../models/User');
 
@@ -47,7 +49,7 @@ const authMiddleware = async (req, res, next) => {
       const fallbackName = String(decodedToken.name || normalizedEmail.split('@')[0] || 'User').trim() || 'User';
       const existingUser = await User.findById(normalizedUid).select('_id email displayName');
 
-      if (!existingUser) {
+      if (existingUser && existingUser.email !== normalizedEmail) { //removing automatic recreation
         await User.create({
           _id: normalizedUid,
           email: normalizedEmail,

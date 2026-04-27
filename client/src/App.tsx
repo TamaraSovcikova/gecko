@@ -11,6 +11,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard/dashboard.tsx";
+import Home from "./pages/Home";
 import Profile from "./pages/Profile/index.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
@@ -26,8 +27,8 @@ import MainLayout from "./MainLayout";
 function App() {
   return (
     <Routes>
-      {/* PUBLIC ROUTES */}
-      <Route path="/" element={<Login />} />
+      {/* Public routes */}
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 

@@ -117,18 +117,22 @@ const generateAdzunaTips = (grossSalary, averageSalary, totalBudget, healthScore
 
 // GET api/v1/dashboard
 //this should be protected - reuires valid firebase token
-router.get('/', authMiddleware, async (req, res) => {
+//remove authmiddleware
+router.get('/', async (req, res) => {
     try {
+        //originally implemented for expnses model so may not have actually been my respnsbility...
+        const now = new Date(); //current date to filter expense objects
+        const month = now.getMonth() + 1; //index values start at 0, so add 1 for logical reference. eg. January = 0, January = 1
+        const year = now.getFullYear(); //self explanatory
+
         const user_id = req.user.uid;     
         const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 }); 
         const takeHome = payslip?.takeHomePay || 0;                                                                                         //if no data, dfaults zero as fallback
         const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget})); //converts to format that recharts requires
         const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);                    //adds all categories for total budget
-
-        //originally implemented for expnses model so may not have actually been my respnsbility...
-        const now = new Date(); //current date to filter expense objects
-        const month = now.getMonth() + 1; //index values start at 0, so add 1 for logical reference. eg. January = 0, January = 1
-        const year = now.getFullYear(); //self explanatory
+        // expenses individually
+        const expenses = await Expense.find({ userId: user_id, month, year })
+          .sort({ date: -1, createdAt: -1 });
 
         const categoryTotals = await Expense.aggregate([ //in orde to make pie charts use correct data, this needs to be combined...
             {$match: { //query...
@@ -202,7 +206,8 @@ router.get('/', authMiddleware, async (req, res) => {
             budgetAllocation,
             healthBreakdown,
             averageSalary,
-            adzunaTips
+            adzunaTips,
+            expenses
         });
 
     } catch(error) {
@@ -210,5 +215,51 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
+async function retrieveDashboardData(user_id) {
+    const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 });
+    const takeHome = payslip?.takeHomePay || 0;
+    const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget}));
+    const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);
+
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const categoryTotals = await Expense.aggregate([
+        {$match: {
+                user_id ,
+                month,
+                year
+            }},
+        {$group: {
+                _id: "$category",
+                total: { $sum: "$amount" }
+            }}
+    ]);
+
+    const actualSpending = categoryTotals.map(item => ({
+        name: item._id,
+        value: item.total
+    }));
+    const totalExpenses = categoryTotals.reduce((sum, e) => sum + e.total, 0);
+
+    let healthScore = 100;
+    if (totalBudget > 0) {
+        const Score = (1 - totalExpenses / totalBudget) * 100;
+        healthScore = Math.round(Math.min(100, Math.max(0, Score)));
+    }
+    const budgetLeft = totalBudget - totalExpenses;
+
+    return {
+        healthScore,
+        takeHome,
+        budgetLeft,
+        totalBudget,
+        actualSpending
+    };
+}
+//...previous function literally contains copied and pasted information from routing above
+
 //export router to be used in app.js
 module.exports = router;
+module.exports.retrieveDashboardData = retrieveDashboardData;

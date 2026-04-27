@@ -12,6 +12,14 @@ import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 import MonthlySnapshotPopup from "../../components/SnapshotPopup";
 import { useStreakWarning } from "../../hooks/useStreakWarning";
+import SnapshotNavigator from "../../components/SnapshotNavigator";
+import MonthlySnapshot, {
+  type MonthlySnapshotData,
+} from "../../components/MonthlySnapshot";
+import GroqChat from "./groqChat.tsx";
+import Modal from "../../components/Modal";
+import ExpenseBreakdown from "../../components/ExpenseBreakdown";
+import { attachDashboardDebug } from "../../dev/dashboardDebug";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -53,30 +61,6 @@ type HealthBreakdown = {
   factors: HealthFactor[];
 };
 
-// types for monthly snapshot
-type SnapshotCategory = {
-  name: string;
-  budget: number;
-  actual: number;
-};
-
-type MonthlySnapshot = {
-  _id: string;
-  userId: string;
-  month: number;
-  year: number;
-  healthScore: number;
-  grossSalary: number;
-  takeHomePay: number;
-  totalExpenses: number;
-  savings: number;
-  categories: SnapshotCategory[];
-  // gamification: TODO tasks
-  xpEarned: number;
-  quizzesCompleted: number;
-  createdAt: string;
-};
-
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
   healthScore: number;
@@ -92,6 +76,17 @@ type DashboardData = {
   // xpEarned: number;
   // quizzesCompleted: number;
   // createdAt: string;
+  expenses?: {
+    _id: string;
+    category: string;
+    amount: number;
+    day: number;
+    month: number;
+    year: number;
+    date: string;
+    note?: string;
+    createdAt: string;
+  }[];
 };
 
 // year, month select helper
@@ -116,9 +111,9 @@ const monthName = (month: number) => {
 const Dashboard = () => {
   // monthly snapshot popup states
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
-  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(
-    null,
-  );
+  const [snapshots, setSnapshots] = useState<MonthlySnapshotData[]>([]);
+  const [popupSnapshot, setPopupSnapshot] =
+    useState<MonthlySnapshotData | null>(null);
   // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
@@ -129,7 +124,9 @@ const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const showExpenses = true;
+  // expense breakdown toggle
+  const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
+
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -140,7 +137,6 @@ const Dashboard = () => {
   } = usePageOnboarding("/dashboard");
 
   // const for monthly snapshot
-  const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
   const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
 
   //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
@@ -155,10 +151,17 @@ const Dashboard = () => {
         setData(res.data);
       } catch (err) {
         console.error(err);
-        setError("error fetching dashboard data");
+        setError("error fetching dashboard data, using fallback");
+        setData({
+          healthScore: 100,
+          takeHome: 100,
+          budgetLeft: 100,
+          totalBudget: 100,
+          actualSpending: [{ name: "Fallback", value: 100 }],
+          budgetAllocation: [{ name: "Fallback", value: 100 }],
+        });
       }
     };
-
     fetchDashboard();
   }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
@@ -197,7 +200,16 @@ const Dashboard = () => {
     fetchSnapshots();
   }, [token, loading, currentUser]);
 
+  useEffect(() => {
+    attachDashboardDebug({
+      snapshots,
+      setPopupSnapshot,
+      setShowSnapshotPopup,
+    });
+  }, [snapshots]);
+
   const isSnapshotMode = snapshotIndex !== null;
+  const showExpenses = !isSnapshotMode;
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
@@ -223,6 +235,57 @@ const Dashboard = () => {
         })),
       }
     : data;
+
+  // delete expense
+  const deleteExpense = async (expenseId: string) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // socket connection updates automatically
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  type ExpenseForm = {
+    category: string;
+    amount: number;
+    date: string;
+    note: string;
+  };
+
+  const updateExpense = async (expenseId: string, editForm: ExpenseForm) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        editForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      // OPTIONAL: you can remove this if socket handles sync
+      setData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          expenses: prev.expenses?.map((exp) =>
+            exp._id === expenseId ? { ...exp, ...editForm } : exp,
+          ),
+        };
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
@@ -392,24 +455,6 @@ const Dashboard = () => {
               }}
             >
               <h4 style={{ margin: 0 }}>Actual Spending</h4>
-              {/*disable if snapshot mode*/}
-              {!isSnapshotMode && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/expenses")}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "999px",
-                    border: "1px solid #bfd1c0",
-                    backgroundColor: "#eef5eb",
-                    color: "#37553e",
-                    fontWeight: 600,
-                  }}
-                >
-                  Edit Expenses
-                </button>
-              )}
-              {/*disable if snapshot mode*/}
             </div>
             <PieChart width={300} height={220}>
               <Pie
@@ -461,6 +506,7 @@ const Dashboard = () => {
             >
               {displayedData.healthScore}
             </p>
+
             {/*breakdown button test*/}
             {!isSnapshotMode && (
               <button
@@ -504,7 +550,7 @@ const Dashboard = () => {
               <p>Under budget by £{displayedData.budgetLeft.toFixed(2)}</p>
             ) : (
               <p>
-                {/*abs ensures displayed number is positive when showing overbudget*/}
+                {/* tabs ensures displayed number is positive when showing overbudget*/}
                 Over budget by £{Math.abs(displayedData.budgetLeft).toFixed(2)}
               </p>
             )}
@@ -523,135 +569,41 @@ const Dashboard = () => {
           )}
         </div>
 
-        {snapshots.length > 0 && (
-          <div
-            style={{
-              marginTop: "60px",
-              paddingTop: "20px",
-              borderTop: "1px solid #ddd",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "16px",
-            }}
-          >
+        {/* expense breakdown toggle / snapshot behaviour */}
+        {isSnapshotMode ? (
+          <ExpenseBreakdown
+            expenses={displayedData.expenses || []}
+            budgetAllocation={displayedData.budgetAllocation || []}
+            onDelete={deleteExpense}
+            onUpdate={updateExpense}
+          />
+        ) : (
+          <>
             <button
-              onClick={() => {
-                if (snapshotIndex === null) {
-                  setSnapshotIndex(0);
-                } else if (snapshotIndex < snapshots.length - 1) {
-                  setSnapshotIndex(snapshotIndex + 1);
-                }
-              }}
-              disabled={
-                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
-              }
+              type="button"
+              onClick={() => setShowExpenseBreakdown((prev) => !prev)}
             >
-              ◀ Older
+              {showExpenseBreakdown
+                ? "Hide expense breakdown"
+                : "See expense breakdown"}
             </button>
 
-            <div style={{ fontWeight: 600 }}>
-              {snapshotIndex === null
-                ? "Live (Current Month)"
-                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
-            </div>
-
-            <button
-              onClick={() => {
-                if (snapshotIndex === null) return;
-                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-                else setSnapshotIndex(null); // go back to live
-              }}
-            >
-              Newer ▶
-            </button>
-          </div>
+            {showExpenseBreakdown && (
+              <ExpenseBreakdown
+                expenses={displayedData.expenses || []}
+                budgetAllocation={displayedData.budgetAllocation || []}
+                onDelete={deleteExpense}
+                onUpdate={updateExpense}
+              />
+            )}
+          </>
         )}
 
-        {/* Calendar dropdown */}
-        {/* Only shows months with valid snapshots */}
-        <SnapshotMonthDropdown
+        <SnapshotNavigator
           snapshots={snapshots}
           snapshotIndex={snapshotIndex}
           setSnapshotIndex={setSnapshotIndex}
         />
-
-        {/* If no snapshot yet */}
-        {snapshots.length == 0 && (
-          <div style={{ fontWeight: 600 }}>
-            You don't have any snapshots yet
-          </div>
-        )}
-
-        {/* summary */}
-        {isSnapshotMode && selectedSnapshot && (
-          <div style={{ marginBottom: "30px" }}>
-            <p>
-              <b>XP Earned:</b> {selectedSnapshot.xpEarned}
-            </p>
-            <p>
-              <b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}
-            </p>
-          </div>
-        )}
-
-        {/* budget adherence table */}
-        {isSnapshotMode && selectedSnapshot && (
-          <div>
-            <div style={{ marginTop: "20px" }}>
-              <h4>Budget Adherence</h4>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #ccc" }}>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Category
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Budget
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Actual
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Difference
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSnapshot.categories.map((cat, idx) => {
-                    const diff = cat.budget - cat.actual;
-                    return (
-                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                        <td style={{ padding: "8px" }}>{cat.name}</td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.budget.toFixed(2)}
-                        </td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.actual.toFixed(2)}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px",
-                            color: diff >= 0 ? "green" : "red",
-                          }}
-                        >
-                          {diff >= 0
-                            ? `+£${diff.toFixed(2)}`
-                            : `-£${Math.abs(diff).toFixed(2)}`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-              Snapshot created:{" "}
-              {new Date(selectedSnapshot.createdAt).toLocaleString()}
-            </p>
-          </div>
-        )}
 
         {/* Adzuna Tips Section */}
         {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
@@ -664,7 +616,7 @@ const Dashboard = () => {
             data-onboarding="dashboard-adzuna-tips"
           >
             <h3 style={{ marginBottom: "20px", color: "#333" }}>
-              💡 Financial Tips Based on Market Data
+              Financial Tips Based on Market Data
             </h3>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "15px" }}
@@ -713,6 +665,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <GroqChat />
       <TooltipGuide
         isOpen={isOnboardingOpen}
         activeStepNumber={activeStepNumber}
@@ -731,11 +684,61 @@ const Dashboard = () => {
       )}
       {/*breakdown disable for snapshot test*/}
 
+      {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
-        <MonthlySnapshotPopup
-          snapshot={popupSnapshot}
-          onClose={() => setShowSnapshotPopup(false)}
-        />
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "14px",
+              width: "900px",
+              maxWidth: "100%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              padding: "30px",
+              fontFamily: "Arial, sans-serif",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+              position: "relative",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowSnapshotPopup(false)}
+              style={{
+                position: "absolute",
+                top: "16px",
+                right: "16px",
+                border: "none",
+                background: "transparent",
+                fontSize: "20px",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              ✕
+            </button>
+
+            {showSnapshotPopup && popupSnapshot && (
+              <Modal onClose={() => setShowSnapshotPopup(false)}>
+                <MonthlySnapshot snapshot={popupSnapshot} />
+              </Modal>
+            )}
+          </div>
+        </div>
       )}
     </>
   );

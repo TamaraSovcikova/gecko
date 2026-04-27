@@ -82,7 +82,7 @@ const Profile = () => {
   const handleDeleteProfile = async () => {
     if (
       window.confirm(
-        "Are you sure you want to delete your profile? This cannot be undone."
+        "Deleting your account is irreversible. This will permanently remove your profile and associated data, including monthly snapshots and newsletter subscriptions "
       )
     ) {
       setDeleting(true);
@@ -94,7 +94,7 @@ const Profile = () => {
 
         // Sign out
         await signOut(auth);
-        navigate("/login");
+        navigate("/");
       } catch (err) {
         console.error("Error deleting profile:", err);
         const message = axios.isAxiosError(err)
@@ -110,7 +110,7 @@ const Profile = () => {
     try {
       setLoggingOut(true);
       await signOut(auth);
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       console.error("Error logging out:", err);
       setError("Failed to log out");

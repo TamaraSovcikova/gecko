@@ -70,10 +70,17 @@ const getCustomQuiz = (topic, reason = "") => {
 
   console.log(`Using custom quiz for '${chosenKey}' (requested: '${topic}')${reason ? ` - ${reason}` : ""}`);
 
+  const selectedQuestions = shuffle(customQuestions)
+    .slice(0, 5)
+    .map((question) => ({
+      ...question,
+      answers: shuffle((question.answers || []).map((answer) => ({ ...answer }))),
+    }));
+
   return {
     topic: chosenKey,
     source: "custom",
-    questions: shuffle(customQuestions).slice(0, 5),
+    questions: selectedQuestions,
   };
 };
 
