@@ -13,15 +13,9 @@ const helmet = require('helmet');
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
+const quizRoutes = require("./routes/quiz");
 
 const app = express();
-
-app.use(
-  helmet({
-    // Firebase popup auth can be noisy or blocked with strict COOP in some flows.
-    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-  })
-);
 
 app.use(
   cors({
@@ -32,6 +26,25 @@ app.use(
 
 app.use(express.json());
 
+app.use("/api/v1/quiz", quizRoutes);
+
+/*
+// DEBUGGING
+app.use("/api/v1/quiz", (req, res, next) => {
+  console.log("QUIZ ROUTE HIT:", req.method, req.url);
+  next();
+});
+*/
+
+//DEBUGGING
+console.log("Mounted quiz routes");
+
+app.use(
+  helmet({
+    // Firebase popup auth can be noisy or blocked with strict COOP in some flows.
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  })
+);
 //
 // TEST ROUTES FOR CRON JOB
 //
