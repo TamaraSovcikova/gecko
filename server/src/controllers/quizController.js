@@ -151,6 +151,19 @@ const completeQuiz = async (req, res) => {
   }
 };
 
+// for Quiz/index.tsx
+const calculateLevel = (xp) => {
+  let level = 0;
+  let remainingXp = xp;
+
+  while (remainingXp >= getXpForLevel(level)) {
+    remainingXp -= getXpForLevel(level);
+    level++;
+  }
+
+  return level;
+};
+
 const fetchQuiz = async (req, res) => {
   try {
     const quiz = await getQuiz(process.env.QUIZ_ID);
