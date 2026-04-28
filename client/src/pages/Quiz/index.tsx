@@ -23,20 +23,6 @@ type Question = {
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function QuizPage() {
-<<<<<<< HEAD
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [selected, setSelected] = useState<number | null>(null);
-    const [showResult, setShowResult] = useState(false);
-    const [score, setScore] = useState(0);
-    const [finished, setFinished] = useState(false);
-    const [completedCount, setCompletedCount] = useState(Number(localStorage.getItem("quizCount")) || 0);
-    const { token } = useAuth();
-    const navigate = useNavigate();
-    const [error, setError] = useState<string | null>(null);
-    // update XP bar
-    const { refreshGamification } = useGamification();
-=======
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -44,13 +30,13 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const { refreshGamification } = useGamification();
+  const [earnedXp, setEarnedXp] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState(
     Number(localStorage.getItem("quizCount")) || 0,
   );
   const { token } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
->>>>>>> cd5e3bf (SCRUM189 - fixed xp live update)
 
   const didFetch = useRef(false);
 
@@ -92,110 +78,39 @@ export default function QuizPage() {
 
   if (finished) {
     return (
-        <>
-            <div style={{ padding: "20px", backgroundColor: "#fafaf8" }}>
-                <TopNav />
-            </div>
-            <button onClick={() => navigate("/dashboard")}
-                style={{ marginTop: "20px", position: "fixed", borderColor: "white", padding: "5px", left: 20, borderRadius: "8px", background: "transparent", display: "flex", justifyContent: "center", color: "white", cursor: "pointer" }}>
-                <BsArrowLeft size={30} />
-            </button>
-            <div style={{ background: "blue", color: "white", padding: "20px", textAlign: "center", fontSize: "24px", fontWeight: "bold" }}>
-                Quiz
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
-                <div style={{ width: "400px", padding: "30px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", background: "white", textAlign: "center" }}>
-                    <p style={{ marginBottom: "10px", color: "darkgray" }}>
-                        Question {currentIndex + 1} of {questions.length}
-                    </p>
-                    <h3 style={{ marginBottom: "20px" }}>{current.question}</h3>
-                    {current.answers.map((a, i) => (
-                        <button key={i}
-                            onClick={() => {
-                                if (showResult) return;
-                                setSelected(i);
-                                setShowResult(true);
-                                if (a.correct) setScore(prev => prev + 1);
-                            }}
-                            style={{ width: "100%", padding: "12px", margin: "8px 0", borderRadius: "8px", border: "1px solid", cursor: "pointer", fontSize: "16px", transition: "0.2s", ...getButtonStyle(i, a) }}>
-                            {a.text}
-                        </button>
-                    ))}
-                    {showResult && (
-                        <button onClick={() => {
-                            console.log("CLICKED NEXT BUTTON"); //DEBUGGING
-                            if (currentIndex + 1 >= questions.length) {
-                                setFinished(true);
-                                setCompletedCount(prev => {
-                                    const next = prev + 1;
-                                    localStorage.setItem("quizCount", String(next));
-                                    return next;
-                                });
-
-                                // sync backend gamification state
-                                const submitResults = async () => {
-                                    try {
-                                        /*
-                                        await fetch(`${API_URL}/api/v1/quiz/complete`, {
-                                            method: "POST",
-                                            headers: {
-                                                "Content-Type": "application/json",
-                                                Authorization: `Bearer ${token}`,
-                                            },
-                                            body: JSON.stringify({
-                                                score,
-                                                difficulty: "medium", // or whatever you track
-                                            }),
-                                        });
-
-                                        // refresh XP bar globally
-                                        await refreshGamification();
-                                        */
-                                        console.log("Submitting quiz results..."); //DEBUGGING
-
-                                        const response = await fetch(`${API_URL}/api/v1/quiz/complete`, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            Authorization: `Bearer ${token}`,
-                                        },
-                                        body: JSON.stringify({
-                                            score,
-                                        }),
-                                        });
-
-                                        console.log("Quiz complete response status:", response.status); //DEBUGGING
-
-                                        const data = await response.json().catch(() => null);
-                                        console.log("Quiz complete response body:", data); //DEBUGGING
-
-                                        console.log("Refreshing gamification state..."); //DEBUGGING
-                                        await refreshGamification();
-                                        console.log("Gamification refreshed"); //DEBUGGING
-
-                                        // setFinished(true);
-                                        console.log("Quiz marked as finished"); //DEBUGGING
-
-                                    } catch (err) {
-                                        console.error("Failed to sync gamification:", err);
-                                    }
-                                };
-
-                                submitResults();
-                                setFinished(true);
-                                return;
-                            }
-                            setSelected(null);
-                            setShowResult(false);
-                            setCurrentIndex(prev => prev + 1);
-                        }}
-                            style={{ marginTop: "20px", width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: "lightblue", color: "black", fontSize: "16px", cursor: "pointer" }}>
-                            Next
-                        </button>
-                    )}
-                </div>
-            </div>
-        </>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "80vh",
+          textAlign: "center",
+        }}
+      >
+        <h1>Quiz Complete!!</h1>
+        <h2>
+          Your Score: {score} / {questions.length}
+        </h2>
+        <h3>
+          You earned {earnedXp} XP
+        </h3>
+        <button
+          onClick={() => navigate("/dashboard")}
+          style={{
+            marginTop: "20px",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            border: "none",
+            background: "blue",
+            color: "white",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+          Go to Dashboard
+        </button>
+      </div>
     );
   }
 
@@ -300,6 +215,9 @@ export default function QuizPage() {
                     console.log("Quiz complete response status:", response.status); //DEBUGGING
 
                     const data = await response.json().catch(() => null);
+                    // show earned XP
+                    setEarnedXp(data?.earnedXp ?? 0);
+              
                     console.log("Quiz complete response body:", data); //DEBUGGING
 
                     console.log("Refreshing gamification state..."); //DEBUGGING
@@ -313,6 +231,7 @@ export default function QuizPage() {
                       localStorage.setItem("quizCount", String(next));
                       return next;
                     });
+
 
                     setFinished(true);
                   } catch (err) {
