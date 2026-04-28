@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
 import TopNav from "../../components/TopNav";
+// update XP bar
+import { useGamification } from "../../context/GamificationContext";
+
 
 type Answer = {
   text: string;
@@ -18,18 +21,18 @@ type Question = {
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function QuizPage() {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const [completedCount, setCompletedCount] = useState(
-    Number(localStorage.getItem("quizCount")) || 0,
-  );
-  const { token } = useAuth();
-  const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [selected, setSelected] = useState<number | null>(null);
+    const [showResult, setShowResult] = useState(false);
+    const [score, setScore] = useState(0);
+    const [finished, setFinished] = useState(false);
+    const [completedCount, setCompletedCount] = useState(Number(localStorage.getItem("quizCount")) || 0);
+    const { token } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
+    // update XP bar
+    const { refreshGamification } = useGamification();
 
   const didFetch = useRef(false);
 

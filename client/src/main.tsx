@@ -10,6 +10,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { GamificationProvider } from "./context/GamificationContext";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -22,6 +23,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <AuthProvider>
         <App />
       </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+    </BrowserRouter>,
+
+    <GamificationProvider>
+    <App />
+  </GamificationProvider>,
+  </React.StrictMode>
 );
