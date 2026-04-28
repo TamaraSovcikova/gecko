@@ -29,7 +29,7 @@ export default function XPBar() {
     <div
       style={{
         position: "fixed",
-        bottom: 85,
+        bottom: 75,
         right: 20,
         width: "340px",
         padding: "10px 12px",
