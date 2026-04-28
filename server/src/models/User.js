@@ -43,10 +43,29 @@ const UserSchema = new mongoose.Schema(
       // payFrequency: { type: String, enum: ['weekly', 'monthly'], default: 'monthly' },
     },
 
-    // XP system
-    xpTotal: {
+    // XP system and gamification
+    // 1. compiling xp total per user
+    // 2. user's level based on their total xp
+    // 3. their weekly quiz streak
+    // 4. date of last time they completed quiz (to calcualte 3.)
+    xp: {
       type: Number,
       default: 0,
+    },
+
+    level: {
+      type: Number,
+      default: 0,
+    },
+
+    weeklyStreak: {
+      type: Number,
+      default: 0,
+    },
+
+    lastQuizCompletedAt: {
+      type: Date,
+      default: null,
     },
 
     // Drives post-login redirect:
