@@ -9,16 +9,13 @@ import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
-import SnapshotNavigator from "../../components/SnapshotNavigator";
+import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 import MonthlySnapshot, {
   type MonthlySnapshotData,
 } from "../../components/MonthlySnapshot";
 import GroqChat from "./groqChat.tsx";
-<<<<<<< HEAD
 import { useStreakWarning } from "../../hooks/useStreakWarning";
-=======
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
->>>>>>> 08e9915 (SCRUM292 - Refactor expense breakdown into seperate compoenent, fix realtime display during history snapshot viewing)
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -590,11 +587,65 @@ const Dashboard = () => {
           </>
         )}
 
-        <SnapshotNavigator
+        {snapshots.length > 0 && (
+          <div
+            style={{
+              marginTop: "60px",
+              paddingTop: "20px",
+              borderTop: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) {
+                  setSnapshotIndex(0);
+                } else if (snapshotIndex < snapshots.length - 1) {
+                  setSnapshotIndex(snapshotIndex + 1);
+                }
+              }}
+              disabled={
+                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
+              }
+            >
+              ◀ Older
+            </button>
+
+            <div style={{ fontWeight: 600 }}>
+              {snapshotIndex === null
+                ? "Live (Current Month)"
+                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
+            </div>
+
+            <button
+              onClick={() => {
+                if (snapshotIndex === null) return;
+                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
+                else setSnapshotIndex(null); // go back to live
+              }}
+            >
+              Newer ▶
+            </button>
+          </div>
+        )}
+
+        {/* Calendar dropdown */}
+        {/* Only shows months with valid snapshots */}
+        <SnapshotMonthDropdown
           snapshots={snapshots}
           snapshotIndex={snapshotIndex}
           setSnapshotIndex={setSnapshotIndex}
         />
+
+        {/* If no snapshot yet */}
+        {snapshots.length == 0 && (
+          <div style={{ fontWeight: 600 }}>
+            You don't have any snapshots yet
+          </div>
+        )}
 
         {/* Adzuna Tips Section */}
         {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
