@@ -71,6 +71,7 @@ type MonthlySnapshot = {
   totalExpenses: number;
   savings: number;
   categories: SnapshotCategory[];
+  // gamification: TODO tasks
   xpEarned: number;
   quizzesCompleted: number;
   createdAt: string;
@@ -98,6 +99,10 @@ type DashboardData = {
     note?: string;
     createdAt: string;
   }[];
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
 };
 
 // year, month select helper
