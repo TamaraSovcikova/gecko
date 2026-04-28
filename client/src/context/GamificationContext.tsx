@@ -8,6 +8,9 @@ type GamificationData = {
   xp: number;
   level: number;
   weeklyStreak: number;
+  xpIntoLevel: number;
+  xpNeeded: number;
+  streakAtRisk: boolean;
 };
 
 type GamificationContextType = {
@@ -39,7 +42,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/user/gamification`,
+        `${import.meta.env.VITE_API_URL}/api/v1/quiz/gamification`, // CHANGE
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -50,7 +53,14 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
       // =========================
       console.log("gamification API response:", res.data); //DEBUGGING
 
+      // FIXED CODE BELOW
       setData(res.data);
+      // setData(res.data.gamification);
+
+      // DEBUGGING
+      console.log("TOKEN:", token);
+      console.log("RAW RESPONSE:", res.data);
+      console.log("GAMIFICATION:", res.data?.gamification);
 
       // =========================
       // DEBUGGING: state update

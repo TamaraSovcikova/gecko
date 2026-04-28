@@ -28,11 +28,20 @@ console.log("QUIZ ROUTES FILE LOADED");
 
 const express = require("express");
 const router = express.Router();
-const QuizController = require("../controllers/quizController");
 const authMiddleware = require("../middleware/auth");
 
-router.get("/", authMiddleware, QuizController.fetchQuiz);
-router.post("/complete", authMiddleware, QuizController.completeQuiz);
+// trying to merge gamificationController into quizController
+const {
+  fetchQuiz,
+  fetchTestQuiz,
+  completeQuiz,
+  getGamification,
+} = require("../controllers/quizController");
+
+router.get("/", authMiddleware, fetchQuiz);
+router.post("/complete", authMiddleware, completeQuiz);
+router.get("/gamification", authMiddleware, getGamification);
+
 
 
 module.exports = router;

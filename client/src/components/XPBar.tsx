@@ -2,19 +2,9 @@
 
 import { useGamification } from "../context/GamificationContext";
 
-// Should borrow logic from quizController
-// but code breaks
-// will fix later
-const BASE_XP = 100;
-const GROWTH_RATE = 1.2;
-
-const getXpForLevel = (level: number) =>
-  Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
-
 export default function XPBar() {
   const { data } = useGamification();
 
-  // DEBUGGING
   console.log("gamification data:", data); //DEBUGGING
 
   if (!data) {
@@ -25,25 +15,15 @@ export default function XPBar() {
     );
   }
 
-const xp = data.xp ?? 0;
+  const xp = data.xp;
+  const level = data.level;
+  const xpIntoLevel = data.xpIntoLevel;
+  const xpNeeded = data.xpNeeded;
 
-// total XP required to reach current level start
-let xpAtLevelStart = 0;
-
-for (let i = 0; i < data.level; i++) {
-  xpAtLevelStart += getXpForLevel(i);
-}
-
-// XP within current level
-const xpIntoLevel = xp - xpAtLevelStart;
-
-// XP needed for current level
-const xpNeeded = getXpForLevel(data.level);
-
-const progress =
-  xpNeeded > 0
-    ? Math.min((xpIntoLevel / xpNeeded) * 100, 100)
-    : 0;
+  const progress =
+    xpNeeded > 0
+      ? Math.min((xpIntoLevel / xpNeeded) * 100, 100)
+      : 0;
 
   return (
     <div
@@ -70,7 +50,7 @@ const progress =
           marginBottom: "6px",
         }}
       >
-        <span>Level {data.level}</span>
+        <span>Level {level}</span>
         <span>
           {xpIntoLevel} / {xpNeeded} XP
         </span>

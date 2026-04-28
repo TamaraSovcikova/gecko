@@ -12,6 +12,7 @@ import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
 import MonthlySnapshotPopup from "../../components/SnapshotPopup";
 import GroqChat from "./groqChat.tsx";
+import { useStreakWarning } from "../../hooks/useStreakWarning";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -135,6 +136,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
+  const { showStreakWarning } = useStreakWarning();
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -416,6 +418,23 @@ const Dashboard = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
+
+        {showStreakWarning && (
+        <div
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            background: "#fff3cd",
+            border: "1px solid #ffeeba",
+            borderRadius: "6px",
+            fontSize: "13px",
+            color: "#856404",
+          }}
+        >
+          ⚠️ Complete a quiz this week to keep your streak alive
+        </div>
+      )}
+      
         {isSnapshotMode && selectedSnapshot && (
           <div
             style={{ marginBottom: "20px" }}

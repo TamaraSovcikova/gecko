@@ -4,29 +4,33 @@ const User = require("../models/User");
 // const { getQuiz, getTestQuiz } = require("../services/quizAPI");
 const { getQuiz } = require("../services/quizAPI");
 
-const BASE_XP_FOR_LEVEL = 100;
-const XP_GROWTH_RATE = 1.2;
+const BASE_XP = 100;
+const GROWTH_RATE = 1.2;
 
-/**
- * XP required per level
- */
-const getXpForLevel = (level) => {
-  return Math.floor(BASE_XP_FOR_LEVEL * Math.pow(XP_GROWTH_RATE, level));
-};
+const getXpForLevel = (level) =>
+  Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
 
-/**
- * Convert XP → level
- */
-const calculateLevel = (xp) => {
-  let level = 0;
-  let remainingXp = xp;
+const calculateGamification = (user) => {
+  const xp = user.xp;
+  const level = user.level;
 
-  while (remainingXp >= getXpForLevel(level)) {
-    remainingXp -= getXpForLevel(level);
-    level++;
+  let xpAtLevelStart = 0;
+
+  for (let i = 0; i < level; i++) {
+    xpAtLevelStart += getXpForLevel(i);
   }
 
-  return level;
+  const xpIntoLevel = xp - xpAtLevelStart;
+  const xpNeeded = getXpForLevel(level);
+
+  return {
+    xp,
+    level,
+    weeklyStreak: user.weeklyStreak,
+    xpIntoLevel,
+    xpNeeded,
+    streakAtRisk: user.streakAtRisk ?? false,
+  };
 };
 
 /**
@@ -75,22 +79,16 @@ const completeQuiz = async (req, res) => {
 
     const now = new Date();
 
-    // -----------------------------------
     // 1. XP CALCULATION
-    // -----------------------------------
     const baseXp = 10;
     const earnedXp = Math.floor(score * 2 + baseXp);
 
     user.xp += earnedXp;
 
-    // -----------------------------------
     // 2. LEVEL UPDATE
-    // -----------------------------------
     user.level = calculateLevel(user.xp);
 
-    // -----------------------------------
     // 3. WEEKLY STREAK (CALENDAR WEEK BASED)
-    // -----------------------------------
     const currentWeek = getWeekKey(now);
 
     if (!user.lastQuizCompletedAt) {
@@ -106,29 +104,20 @@ const completeQuiz = async (req, res) => {
 
     user.lastQuizCompletedAt = now;
 
-    // -----------------------------------
+    // 3.5 STREAK WARNING (CALENDAR WEEK BASED)
+    const lastWeek = user.lastQuizCompletedAt
+      ? getWeekKey(user.lastQuizCompletedAt)
+      : null;
+
+    const streakAtRisk =
+      !lastWeek || lastWeek !== currentWeek;
+
     // 4. MONTHLY QUIZ COUNT
-    // -----------------------------------
-
-    
     const currentMonth = getMonthKey(now);
-
-    /*
-    if (!user.completedQuizzesThisMonth) {
-      user.completedQuizzesThisMonth = {};
-    }
-
-    const existingCount =
-      user.completedQuizzesThisMonth[currentMonth] || 0;
-
-    user.completedQuizzesThisMonth[currentMonth] = existingCount + 1;
-    */
 
     user.completedQuizzesThisMonth = (user.completedQuizzesThisMonth || 0) + 1;
 
-    // -----------------------------------
     // 5. XP PROGRESSION CALCULATION (FOR FRONTEND)
-    // -----------------------------------
     const xp = user.xp;
     const level = user.level;
 
@@ -142,20 +131,12 @@ const completeQuiz = async (req, res) => {
     const xpIntoLevel = xp - xpAtLevelStart;
     const xpNeeded = getXpForLevel(level);
 
-    // -----------------------------------
     // SAVE USER
-    // -----------------------------------
     await user.save();
 
     return res.status(200).json({
       message: "Quiz completed successfully",
-      gamification: {
-        xp,
-        level,
-        weeklyStreak: user.weeklyStreak,
-        xpIntoLevel,
-        xpNeeded,
-      },
+      gamification: calculateGamification(user),
     });
 
   } catch (error) {
@@ -163,17 +144,6 @@ const completeQuiz = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-/*
-const fetchQuiz = async (req, res) => {
-  try {
-    const quiz = await getQuiz();
-    res.status(200).json(quiz);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch quiz" });
-  }
-};
-*/
 
 const fetchQuiz = async (req, res) => {
   try {
@@ -195,8 +165,21 @@ const fetchTestQuiz = async (req, res) => {
   }
 };
 
+const getGamification = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.uid);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    return res.json(calculateGamification(user));
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   fetchQuiz,
   fetchTestQuiz,
   completeQuiz,
+  getGamification,
 };
