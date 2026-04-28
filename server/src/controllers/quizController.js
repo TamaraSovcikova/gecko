@@ -1,6 +1,8 @@
 // server/src/controllers/quizController.js
+
 const User = require("../models/User");
-const { getQuiz, getTestQuiz } = require("../services/quizAPI");
+// const { getQuiz, getTestQuiz } = require("../services/quizAPI");
+const { getQuiz } = require("../services/quizAPI");
 
 const BASE_XP_FOR_LEVEL = 100;
 const XP_GROWTH_RATE = 1.2;
@@ -54,10 +56,17 @@ const getMonthKey = (date) => {
  * POST /api/quiz/complete
  */
 const completeQuiz = async (req, res) => {
+  // DEBUGGING
+  console.log("COMPLETE QUIZ UID:", req.user.uid);
   try {
     const userId = req.user.uid;
     const { score, difficulty } = req.body;
 
+    //const user = await User.findById(userId);
+    // will this fix XP live update?
+    // DEBUGGING
+    console.log("LOOKING FOR USER:", userId);
+    // const user = await User.findOne({ firebaseUid: userId });
     const user = await User.findById(userId);
 
     if (!user) {
@@ -69,7 +78,7 @@ const completeQuiz = async (req, res) => {
     // -----------------------------------
     // 1. XP CALCULATION
     // -----------------------------------
-    const baseXp = 20;
+    const baseXp = 10;
     const difficultyMultiplier =
       difficulty === "hard" ? 2 : difficulty === "medium" ? 1.5 : 1;
 
@@ -103,8 +112,11 @@ const completeQuiz = async (req, res) => {
     // -----------------------------------
     // 4. MONTHLY QUIZ COUNT
     // -----------------------------------
+
+    
     const currentMonth = getMonthKey(now);
 
+    /*
     if (!user.completedQuizzesThisMonth) {
       user.completedQuizzesThisMonth = {};
     }
@@ -113,6 +125,9 @@ const completeQuiz = async (req, res) => {
       user.completedQuizzesThisMonth[currentMonth] || 0;
 
     user.completedQuizzesThisMonth[currentMonth] = existingCount + 1;
+    */
+
+    user.completedQuizzesThisMonth = (user.completedQuizzesThisMonth || 0) + 1;
 
     // -----------------------------------
     // SAVE USER
@@ -135,12 +150,25 @@ const completeQuiz = async (req, res) => {
   }
 };
 
+/*
 const fetchQuiz = async (req, res) => {
   try {
     const quiz = await getQuiz();
     res.status(200).json(quiz);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch quiz" });
+  }
+};
+*/
+
+const fetchQuiz = async (req, res) => {
+  try {
+    const quiz = await getQuiz(process.env.QUIZ_ID);
+
+    return res.status(200).json(quiz);
+  } catch (err) {
+    console.error("Failed to fetch quiz:", err.message);
+    return res.status(500).json({ questions: [] });
   }
 };
 

@@ -14,6 +14,7 @@ const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
 const gamificationRoutes = require("./routes/gamification");
+const quizRoutes = require("./routes/quiz");
 
 const app = express();
 
@@ -26,6 +27,18 @@ app.use(
 
 app.use(express.json());
 
+app.use("/api/v1/quiz", quizRoutes);
+
+/*
+// DEBUGGING
+app.use("/api/v1/quiz", (req, res, next) => {
+  console.log("QUIZ ROUTE HIT:", req.method, req.url);
+  next();
+});
+*/
+
+//DEBUGGING
+console.log("Mounted quiz routes");
 app.use("/api/v1/user", gamificationRoutes);
 
 app.use(

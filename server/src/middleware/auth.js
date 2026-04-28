@@ -27,6 +27,10 @@ const authMiddleware = async (req, res, next) => {
   }
 
   const normalizedUid = decodedToken.uid || decodedToken.user_id || decodedToken.sub;
+
+  // DEBUGGING
+  console.log("AUTH UID:", normalizedUid);
+
   if (!normalizedUid) {
     return res.status(401).json({ error: 'Unauthorized - token missing user id' });
   }
