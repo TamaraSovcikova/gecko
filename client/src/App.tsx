@@ -28,7 +28,7 @@ function App() {
   return (
     <Routes>
       {/* PUBLIC ROUTES */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 

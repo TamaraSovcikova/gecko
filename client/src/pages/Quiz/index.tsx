@@ -1,13 +1,12 @@
 // pages/Quiz/index.tsx
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
 import TopNav from "../../components/TopNav";
 // update XP bar
 import { useGamification } from "../../context/GamificationContext";
-
 
 type Answer = {
   text: string;
@@ -92,9 +91,7 @@ export default function QuizPage() {
         <h2>
           Your Score: {score} / {questions.length}
         </h2>
-        <h3>
-          You earned {earnedXp} XP
-        </h3>
+        <h3>You earned {earnedXp} XP</h3>
         <button
           onClick={() => navigate("/dashboard")}
           style={{
@@ -191,77 +188,82 @@ export default function QuizPage() {
             </button>
           ))}
           {showResult && (
-          <button
-            onClick={() => {
-              console.log("CLICKED NEXT BUTTON"); //DEBUGGING
+            <button
+              onClick={() => {
+                console.log("CLICKED NEXT BUTTON"); //DEBUGGING
 
-              if (currentIndex + 1 >= questions.length) {
-                // sync backend gamification state
-                const submitResults = async () => {
-                  try {
-                    console.log("Submitting quiz results..."); //DEBUGGING
+                if (currentIndex + 1 >= questions.length) {
+                  // sync backend gamification state
+                  const submitResults = async () => {
+                    try {
+                      console.log("Submitting quiz results..."); //DEBUGGING
 
-                    const response = await fetch(`${API_URL}/api/v1/quiz/complete`, {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        score,
-                      }),
-                    });
+                      const response = await fetch(
+                        `${API_URL}/api/v1/quiz/complete`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({
+                            score,
+                          }),
+                        },
+                      );
 
-                    console.log("Quiz complete response status:", response.status); //DEBUGGING
+                      console.log(
+                        "Quiz complete response status:",
+                        response.status,
+                      ); //DEBUGGING
 
-                    const data = await response.json().catch(() => null);
-                    // show earned XP
-                    setEarnedXp(data?.earnedXp ?? 0);
-              
-                    console.log("Quiz complete response body:", data); //DEBUGGING
+                      const data = await response.json().catch(() => null);
+                      // show earned XP
+                      setEarnedXp(data?.earnedXp ?? 0);
 
-                    console.log("Refreshing gamification state..."); //DEBUGGING
-                    await refreshGamification();
-                    console.log("Gamification refreshed"); //DEBUGGING
+                      console.log("Quiz complete response body:", data); //DEBUGGING
 
-                    console.log("Quiz marked as finished"); //DEBUGGING
+                      console.log("Refreshing gamification state..."); //DEBUGGING
+                      await refreshGamification();
+                      console.log("Gamification refreshed"); //DEBUGGING
 
-                    setCompletedCount((prev) => {
-                      const next = prev + 1;
-                      localStorage.setItem("quizCount", String(next));
-                      return next;
-                    });
+                      console.log("Quiz marked as finished"); //DEBUGGING
 
+                      setCompletedCount((prev) => {
+                        const next = prev + 1;
+                        localStorage.setItem("quizCount", String(next));
+                        return next;
+                      });
 
-                    setFinished(true);
-                  } catch (err) {
-                    console.error("Failed to sync gamification:", err);
-                  }
-                };
+                      setFinished(true);
+                    } catch (err) {
+                      console.error("Failed to sync gamification:", err);
+                    }
+                  };
 
-                submitResults();
-                return;
-              }
+                  submitResults();
+                  return;
+                }
 
-              setSelected(null);
-              setShowResult(false);
-              setCurrentIndex((prev) => prev + 1);
-            }}
-            style={{
-              marginTop: "20px",
-              width: "100%",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "none",
-              background: "lightblue",
-              color: "black",
-              fontSize: "16px",
-              cursor: "pointer",
-            }}
-          >
-            Next
-          </button>
-        )}
+                setSelected(null);
+                setShowResult(false);
+                setCurrentIndex((prev) => prev + 1);
+              }}
+              style={{
+                marginTop: "20px",
+                width: "100%",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "none",
+                background: "lightblue",
+                color: "black",
+                fontSize: "16px",
+                cursor: "pointer",
+              }}
+            >
+              Next
+            </button>
+          )}
         </div>
       </div>
     </>

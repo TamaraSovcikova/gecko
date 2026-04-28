@@ -17,7 +17,6 @@ import GroqChat from "./groqChat.tsx";
 import { useStreakWarning } from "../../hooks/useStreakWarning";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
 import Modal from "../../components/Modal";
-import ExpenseBreakdown from "../../components/ExpenseBreakdown";
 import { attachDashboardDebug } from "../../dev/dashboardDebug";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
@@ -353,23 +352,22 @@ const Dashboard = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
-
         {showStreakWarning && (
-        <div
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            background: "#fff3cd",
-            border: "1px solid #ffeeba",
-            borderRadius: "6px",
-            fontSize: "13px",
-            color: "#856404",
-          }}
-        >
-          ⚠️ Complete a quiz this week to keep your streak alive
-        </div>
-      )}
-      
+          <div
+            style={{
+              padding: "10px",
+              marginBottom: "10px",
+              background: "#fff3cd",
+              border: "1px solid #ffeeba",
+              borderRadius: "6px",
+              fontSize: "13px",
+              color: "#856404",
+            }}
+          >
+            ⚠️ Complete a quiz this week to keep your streak alive
+          </div>
+        )}
+
         {isSnapshotMode && selectedSnapshot && (
           <div
             style={{ marginBottom: "20px" }}
