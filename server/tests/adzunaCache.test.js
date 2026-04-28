@@ -25,7 +25,7 @@ describe("Backend: Adzuna cache hit", () => {
         expect(axios.get).toHaveBeenCalledTimes(1);
 
         // WHEN: The same benchmark is requested again immediately
-        const secondResult = await getAverageSalary("Software Engineer Intern", "London");
+        const secondResult = await getAverageSalary("software engineer intern", "anywehere");
 
         // THEN: cached value should be returned and no scond call to adzuna
         expect(secondResult).toBe(6000);
