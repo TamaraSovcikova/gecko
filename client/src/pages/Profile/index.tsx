@@ -92,7 +92,7 @@ const Profile = () => {
 
         // Sign out
         await signOut(auth);
-        navigate("/login");
+        navigate("/");
       } catch (err) {
         console.error("Error deleting profile:", err);
         const message = axios.isAxiosError(err)
@@ -108,7 +108,7 @@ const Profile = () => {
     try {
       setLoggingOut(true);
       await signOut(auth);
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       console.error("Error logging out:", err);
       setError("Failed to log out");
@@ -117,12 +117,29 @@ const Profile = () => {
     }
   };
 
-  // Calculate XP level and progress
-  const xpTotal = userData?.xpTotal || 0;
-  const xpPerLevel = 100;
-  const currentLevel = Math.floor(xpTotal / xpPerLevel) + 1;
-  const xpInCurrentLevel = xpTotal % xpPerLevel;
-  const xpProgressPercent = (xpInCurrentLevel / xpPerLevel) * 100;
+  // XP system (same as XPBar)
+  const BASE_XP = 100;
+  const GROWTH_RATE = 1.2;
+
+  const getXpForLevel = (level: number) =>
+    Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
+
+  // total accumulated XP (from backend)
+  const xpTotal = userData?.xp || 0;
+
+  // calculate level + progress
+  let level = 0;
+  let remainingXp = xpTotal;
+
+  while (remainingXp >= getXpForLevel(level)) {
+    remainingXp -= getXpForLevel(level);
+    level++;
+  }
+
+  const xpIntoLevel = remainingXp;
+  const xpNeeded = getXpForLevel(level);
+  const xpProgressPercent =
+    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
 
   if (loading || loadingData) {
     return (
@@ -379,7 +396,7 @@ const Profile = () => {
                   color: "#6ba3d9",
                 }}
               >
-                {currentLevel}
+                {level}
               </h2>
 
               {/* XP Bar */}
@@ -404,7 +421,11 @@ const Profile = () => {
               </div>
 
               <p style={{ margin: "0", fontSize: "11px", color: "#999" }}>
-                {xpInCurrentLevel} / {xpPerLevel} XP
+                {xpIntoLevel} / {xpNeeded} XP
+              </p>
+
+              <p style={{ margin: "6px 0 0 0", fontSize: "11px", color: "#999" }}>
+                Total XP: {xpTotal}
               </p>
             </div>
           </div>

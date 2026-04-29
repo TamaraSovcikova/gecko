@@ -1,31 +1,25 @@
 const axios = require("axios");
 const { CUSTOM_QUIZ_MAP, CUSTOM_TOPICS_LIST } = require("../data/customQuizzes");
+const shuffle = require("../utils/shuffle");
 
 const BASE_URL = "https://quizapi.io/api/v1/questions";
 
 const DYNAMIC_TOPICS = ["JavaScript", "HTML", "CSS", "SQL", "Linux", "Docker"];
 
-// Quiz data is imported from ../data/customQuizzes.js
-// - CUSTOM_QUIZ_MAP: object with all custom quiz questions
-// - DEFAULT_CUSTOM_TOPIC: default topic for fallback
-// - CUSTOM_TOPICS_LIST: precomputed list of custom topic keys for efficient random selection
-
+/**
+ * Normalize topic string (IMPORTANT for matching frontend IDs)
+ */
 const normalizeTopic = (topic) => {
   if (!topic) return "";
-  return topic.toString().trim();
+  return topic.toString().trim().toLowerCase();
 };
 
-const shuffle = (array) => {
-  const items = [...array];
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
-};
-
+/**
+ * Convert QuizAPI format → app format
+ */
 const normalizeQuizApiQuestions = (data) => {
   if (!Array.isArray(data)) return [];
+
   return data
     .map((question) => {
       if (!question || !question.id || !question.text || !question.answers) {
@@ -44,48 +38,72 @@ const normalizeQuizApiQuestions = (data) => {
         question: question.text,
         type: question.type || "multiple",
         answers: shuffle(
-          answers.map((answer) => ({
-            text: answer.text,
-            correct: answer.correct,
-          })),
+          answers.map((a) => ({
+            text: a.text,
+            correct: a.correct,
+          }))
         ),
       };
     })
     .filter(Boolean);
 };
 
+/**
+ * Match dynamic topics (case-insensitive)
+ */
 const getDynamicTopicTag = (topic) => {
-  const normalized = normalizeTopic(topic).toLowerCase();
-  return DYNAMIC_TOPICS.find((dynamicTopic) => dynamicTopic.toLowerCase() === normalized) || null;
+  const normalized = normalizeTopic(topic);
+
+  return (
+    DYNAMIC_TOPICS.find(
+      (t) => t.toLowerCase() === normalized
+    ) || null
+  );
 };
 
+/**
+ * Get random custom topic
+ */
 const getRandomCustomTopic = () => {
-  return CUSTOM_TOPICS_LIST[Math.floor(Math.random() * CUSTOM_TOPICS_LIST.length)];
+  return CUSTOM_TOPICS_LIST[
+    Math.floor(Math.random() * CUSTOM_TOPICS_LIST.length)
+  ];
 };
 
+/**
+ * Build custom quiz response
+ */
 const getCustomQuiz = (topic, reason = "") => {
-  const normalized = normalizeTopic(topic).toLowerCase();
-  const chosenKey = CUSTOM_QUIZ_MAP[normalized] ? normalized : getRandomCustomTopic();
-  const customQuestions = CUSTOM_QUIZ_MAP[chosenKey] || [];
+  const normalized = normalizeTopic(topic);
 
-  console.log(`Using custom quiz for '${chosenKey}' (requested: '${topic}')${reason ? ` - ${reason}` : ""}`);
+  const questions = CUSTOM_QUIZ_MAP[normalized] || [];
+
+  const selectedQuestions = shuffle(questions)
+    .slice(0, 5)
+    .map((q) => ({
+      ...q,
+      answers: shuffle((q.answers || []).map((a) => ({ ...a }))),
+    }));
 
   return {
-    topic: chosenKey,
+    topic: normalized,
     source: "custom",
-    questions: shuffle(customQuestions).slice(0, 5),
+    questions: selectedQuestions,
   };
 };
 
+/**
+ * Fetch dynamic quiz from QuizAPI
+ */
 const fetchDynamicQuiz = async (topic) => {
   const tag = getDynamicTopicTag(topic);
-  if (!tag) {
-    return null;
-  }
+
+  if (!tag) return null;
 
   const QUIZ_API_KEY = process.env.QUIZ_API_KEY;
+
   if (!QUIZ_API_KEY) {
-    console.warn("QuizAPI key is not configured, skipping dynamic fetch");
+    console.warn("QuizAPI key missing → skipping dynamic fetch");
     return null;
   }
 
@@ -103,47 +121,70 @@ const fetchDynamicQuiz = async (topic) => {
       timeout: 5000,
     });
 
-    const payload = response.data && response.data.data ? response.data.data : response.data;
+    const payload =
+      response.data?.data || response.data;
+
     const questions = normalizeQuizApiQuestions(payload);
 
-    if (questions.length === 0) {
-      console.warn(`QuizAPI returned no questions for dynamic topic '${topic}'`);
+    if (!questions.length) {
+      console.warn(`No dynamic questions for '${topic}'`);
       return null;
     }
 
-    const selectedQuestions = shuffle(questions).slice(0, 5);
     return {
-      topic,
+      topic: normalizeTopic(topic),
       source: "dynamic",
-      questions: selectedQuestions,
+      questions: shuffle(questions).slice(0, 5),
     };
-  } catch (error) {
-    console.warn(`QuizAPI dynamic fetch failed for topic '${topic}': ${error.message}`);
+  } catch (err) {
+    console.warn(`Dynamic quiz failed for '${topic}': ${err.message}`);
     return null;
   }
 };
 
+/**
+ * MAIN ENTRY
+ */
 const getQuiz = async (topic) => {
-  console.log("getQuiz called at", new Date().toISOString());
   const requestedTopic = normalizeTopic(topic);
 
+  console.log("Requested topic:", requestedTopic);
+
   if (!requestedTopic) {
-    const randomTopic = getRandomCustomTopic();   
-    return getCustomQuiz(randomTopic, "no topic provided, random selection");
+    const randomTopic = getRandomCustomTopic();
+
+    console.log("→ No topic provided, using RANDOM:", randomTopic);
+
+    return getCustomQuiz(randomTopic, "no topic provided");
   }
 
   const dynamicTag = getDynamicTopicTag(requestedTopic);
+
   if (dynamicTag) {
     const dynamicQuiz = await fetchDynamicQuiz(requestedTopic);
+
     if (dynamicQuiz && dynamicQuiz.questions.length > 0) {
+      console.log("→ Using dynamic quiz:", requestedTopic);
       return dynamicQuiz;
     }
 
-    console.warn(`QuizAPI fallback: dynamic topic '${requestedTopic}' returned no questions`);
-    return getCustomQuiz(requestedTopic, "dynamic topic fallback");
+    console.warn("→ Dynamic failed, falling back to custom");
   }
 
-  return getCustomQuiz(requestedTopic, "custom topic match");
+  if (!CUSTOM_QUIZ_MAP[requestedTopic]) {
+    console.warn(`Topic mismatch: '${requestedTopic}' not found`);
+    console.warn("Available topics:", Object.keys(CUSTOM_QUIZ_MAP));
+
+    const randomTopic = getRandomCustomTopic();
+
+    console.warn("→ Falling back to RANDOM:", randomTopic);
+
+    return getCustomQuiz(randomTopic, "fallback (invalid topic)");
+  }
+
+  console.log("→ Using EXACT custom topic:", requestedTopic);
+
+  return getCustomQuiz(requestedTopic, "exact match");
 };
 
 module.exports = {

@@ -9,8 +9,15 @@ import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
-import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
-import MonthlySnapshotPopup from "../../components/SnapshotPopup";
+import SnapshotNavigator from "../../components/SnapshotNavigator";
+import MonthlySnapshot, {
+  type MonthlySnapshotData,
+} from "../../components/MonthlySnapshot";
+import GroqChat from "./groqChat.tsx";
+import { useStreakWarning } from "../../hooks/useStreakWarning";
+import ExpenseBreakdown from "../../components/ExpenseBreakdown";
+import Modal from "../../components/Modal";
+import { attachDashboardDebug } from "../../dev/dashboardDebug";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
 
@@ -52,29 +59,6 @@ type HealthBreakdown = {
   factors: HealthFactor[];
 };
 
-// types for monthly snapshot
-type SnapshotCategory = {
-  name: string;
-  budget: number;
-  actual: number;
-};
-
-type MonthlySnapshot = {
-  _id: string;
-  userId: string;
-  month: number;
-  year: number;
-  healthScore: number;
-  grossSalary: number;
-  takeHomePay: number;
-  totalExpenses: number;
-  savings: number;
-  categories: SnapshotCategory[];
-  xpEarned: number;
-  quizzesCompleted: number;
-  createdAt: string;
-};
-
 //defined exact data as expected from backend endpoint...
 type DashboardData = {
   healthScore: number;
@@ -97,6 +81,10 @@ type DashboardData = {
     note?: string;
     createdAt: string;
   }[];
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
 };
 
 // year, month select helper
@@ -121,21 +109,22 @@ const monthName = (month: number) => {
 const Dashboard = () => {
   // monthly snapshot popup states
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
-  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshot | null>(
-    null,
-  );
+  const [snapshots, setSnapshots] = useState<MonthlySnapshotData[]>([]);
+  const [popupSnapshot, setPopupSnapshot] =
+    useState<MonthlySnapshotData | null>(null);
   // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
   const { token, loading, currentUser } = useAuth();
   const socket = useSocket(currentUser?.uid);
+  const { showStreakWarning } = useStreakWarning();
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   // expense breakdown toggle
   const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
-  const showExpenses = true;
+
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -146,7 +135,6 @@ const Dashboard = () => {
   } = usePageOnboarding("/dashboard");
 
   // const for monthly snapshot
-  const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
   const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
 
   //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
@@ -161,10 +149,17 @@ const Dashboard = () => {
         setData(res.data);
       } catch (err) {
         console.error(err);
-        setError("error fetching dashboard data");
+        setError("error fetching dashboard data, using fallback");
+        setData({
+          healthScore: 100,
+          takeHome: 100,
+          budgetLeft: 100,
+          totalBudget: 100,
+          actualSpending: [{ name: "Fallback", value: 100 }],
+          budgetAllocation: [{ name: "Fallback", value: 100 }],
+        });
       }
     };
-
     fetchDashboard();
   }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
@@ -203,14 +198,19 @@ const Dashboard = () => {
     fetchSnapshots();
   }, [token, loading, currentUser]);
 
+  useEffect(() => {
+    attachDashboardDebug({
+      snapshots,
+      setPopupSnapshot,
+      setShowSnapshotPopup,
+    });
+  }, [snapshots]);
+
   const isSnapshotMode = snapshotIndex !== null;
+  const showExpenses = !isSnapshotMode;
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
-
-  // use state for 7 expenses per table page
-  const [expensePage, setExpensePage] = useState(1);
-  const EXPENSES_PER_PAGE = 7;
 
   const displayedData: DashboardData | null = selectedSnapshot
     ? {
@@ -252,77 +252,37 @@ const Dashboard = () => {
     }
   };
 
-  // expense edit button
-  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  type ExpenseForm = {
+    category: string;
+    amount: number;
+    date: string;
+    note: string;
+  };
 
-  const [editForm, setEditForm] = useState({
-    category: "",
-    amount: 0,
-    date: "",
-    note: "",
-  });
-
-  // pending delete state
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-
-  const updateExpense = async (expenseId: string) => {
+  const updateExpense = async (expenseId: string, editForm: ExpenseForm) => {
     try {
-      console.log("Updating expense:", expenseId, editForm);
-
-      const res = await axios.patch(
+      await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        {
-          category: editForm.category,
-          amount: editForm.amount,
-          date: editForm.date,
-          note: editForm.note,
-        },
+        editForm,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
 
-      console.log("Expense updated successfully:", res.data);
-
-      // update frontend immediately (without waiting for socket)
+      // OPTIONAL: you can remove this if socket handles sync
       setData((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
           expenses: prev.expenses?.map((exp) =>
-            exp._id === expenseId
-              ? {
-                  ...exp,
-                  category: editForm.category,
-                  amount: editForm.amount,
-                  date: editForm.date,
-                  note: editForm.note,
-                  month: new Date(editForm.date).getMonth() + 1,
-                  year: new Date(editForm.date).getFullYear(),
-                }
-              : exp,
+            exp._id === expenseId ? { ...exp, ...editForm } : exp,
           ),
         };
       });
-
-      setEditingExpenseId(null);
-      setPendingDeleteId(null);
     } catch (err) {
-      console.error("Failed to update expense:", err);
+      console.error(err);
     }
-  };
-
-  // cancel expense edit
-  const cancelEditing = () => {
-    setEditingExpenseId(null);
-    setPendingDeleteId(null);
-    setEditForm({
-      category: "",
-      amount: 0,
-      date: "",
-      note: "",
-    });
   };
 
   // useEffect for pop-up on first log-in of the month
@@ -379,17 +339,6 @@ const Dashboard = () => {
     }
   };
 
-  // calculate number of expenses
-  // 7 expenses (rows) per expense breakdown table page
-  const totalExpenses = displayedData?.expenses?.length || 0;
-  const totalExpensePages = Math.ceil(totalExpenses / EXPENSES_PER_PAGE);
-
-  const expenseStartIndex = (expensePage - 1) * EXPENSES_PER_PAGE;
-  const expenseEndIndex = expenseStartIndex + EXPENSES_PER_PAGE;
-
-  const pagedExpenses =
-    displayedData?.expenses?.slice(expenseStartIndex, expenseEndIndex) || [];
-
   if (error) return <div>{error}</div>;
   if (!displayedData) return <div>Loading...</div>;
 
@@ -403,6 +352,22 @@ const Dashboard = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
+        {showStreakWarning && (
+          <div
+            style={{
+              padding: "10px",
+              marginBottom: "10px",
+              background: "#fff3cd",
+              border: "1px solid #ffeeba",
+              borderRadius: "6px",
+              fontSize: "13px",
+              color: "#856404",
+            }}
+          >
+            ⚠️ Complete a quiz this week to keep your streak alive
+          </div>
+        )}
+
         {isSnapshotMode && selectedSnapshot && (
           <div
             style={{ marginBottom: "20px" }}
@@ -601,422 +566,41 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* expense breakdown button */}
-        {!isSnapshotMode && (
-          <button
-            type="button"
-            onClick={() => setShowExpenseBreakdown(!showExpenseBreakdown)}
-            data-onboarding="dashboard-health-breakdown-trigger"
-            style={{
-              padding: "8px 12px",
-              borderRadius: "999px",
-              border: "1px solid #bfd1c0",
-              backgroundColor: "#eef5eb",
-              color: "#37553e",
-              fontWeight: 600,
-            }}
-          >
-            {showExpenseBreakdown
-              ? "Hide expense breakdown"
-              : "See expense breakdown"}
-          </button>
-        )}
-
-        {/* expense table but make it live */}
-        {!isSnapshotMode && showExpenseBreakdown && displayedData?.expenses && (
-          <div style={{ marginTop: "30px" }}>
-            <h4>Expense Breakdown</h4>
-
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #ccc" }}>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Category
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    dd/mm/yyyy
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {pagedExpenses.map((exp, idx) => {
-                  const isEditing = editingExpenseId === exp._id;
-
-                  return (
-                    <tr
-                      key={exp._id || idx}
-                      style={{ borderBottom: "1px solid #eee" }}
-                    >
-                      {/* CATEGORY */}
-                      <td style={{ padding: "8px" }}>
-                        {isEditing ? (
-                          <select
-                            value={editForm.category}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                category: e.target.value,
-                              }))
-                            }
-                            style={{
-                              padding: "6px",
-                              borderRadius: "6px",
-                              border: "1px solid #ccc",
-                              width: "100%",
-                            }}
-                          >
-                            {(displayedData.budgetAllocation || []).map(
-                              (cat) => (
-                                <option key={cat.name} value={cat.name}>
-                                  {cat.name}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                        ) : (
-                          exp.category
-                        )}
-                      </td>
-
-                      {/* VALUE */}
-                      <td style={{ padding: "8px" }}>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            value={editForm.amount}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                amount: Number(e.target.value),
-                              }))
-                            }
-                          />
-                        ) : (
-                          `£${exp.amount.toFixed(2)}`
-                        )}
-                      </td>
-
-                      {/* DATE */}
-                      <td style={{ padding: "8px" }}>
-                        {isEditing ? (
-                          <input
-                            type="date"
-                            value={editForm.date}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                date: e.target.value,
-                              }))
-                            }
-                          />
-                        ) : (
-                          new Date(exp.date).toLocaleDateString("en-GB")
-                        )}
-                      </td>
-
-                      {/* NOTE */}
-                      <td style={{ padding: "8px" }}>
-                        {isEditing ? (
-                          <input
-                            value={editForm.note}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                note: e.target.value,
-                              }))
-                            }
-                          />
-                        ) : (
-                          exp.note || "-"
-                        )}
-                      </td>
-
-                      {/* EDIT / SAVE */}
-                      <td style={{ padding: "8px" }}>
-                        {isEditing ? (
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              onClick={() => updateExpense(exp._id)}
-                              style={{
-                                padding: "4px 10px",
-                                borderRadius: "6px",
-                                border: "1px solid #ccc",
-                                cursor: "pointer",
-                              }}
-                            >
-                              Save
-                            </button>
-
-                            <button
-                              onClick={cancelEditing}
-                              style={{
-                                padding: "4px 10px",
-                                borderRadius: "6px",
-                                border: "1px solid #ccc",
-                                cursor: "pointer",
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setEditingExpenseId(exp._id);
-                              setPendingDeleteId(null);
-                              setEditForm({
-                                category: exp.category,
-                                amount: exp.amount,
-                                date: exp.date,
-                                note: exp.note || "",
-                              });
-                            }}
-                            style={{
-                              padding: "4px 10px",
-                              borderRadius: "6px",
-                              border: "1px solid #ccc",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </td>
-
-                      {/* DELETE */}
-                      <td style={{ padding: "8px" }}>
-                        {pendingDeleteId === exp._id ? (
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              onClick={() => {
-                                deleteExpense(exp._id);
-                                setPendingDeleteId(null);
-                              }}
-                              style={{
-                                padding: "4px 10px",
-                                borderRadius: "6px",
-                                border: "1px solid #ccc",
-                                cursor: "pointer",
-                                backgroundColor: "#dc3545",
-                                color: "white",
-                              }}
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => setPendingDeleteId(null)}
-                              style={{
-                                padding: "4px 10px",
-                                borderRadius: "6px",
-                                border: "1px solid #ccc",
-                                cursor: "pointer",
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setPendingDeleteId(exp._id)}
-                            style={{
-                              padding: "4px 10px",
-                              borderRadius: "6px",
-                              border: "1px solid #ccc",
-                              cursor: "pointer",
-                              color: "red",
-                            }}
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* expense breakdown table nav buttons */}
-        {showExpenseBreakdown && totalExpensePages > 1 && (
-          <div
-            style={{
-              marginTop: "12px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
+        {/* expense breakdown toggle / snapshot behaviour */}
+        {isSnapshotMode ? (
+          <ExpenseBreakdown
+            expenses={displayedData.expenses || []}
+            budgetAllocation={displayedData.budgetAllocation || []}
+            onDelete={deleteExpense}
+            onUpdate={updateExpense}
+          />
+        ) : (
+          <>
             <button
-              onClick={() => setExpensePage((prev) => Math.max(prev - 1, 1))}
-              disabled={expensePage === 1}
-              style={{
-                padding: "4px 10px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-                cursor: "pointer",
-              }}
+              type="button"
+              onClick={() => setShowExpenseBreakdown((prev) => !prev)}
             >
-              ◀
+              {showExpenseBreakdown
+                ? "Hide expense breakdown"
+                : "See expense breakdown"}
             </button>
 
-            <span style={{ fontSize: "13px", fontWeight: 600 }}>
-              Page {expensePage}/{totalExpensePages}
-            </span>
-
-            <button
-              onClick={() =>
-                setExpensePage((prev) => Math.min(prev + 1, totalExpensePages))
-              }
-              disabled={expensePage === totalExpensePages}
-              style={{
-                padding: "4px 10px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-                cursor: "pointer",
-              }}
-            >
-              ▶
-            </button>
-          </div>
+            {showExpenseBreakdown && (
+              <ExpenseBreakdown
+                expenses={displayedData.expenses || []}
+                budgetAllocation={displayedData.budgetAllocation || []}
+                onDelete={deleteExpense}
+                onUpdate={updateExpense}
+              />
+            )}
+          </>
         )}
 
-        {/* summary */}
-        {isSnapshotMode && selectedSnapshot && (
-          <div style={{ marginBottom: "30px" }}>
-            <p>
-              <b>XP Earned:</b> {selectedSnapshot.xpEarned}
-            </p>
-            <p>
-              <b>Quizzes Completed:</b> {selectedSnapshot.quizzesCompleted}
-            </p>
-          </div>
-        )}
-
-        {/* budget adherence table */}
-        {isSnapshotMode && selectedSnapshot && (
-          <div>
-            <div style={{ marginTop: "20px" }}>
-              <h4>Budget Adherence</h4>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #ccc" }}>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Category
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Budget
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Actual
-                    </th>
-                    <th style={{ textAlign: "left", padding: "8px" }}>
-                      Difference
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSnapshot.categories.map((cat, idx) => {
-                    const diff = cat.budget - cat.actual;
-                    return (
-                      <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                        <td style={{ padding: "8px" }}>{cat.name}</td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.budget.toFixed(2)}
-                        </td>
-                        <td style={{ padding: "8px" }}>
-                          £{cat.actual.toFixed(2)}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px",
-                            color: diff >= 0 ? "green" : "red",
-                          }}
-                        >
-                          {diff >= 0
-                            ? `+£${diff.toFixed(2)}`
-                            : `-£${Math.abs(diff).toFixed(2)}`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <p style={{ marginTop: "40px", fontSize: "12px", color: "#777" }}>
-              Snapshot created:{" "}
-              {new Date(selectedSnapshot.createdAt).toLocaleString()}
-            </p>
-          </div>
-        )}
-
-        {snapshots.length > 0 && (
-          <div
-            style={{
-              marginTop: "60px",
-              paddingTop: "20px",
-              borderTop: "1px solid #ddd",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "16px",
-            }}
-          >
-            <button
-              onClick={() => {
-                if (snapshotIndex === null) {
-                  setSnapshotIndex(0);
-                } else if (snapshotIndex < snapshots.length - 1) {
-                  setSnapshotIndex(snapshotIndex + 1);
-                }
-              }}
-              disabled={
-                snapshotIndex !== null && snapshotIndex >= snapshots.length - 1
-              }
-            >
-              ◀ Older
-            </button>
-
-            <div style={{ fontWeight: 600 }}>
-              {snapshotIndex === null
-                ? "Live (Current Month)"
-                : `${snapshots[snapshotIndex].month}/${snapshots[snapshotIndex].year}`}
-            </div>
-
-            <button
-              onClick={() => {
-                if (snapshotIndex === null) return;
-                if (snapshotIndex > 0) setSnapshotIndex(snapshotIndex - 1);
-                else setSnapshotIndex(null); // go back to live
-              }}
-            >
-              Newer ▶
-            </button>
-          </div>
-        )}
-
-        {/* Calendar dropdown */}
-        {/* Only shows months with valid snapshots */}
-        <SnapshotMonthDropdown
+        <SnapshotNavigator
           snapshots={snapshots}
           snapshotIndex={snapshotIndex}
           setSnapshotIndex={setSnapshotIndex}
         />
-
-        {/* If no snapshot yet */}
-        {snapshots.length == 0 && (
-          <div style={{ fontWeight: 600 }}>
-            You don't have any snapshots yet
-          </div>
-        )}
 
         {/* Adzuna Tips Section */}
         {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
@@ -1078,6 +662,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <GroqChat />
       <TooltipGuide
         isOpen={isOnboardingOpen}
         activeStepNumber={activeStepNumber}
@@ -1096,11 +681,80 @@ const Dashboard = () => {
       )}
       {/*breakdown disable for snapshot test*/}
 
+      {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
-        <MonthlySnapshotPopup
-          snapshot={popupSnapshot}
-          onClose={() => setShowSnapshotPopup(false)}
-        />
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "14px",
+              width: "900px",
+              maxWidth: "100%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              padding: "30px",
+              fontFamily: "Arial, sans-serif",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+              position: "relative",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowSnapshotPopup(false)}
+              style={{
+                position: "absolute",
+                top: "16px",
+                right: "16px",
+                border: "none",
+                background: "transparent",
+                fontSize: "20px",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              ✕
+            </button>
+
+            {/* EXTRA LINES */}
+            {/* Moved from component to popup */}
+            <h2 style={{ margin: 0 }}>
+              Monthly Snapshot: {monthName(popupSnapshot.month)}{" "}
+              {popupSnapshot.year}
+            </h2>
+
+            <p style={{ marginTop: "10px", color: "#555" }}>
+              Snapshot created:{" "}
+              {new Date(popupSnapshot.createdAt).toLocaleString()}
+            </p>
+
+            <p style={{ marginTop: "10px", color: "#000" }}>
+              This is your monthly summary for the past month. Past snapshots
+              can be found on your dashboard page using nav buttons and a
+              dropdown.
+            </p>
+            {/* Reuse snapshot component */}
+            <MonthlySnapshot snapshot={popupSnapshot} />
+            {showSnapshotPopup && popupSnapshot && (
+              <Modal onClose={() => setShowSnapshotPopup(false)}>
+                <MonthlySnapshot snapshot={popupSnapshot} />
+              </Modal>
+            )}
+          </div>
+        </div>
       )}
     </>
   );

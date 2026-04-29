@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { BsArrowLeft } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
+import { useLocation } from "react-router-dom";
 import TopNav from "../../components/TopNav";
+import { useGamification } from "../../context/GamificationContext";
 
 type Answer = {
   text: string;
@@ -17,6 +18,74 @@ type Question = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/* ------------------ LAYOUT ------------------ */
+
+const layoutStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const contentWrapperStyle: React.CSSProperties = {
+  flex: 1,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#fafaf8",
+};
+
+/* ------------------ CARD ------------------ */
+
+const cardStyle: React.CSSProperties = {
+  maxWidth: "640px",
+  width: "100%",
+  padding: "40px",
+  border: "1px solid #d6d2c9",
+  background: "#fff",
+};
+
+/* ------------------ TEXT ------------------ */
+
+const questionTextStyle: React.CSSProperties = {
+  fontSize: "20px",
+  fontWeight: 600,
+  marginBottom: "24px",
+  color: "#1a1a1a",
+};
+
+const subTextStyle: React.CSSProperties = {
+  marginBottom: "12px",
+  color: "#718096",
+  fontSize: "14px",
+  fontWeight: 500,
+};
+
+/* ------------------ BUTTONS ------------------ */
+
+const baseButton: React.CSSProperties = {
+  width: "100%",
+  padding: "16px 20px",
+  margin: "10px 0",
+  border: "1px solid #d6d2c9",
+  cursor: "pointer",
+  fontSize: "16px",
+  background: "#fff",
+  textAlign: "left",
+};
+
+const primaryButton: React.CSSProperties = {
+  marginTop: "24px",
+  padding: "14px 28px",
+  border: "none",
+  background: "#2d3748",
+  color: "white",
+  fontSize: "16px",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+/* ------------------ COMPONENT ------------------ */
+
 export default function QuizPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -24,26 +93,23 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [completedCount, setCompletedCount] = useState(
-    Number(localStorage.getItem("quizCount")) || 0,
-  );
+  const [earnedXp, setEarnedXp] = useState(0);
+
   const { token } = useAuth();
+  const { refreshGamification } = useGamification();
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
 
   const didFetch = useRef(false);
+  const location = useLocation();
+
+  const topic = new URLSearchParams(location.search).get("topic");
 
   useEffect(() => {
-    if (!token) return;
-    if (didFetch.current) return;
-
+    if (!token || didFetch.current) return;
     didFetch.current = true;
 
-    const params = new URLSearchParams(window.location.search);
-    const topic = params.get("topic");
-
     const url = topic
-      ? `${API_URL}/api/v1/quiz?topic=${encodeURIComponent(topic)}`
+      ? `${API_URL}/api/v1/quiz?topic=${topic}`
       : `${API_URL}/api/v1/quiz`;
 
     fetch(url, {
@@ -51,168 +117,108 @@ export default function QuizPage() {
     })
       .then((res) => res.json())
       .then((data) => setQuestions(data.questions))
-      .catch((err) => setError(err.message));
-  }, [token]);
+      .catch(console.error);
+  }, [token, topic]);
 
-  if (error) return <p>Failed to load quiz: {error}</p>;
   if (questions.length === 0) return <p>Loading...</p>;
 
   const current = questions[currentIndex];
 
-  function getButtonStyle(i: number, a: Answer) {
+  function getAnswerStyle(i: number, a: Answer): React.CSSProperties {
     if (!showResult) {
-      if (selected === i) return { background: "grey" };
-      return { background: "white" };
+      return selected === i
+        ? { ...baseButton, background: "#e2e8f0", borderColor: "#2d3748" }
+        : baseButton;
     }
-    if (a.correct) return { background: "lightgreen" };
-    if (selected === i && !a.correct) return { background: "red" };
-    return { background: "white" };
+
+    if (a.correct)
+      return { ...baseButton, background: "#c6f6d5", borderColor: "#48bb78" };
+
+    if (selected === i)
+      return { ...baseButton, background: "#fed7d7", borderColor: "#f56565" };
+
+    return { ...baseButton, opacity: 0.6 };
   }
 
-  if (finished) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "80vh",
-          textAlign: "center",
-        }}
-      >
-        <h1>Quiz Complete!!</h1>
-        <h2>
-          Your Score: {score} / {questions.length}
-        </h2>
-        <button
-          onClick={() => navigate("/dashboard")}
-          style={{
-            marginTop: "20px",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            border: "none",
-            background: "blue",
-            color: "white",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    );
-  }
+  const handleNext = async () => {
+    if (currentIndex + 1 >= questions.length) {
+      const res = await fetch(`${API_URL}/api/v1/quiz/complete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ score }),
+      });
+
+      const data = await res.json();
+      setEarnedXp(data?.earnedXp ?? 0);
+      await refreshGamification();
+      setFinished(true);
+    } else {
+      setSelected(null);
+      setShowResult(false);
+      setCurrentIndex((i) => i + 1);
+    }
+  };
+
+  /* ------------------ UI ------------------ */
 
   return (
-    <>
-      <div style={{ padding: "20px", backgroundColor: "#fafaf8" }}>
-        <TopNav />
-      </div>
-      <button
-        onClick={() => navigate("/dashboard")}
-        style={{
-          marginTop: "20px",
-          position: "fixed",
-          borderColor: "white",
-          padding: "5px",
-          left: 20,
-          borderRadius: "8px",
-          background: "transparent",
-          display: "flex",
-          justifyContent: "center",
-          color: "white",
-          cursor: "pointer",
-        }}
-      >
-        <BsArrowLeft size={30} />
-      </button>
-      <div
-        style={{
-          background: "blue",
-          color: "white",
-          padding: "20px",
-          textAlign: "center",
-          fontSize: "24px",
-          fontWeight: "bold",
-        }}
-      >
-        Quiz
-      </div>
-      <div
-        style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}
-      >
-        <div
-          style={{
-            width: "400px",
-            padding: "30px",
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            background: "white",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ marginBottom: "10px", color: "darkgray" }}>
-            Question {currentIndex + 1} of {questions.length}
-          </p>
-          <h3 style={{ marginBottom: "20px" }}>{current.question}</h3>
-          {current.answers.map((a, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                if (showResult) return;
-                setSelected(i);
-                setShowResult(true);
-                if (a.correct) setScore((prev) => prev + 1);
-              }}
-              style={{
-                width: "100%",
-                padding: "12px",
-                margin: "8px 0",
-                borderRadius: "8px",
-                border: "1px solid",
-                cursor: "pointer",
-                fontSize: "16px",
-                transition: "0.2s",
-                ...getButtonStyle(i, a),
-              }}
-            >
-              {a.text}
-            </button>
-          ))}
-          {showResult && (
-            <button
-              onClick={() => {
-                if (currentIndex + 1 >= questions.length) {
-                  setFinished(true);
-                  setCompletedCount((prev) => {
-                    const next = prev + 1;
-                    localStorage.setItem("quizCount", String(next));
-                    return next;
-                  });
-                  return;
-                }
-                setSelected(null);
-                setShowResult(false);
-                setCurrentIndex((prev) => prev + 1);
-              }}
-              style={{
-                marginTop: "20px",
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "none",
-                background: "lightblue",
-                color: "black",
-                fontSize: "16px",
-                cursor: "pointer",
-              }}
-            >
-              Next
-            </button>
+    <div style={layoutStyle}>
+      <TopNav />
+
+      <div style={contentWrapperStyle}>
+        <div style={cardStyle}>
+          {finished ? (
+            <>
+              <h1>Quiz Complete 🎉</h1>
+              <h2>
+                Score: {score} / {questions.length}
+              </h2>
+              <h3>You earned {earnedXp} XP</h3>
+
+              <button
+                onClick={() => navigate("/dashboard")}
+                style={primaryButton}
+              >
+                Go to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={subTextStyle}>
+                Question {currentIndex + 1} / {questions.length}
+              </p>
+
+              <h3 style={questionTextStyle}>{current.question}</h3>
+
+              {current.answers.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (showResult) return;
+                    setSelected(i);
+                    setShowResult(true);
+                    if (a.correct) setScore((s) => s + 1);
+                  }}
+                  style={getAnswerStyle(i, a)}
+                >
+                  {a.text}
+                </button>
+              ))}
+
+              {showResult && (
+                <button onClick={handleNext} style={primaryButton}>
+                  {currentIndex + 1 >= questions.length
+                    ? "Finish Quiz"
+                    : "Next Question"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
