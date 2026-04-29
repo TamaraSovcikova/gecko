@@ -1,11 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const authMiddleware = require("./middleware/auth");
 
 const router = require("./routes/index");
-const dashboardRouter = require("./routes/dashboard");
 const expenseRoutes = require("./routes/expense");
 const quizRoutes = require("./routes/quiz");
+const forecastRoutes = require("./routes/forecast");
 
 const snapshotRoutes = require("./routes/snapshot");
 
@@ -30,6 +31,7 @@ app.use(
 // Routes
 app.use("/api/v1/quiz", quizRoutes);
 app.use("/api/v1/expenses", expenseRoutes);
+app.use("/api/v1/forecast", authMiddleware, forecastRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 app.use("/", router);
 

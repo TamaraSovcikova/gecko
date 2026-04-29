@@ -9,9 +9,9 @@ import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
-import SnapshotMonthDropdown from "../../components/MonthlySnapshotDropdown";
-import MonthlySnapshotPopup from "../../components/SnapshotPopup";
-import { useStreakWarning } from "../../hooks/useStreakWarning";
+import ForecastWarningPopup from "../../components/ForecastWarningPopup";
+import { ForecastPayload } from "../../types/forecast";
+import { dismissForecastWarning, getForecast } from "../../api/forecastApi";
 import SnapshotNavigator from "../../components/SnapshotNavigator";
 import MonthlySnapshot, {
   type MonthlySnapshotData,
@@ -94,6 +94,11 @@ type DashboardData = {
   // createdAt: string;
 };
 
+type BudgetUpdatePayload = {
+  dashboard?: DashboardData;
+  forecast?: ForecastPayload;
+};
+
 // year, month select helper
 const monthName = (month: number) => {
   const months = [
@@ -127,6 +132,7 @@ const Dashboard = () => {
   const { showStreakWarning } = useStreakWarning();
   //react state which stores dashboard data, initially null
   const [data, setData] = useState<DashboardData | null>(null);
+  const [forecast, setForecast] = useState<ForecastPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   // expense breakdown toggle
@@ -170,18 +176,40 @@ const Dashboard = () => {
     fetchDashboard();
   }, [token, loading, location.key]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
 
+  useEffect(() => {
+    if (loading || !token) return;
+
+    const loadForecast = async () => {
+      try {
+        const forecastData = await getForecast(token);
+        setForecast(forecastData);
+      } catch (err) {
+        console.error("[Dashboard] Failed to fetch forecast:", err);
+      }
+    };
+
+    loadForecast();
+  }, [token, loading, location.key]);
+
   // useEffect() for real-time updates to the dashboard
   // Runs when the socket is available
   useEffect(() => {
     if (!socket) return;
-    // Listens for an emission from the backend of the dashboard
-    socket.on("budget:update", (updatedData: DashboardData) => {
-      console.log("Recieved real-time update:", updatedData);
-      setData(updatedData);
-    });
+
+    const handleBudgetUpdate = (payload: BudgetUpdatePayload) => {
+      if (payload.dashboard) {
+        setData(payload.dashboard);
+      }
+
+      if (payload.forecast) {
+        setForecast(payload.forecast);
+      }
+    };
+
+    socket.on("budget:update", handleBudgetUpdate);
+
     return () => {
-      // Switches off the socket to prevent duplicate listeners
-      socket.off("budget:update");
+      socket.off("budget:update", handleBudgetUpdate);
     };
   }, [socket]);
 
@@ -248,7 +276,7 @@ const Dashboard = () => {
   // delete expense
   const deleteExpense = async (expenseId: string) => {
     try {
-      await axios.delete(
+      const res = await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
         {
           headers: {
@@ -257,7 +285,13 @@ const Dashboard = () => {
         },
       );
 
-      // socket connection updates automatically
+      if (res.data?.dashboard) {
+        setData(res.data.dashboard);
+      }
+
+      if (res.data?.forecast) {
+        setForecast(res.data.forecast);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -272,7 +306,7 @@ const Dashboard = () => {
 
   const updateExpense = async (expenseId: string, editForm: ExpenseForm) => {
     try {
-      await axios.patch(
+      const res = await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
         editForm,
         {
@@ -280,19 +314,53 @@ const Dashboard = () => {
         },
       );
 
-      // OPTIONAL: you can remove this if socket handles sync
-      setData((prev) => {
+      if (res.data?.dashboard) {
+        setData(res.data.dashboard);
+      } else {
+        setData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            expenses: prev.expenses?.map((exp) =>
+              exp._id === expenseId
+                ? {
+                    ...exp,
+                    category: editForm.category,
+                    amount: editForm.amount,
+                    date: editForm.date,
+                    note: editForm.note,
+                    month: new Date(editForm.date).getMonth() + 1,
+                    year: new Date(editForm.date).getFullYear(),
+                  }
+                : exp,
+            ),
+          };
+        });
+      }
+
+      if (res.data?.forecast) {
+        setForecast(res.data.forecast);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDismissForecastWarning = async (warningId: string) => {
+    try {
+      setForecast((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
-          expenses: prev.expenses?.map((exp) =>
-            exp._id === expenseId ? { ...exp, ...editForm } : exp,
-          ),
+          warnings: prev.warnings.filter((warning) => warning.id !== warningId),
         };
       });
+
+      await dismissForecastWarning(warningId, token);
     } catch (err) {
-      console.error(err);
+      console.error("[Dashboard] Failed to dismiss forecast warning:", err);
     }
   };
 
@@ -368,6 +436,12 @@ const Dashboard = () => {
   return (
     <>
       <TopNav />
+      {!isSnapshotMode && (
+        <ForecastWarningPopup
+          warnings={forecast?.warnings || []}
+          onDismiss={handleDismissForecastWarning}
+        />
+      )}
       <div
         style={{
           maxWidth: "1000px",
@@ -522,7 +596,18 @@ const Dashboard = () => {
               }}
               data-onboarding="dashboard-embedded-expenses"
             >
-              <Expenses categories={displayedData.budgetAllocation} />
+              <Expenses
+                categories={displayedData.budgetAllocation}
+                onExpenseCreated={(dashboard, forecastPayload) => {
+                  if (dashboard) {
+                    setData(dashboard);
+                  }
+
+                  if (forecastPayload) {
+                    setForecast(forecastPayload);
+                  }
+                }}
+              />
             </div>
           )}
         </div>
