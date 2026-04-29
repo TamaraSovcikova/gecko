@@ -1,13 +1,25 @@
 // server/src/controllers/quizController.js
 
 const User = require("../models/User");
-const { getQuiz } = require("../services/quizAPI");
+const { getQuiz, getTestQuiz } = require("../services/quizService");
 
 const BASE_XP = 100;
 const GROWTH_RATE = 1.2;
 
 const getXpForLevel = (level) =>
   Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
+
+const calculateLevel = (xp) => {
+  let level = 0;
+  let remainingXp = xp;
+
+  while (remainingXp >= getXpForLevel(level)) {
+    remainingXp -= getXpForLevel(level);
+    level++;
+  }
+
+  return level;
+};
 
 const calculateGamification = (user) => {
   const xp = user.xp || 0;
@@ -19,22 +31,16 @@ const calculateGamification = (user) => {
     xpAtLevelStart += getXpForLevel(i);
   }
 
-  const xpIntoLevel = xp - xpAtLevelStart;
-  const xpNeeded = getXpForLevel(level);
-
   return {
     xp,
     level,
     weeklyStreak: user.weeklyStreak || 0,
-    xpIntoLevel,
-    xpNeeded,
+    xpIntoLevel: xp - xpAtLevelStart,
+    xpNeeded: getXpForLevel(level),
     streakAtRisk: user.streakAtRisk ?? false,
   };
 };
 
-/**
- * ISO week key (Mon–Sun)
- */
 const getWeekKey = (date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = d.getUTCDay() || 7;
@@ -48,28 +54,6 @@ const getWeekKey = (date) => {
 };
 
 /**
- * Month key helper (YYYY-MM)
- */
-const getMonthKey = (date) => {
-  return `${date.getFullYear()}-${date.getMonth() + 1}`;
-};
-
-/**
- * Calculate level from XP
- */
-const calculateLevel = (xp) => {
-  let level = 0;
-  let remainingXp = xp;
-
-  while (remainingXp >= getXpForLevel(level)) {
-    remainingXp -= getXpForLevel(level);
-    level++;
-  }
-
-  return level;
-};
-
-/**
  * POST /api/quiz/complete
  */
 const completeQuiz = async (req, res) => {
@@ -79,11 +63,10 @@ const completeQuiz = async (req, res) => {
     }
 
     const userId = req.user.uid;
-    const { score } = req.body;
+    const { score = 0 } = req.body;
 
     console.log("COMPLETE QUIZ UID:", userId);
 
-    // User model uses _id as the Firebase UID
     const user = await User.findById(userId);
 
     if (!user) {
@@ -92,21 +75,21 @@ const completeQuiz = async (req, res) => {
 
     const now = new Date();
 
-    // 1. XP CALCULATION
-    const baseXp = 10;
-    const earnedXp = Math.floor(score * 2 + baseXp);
+    // XP
+    const earnedXp = Math.floor(score * 2 + 10);
     user.xp = (user.xp || 0) + earnedXp;
 
-    // 2. LEVEL UPDATE
+    // Level
     user.level = calculateLevel(user.xp);
 
-    // 3. WEEKLY STREAK
+    // Weekly streak
     const currentWeek = getWeekKey(now);
 
     if (!user.lastQuizCompletedAt) {
       user.weeklyStreak = 1;
     } else {
-      const lastWeek = getWeekKey(user.lastQuizCompletedAt);
+      const lastWeek = getWeekKey(new Date(user.lastQuizCompletedAt));
+
       if (currentWeek !== lastWeek) {
         user.weeklyStreak = (user.weeklyStreak || 0) + 1;
       }
@@ -114,22 +97,18 @@ const completeQuiz = async (req, res) => {
 
     user.lastQuizCompletedAt = now;
 
-    // 4. STREAK AT RISK
-    user.streakAtRisk =
-      !user.lastQuizCompletedAt ||
-      getWeekKey(user.lastQuizCompletedAt) !== currentWeek;
+    user.streakAtRisk = false;
 
-    // 5. MONTHLY QUIZ COUNT
+    // Monthly counter
     user.completedQuizzesThisMonth =
       (user.completedQuizzesThisMonth || 0) + 1;
 
-    // SAVE USER
     await user.save();
 
     return res.status(200).json({
       message: "Quiz completed successfully",
-      gamification: calculateGamification(user),
       earnedXp,
+      gamification: calculateGamification(user),
     });
 
   } catch (error) {
@@ -139,11 +118,29 @@ const completeQuiz = async (req, res) => {
 };
 
 /**
- * GET /api/quiz
+ * GET /api/quiz?topic=xyz
  */
 const fetchQuiz = async (req, res) => {
-  try {
-    const quiz = await getQuiz(process.env.QUIZ_ID);
+  try {   
+
+    // 1. Primary: query param (ideal case)
+    let topic = req.query.topic;
+
+    // 2. Fallback: try parsing from referer URL (because frontend uses navigate)
+    if (!topic && req.headers.referer) {
+      try {
+        const url = new URL(req.headers.referer);
+        topic = url.searchParams.get("topic");
+      } catch (e) {
+        console.warn("Could not parse referer:", e.message);
+      }
+    }
+
+    // 3. Normalize
+    topic = topic ? String(topic).trim() : null;
+
+    const quiz = await getQuiz(topic);
+
     return res.status(200).json(quiz);
   } catch (err) {
     console.error("Failed to fetch quiz:", err.message);
@@ -173,7 +170,6 @@ const getGamification = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // User model uses _id as the Firebase UID
     const user = await User.findById(req.user.uid);
 
     if (!user) {

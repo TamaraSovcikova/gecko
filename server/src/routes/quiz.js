@@ -1,36 +1,9 @@
 // server/src/routes/quiz.js
-/*
-const express = require("express");
-const router = express.Router();
-const { getQuiz } = require("../services/quizService");
-const authMiddleware = require("../middleware/auth");
-
-router.get("/", authMiddleware, async (req, res) => {
-  try {
-    const topic = req.query.topic || req.query.category; // Support both param names for flexibility
-    const quiz = await getQuiz(topic);
-    return res.json(quiz);
-  } catch (error) {
-    console.error("Failed to load quiz:", error.message);
-    res.status(500).json({
-      error: "Failed to load quiz",
-      questions: [],
-    });
-  }
-});
-
-module.exports = router;
-*/
-
-// server/src/routes/quiz.js
-// DEBUGGING
-console.log("QUIZ ROUTES FILE LOADED");
 
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/auth");
 
-// trying to merge gamificationController into quizController
+const authMiddleware = require("../middleware/auth");
 const {
   fetchQuiz,
   fetchTestQuiz,
@@ -38,10 +11,16 @@ const {
   getGamification,
 } = require("../controllers/quizController");
 
+// Main quiz endpoint (supports ?topic=...)
 router.get("/", authMiddleware, fetchQuiz);
+
+// Test quiz endpoint (no auth-dependent logic assumed beyond middleware)
+router.get("/test", authMiddleware, fetchTestQuiz);
+
+// Quiz completion (XP, level, streaks)
 router.post("/complete", authMiddleware, completeQuiz);
+
+// Gamification state (XP, level, streak UI)
 router.get("/gamification", authMiddleware, getGamification);
-
-
 
 module.exports = router;

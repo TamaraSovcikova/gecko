@@ -44,34 +44,37 @@ const authMiddleware = async (req, res, next) => {
 
   // Best-effort sync between Firebase and Mongo. Never reject a valid token for this.
   try {
-    if (decodedToken.email) {
-      const normalizedEmail = String(decodedToken.email).toLowerCase().trim();
-      const fallbackName = String(decodedToken.name || normalizedEmail.split('@')[0] || 'User').trim() || 'User';
-      const existingUser = await User.findById(normalizedUid).select('_id email displayName');
+  if (decodedToken.email) {
+    const normalizedEmail = String(decodedToken.email).toLowerCase().trim();
+    const fallbackName =
+      String(decodedToken.name || normalizedEmail.split('@')[0] || 'User').trim() || 'User';
 
-      if (existingUser && existingUser.email !== normalizedEmail) { //removing automatic recreation
-        await User.create({
-          _id: normalizedUid,
-          email: normalizedEmail,
-          displayName: fallbackName,
-        });
-      } else if (existingUser.email !== normalizedEmail) {
-        await User.updateOne(
-          { _id: normalizedUid },
-          {
-            $set: { email: normalizedEmail },
-            $push: {
-              accountChangeLog: {
-                $each: [{ action: 'email_changed', changedAt: new Date() }],
-              },
+    const existingUser = await User.findById(normalizedUid);
+
+    if (!existingUser) {
+      await User.create({
+        _id: normalizedUid,
+        email: normalizedEmail,
+        displayName: fallbackName,
+      });
+    } else if (existingUser.email !== normalizedEmail) {
+      await User.updateOne(
+        { _id: normalizedUid },
+        {
+          $set: { email: normalizedEmail },
+          $push: {
+            accountChangeLog: {
+              action: 'email_changed',
+              changedAt: new Date(),
             },
-          }
-        );
-      }
+          },
+        }
+      );
     }
-  } catch (syncErr) {
-    console.error('Auth profile sync warning:', syncErr.message);
   }
+} catch (err) {
+  console.error('Auth profile sync warning:', err.message);
+}
 
   next();
 };
