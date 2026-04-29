@@ -23,7 +23,7 @@ router.post("/complete", authMiddleware, completeQuiz);
 router.get("/gamification", authMiddleware, getGamification);
 
 module.exports = router;
-*/
+
 
 // server/src/routes/quiz.js
 // DEBUGGING
