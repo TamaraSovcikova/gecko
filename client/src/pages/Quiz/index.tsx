@@ -21,6 +21,67 @@ type Question = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Match homepage styling
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  border: "1px solid #d6d2c9",
+  borderRadius: "0",
+  padding: "68px clamp(20px, 5vw, 72px)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  width: "100%",
+  scrollMarginTop: "86px",
+  backgroundColor: "#fafaf8",
+};
+
+const quizCardStyle: React.CSSProperties = {
+  maxWidth: "640px",
+  width: "100%",
+  margin: "0 auto",
+  padding: "40px",
+  borderRadius: "0",
+  border: "1px solid #d6d2c9",
+  background: "#fff",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+};
+
+const questionTextStyle: React.CSSProperties = {
+  fontSize: "20px",
+  fontWeight: 600,
+  marginBottom: "24px",
+  color: "#1a1a1a",
+  lineHeight: 1.4,
+};
+
+const answerButtonStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "16px 20px",
+  margin: "10px 0",
+  borderRadius: "0",
+  border: "1px solid #d6d2c9",
+  cursor: "pointer",
+  fontSize: "16px",
+  transition: "all 0.2s ease",
+  background: "#fff",
+  color: "#1a1a1a",
+  textAlign: "left",
+};
+
+const nextButtonStyle: React.CSSProperties = {
+  marginTop: "24px",
+  padding: "14px 28px",
+  borderRadius: "0",
+  border: "none",
+  background: "#2d3748",
+  color: "white",
+  fontSize: "16px",
+  fontWeight: 600,
+  cursor: "pointer",
+  transition: "background 0.2s ease",
+};
+
 export default function QuizPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,39 +126,90 @@ export default function QuizPage() {
 
   const current = questions[currentIndex];
 
-  function getButtonStyle(i: number, a: Answer) {
+  function getButtonStyle(i: number, a: Answer): React.CSSProperties {
+    const baseStyle = { ...answerButtonStyle };
     if (!showResult) {
-      if (selected === i) return { background: "grey" };
-      return { background: "white" };
+      if (selected === i) return { ...baseStyle, background: "#e2e8f0", borderColor: "#2d3748" };
+      return baseStyle;
     }
-    if (a.correct) return { background: "lightgreen" };
-    if (selected === i && !a.correct) return { background: "red" };
-    return { background: "white" };
+    if (a.correct) return { ...baseStyle, background: "#c6f6d5", borderColor: "#48bb78", color: "#22543d" };
+    if (selected === i && !a.correct) return { ...baseStyle, background: "#fed7d7", borderColor: "#f56565", color: "#742a2a" };
+    return { ...baseStyle, opacity: 0.6 };
   }
 
   if (finished) {
     return (
-      <div
+      <div style={pageStyle}>
+        <TopNav />
+        <div style={quizCardStyle}>
+          <h1 style={{ fontSize: "32px", fontWeight: 700, marginBottom: "16px", color: "#1a1a1a" }}>
+            Quiz Complete! 🎉
+          </h1>
+          <h2 style={{ fontSize: "24px", marginBottom: "12px", color: "#4a5568" }}>
+            Your Score: {score} / {questions.length}
+          </h2>
+          <h3 style={{ fontSize: "20px", marginBottom: "32px", color: "#48bb78", fontWeight: 600 }}>
+            You earned {earnedXp} XP
+          </h3>
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={nextButtonStyle}
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={pageStyle}>
+      <TopNav />
+      <button
+        onClick={() => navigate("/dashboard")}
         style={{
+          position: "fixed",
+          top: "90px",
+          left: "24px",
+          padding: "8px 12px",
+          borderRadius: "0",
+          border: "1px solid #d6d2c9",
+          background: "#fff",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          height: "80vh",
-          textAlign: "center",
+          gap: "6px",
+          color: "#4a5568",
+          cursor: "pointer",
+          fontSize: "14px",
+          fontWeight: 500,
+          zIndex: 100,
         }}
       >
-        <h1>Quiz Complete!!</h1>
-        <h2>
-          Your Score: {score} / {questions.length}
-        </h2>
-        <h3>You earned {earnedXp} XP</h3>
-        <button
-          onClick={() => navigate("/dashboard")}
-          style={{
-            marginTop: "20px",
-            padding: "12px 20px",
-            borderRadius: "8px",
+        <BsArrowLeft size={18} />
+        Back
+      </button>
+      <div style={quizCardStyle}>
+        <p style={{ marginBottom: "12px", color: "#718096", fontSize: "14px", fontWeight: 500 }}>
+          Question {currentIndex + 1} of {questions.length}
+        </p>
+        <h3 style={questionTextStyle}>{current.question}</h3>
+        {current.answers.map((a, i) => (
+          <button
+            key={i}
+            onClick={() => {
+              if (showResult) return;
+              setSelected(i);
+              setShowResult(true);
+              if (a.correct) setScore((prev) => prev + 1);
+            }}
+            style={getButtonStyle(i, a)}
+          >
+            {a.text}
+          </button>
+        ))}
+        {showResult && (
+          <button
+            onClick={() => {
             border: "none",
             background: "blue",
             color: "white",
@@ -217,7 +329,16 @@ export default function QuizPage() {
                         response.status,
                       ); //DEBUGGING
 
-                      const data = await response.json().catch(() => null);
+                      if (!response.ok) {
+                        console.error(
+                          "Quiz complete failed:",
+                          response.status,
+                          response.statusText,
+                        );
+                        return;
+                      }
+
+                      const data = await response.json();
                       // show earned XP
                       setEarnedXp(data?.earnedXp ?? 0);
 

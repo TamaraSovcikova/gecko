@@ -5,14 +5,9 @@ import { useGamification } from "../context/GamificationContext";
 export default function XPBar() {
   const { data } = useGamification();
 
-  console.log("gamification data:", data); //DEBUGGING
-
+  // Don't show loading state - just hide until data is ready
   if (!data) {
-    return (
-      <div style={{ marginTop: "10px", marginRight: "20px" }}>
-        Loading XP...
-      </div>
-    );
+    return null;
   }
 
   const xp = data.xp;

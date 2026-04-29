@@ -83,7 +83,8 @@ const completeQuiz = async (req, res) => {
 
     console.log("COMPLETE QUIZ UID:", userId);
 
-    const user = await User.findOne({ firebaseUid: userId });
+    // User model uses _id as the Firebase UID
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -172,7 +173,8 @@ const getGamification = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const user = await User.findOne({ firebaseUid: req.user.uid });
+    // User model uses _id as the Firebase UID
+    const user = await User.findById(req.user.uid);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

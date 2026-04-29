@@ -71,7 +71,12 @@ const UserSchema = new mongoose.Schema(
 
     completedQuizzesThisMonth: {
       type: Number,
-      default:0,
+      default: 0,
+    },
+
+    streakAtRisk: {
+      type: Boolean,
+      default: false,
     },
 
     // Drives post-login redirect:
