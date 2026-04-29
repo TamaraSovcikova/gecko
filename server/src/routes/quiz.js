@@ -28,7 +28,6 @@ module.exports = router;
 // DEBUGGING
 console.log("QUIZ ROUTES FILE LOADED");
 
-const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth");
 
