@@ -208,6 +208,41 @@ const sendNewsletterEmail = async ({ to, subject, html }) => {
   });
 };
 
+// monthly snapshot html
+const buildSnapshotHtml = (data) => {
+  const categoriesHtml = data.categoryTotals
+    .map(
+      (cat) => `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${cat.category}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">GBP ${cat.total.toFixed(2)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  return `
+    <h2 style="font-size: 17px; margin: 24px 0 10px; color: #335740;">
+      Monthly Snapshot Breakdown
+    </h2>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+      style="border: 1px solid #ece8de; border-radius: 10px; overflow: hidden; margin-bottom: 18px;">
+      <tr style="background-color: #faf9f6;">
+        <th style="text-align: left; padding: 10px; font-size: 12px; text-transform: uppercase; color: #6f736f;">
+          Category
+        </th>
+        <th style="text-align: right; padding: 10px; font-size: 12px; text-transform: uppercase; color: #6f736f;">
+          Total Spent
+        </th>
+      </tr>
+      ${categoriesHtml}
+    </table>
+  `;
+};
+// monthly snapshot html
+
+/*
 const buildMonthlyNewsletterPlaceholder = ({ user, unsubscribeUrl }) => {
   return {
     subject: `Your Zoar monthly snapshot (placeholder)`,
@@ -246,6 +281,7 @@ const buildMonthlyNewsletterPlaceholder = ({ user, unsubscribeUrl }) => {
     ],
   };
 };
+*/
 
 const buildMonthlyNewsletterData = async ({ user, year, month }) => {
   const { monthEnd } = getMonthRange({ year, month });
@@ -407,6 +443,7 @@ const buildMonthlyNewsletterHtml = ({ user, unsubscribeUrl, data }) => {
                 </tr>
                 <tr>
                   <td style="padding: 18px 24px; border-top: 1px solid #ece8de; background-color: #faf9f6; font-size: 12px; color: #616a62;">
+                    ${buildSnapshotHtml(data)}
                     To unsubscribe, <a href="${unsubscribeUrl}" style="color: #2f6a4b;">click here</a>.
                   </td>
                 </tr>
@@ -496,5 +533,6 @@ module.exports = {
   buildMonthlyNewsletterData,
   buildMonthlyNewsletterHtml,
   sendMonthlyNewsletterToUser,
-  buildMonthlyNewsletterPlaceholder,
+  /* buildMonthlyNewsletterPlaceholder, */
+  buildSnapshotHtml,
 };

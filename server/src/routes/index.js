@@ -14,6 +14,7 @@ router.get('/', (req, res) => res.send('<h1>Login</h1>'));
 
 // Auth routes — register/login handling (token verified inside these routes)
 router.use('/api/v1/auth', require('./auth'));
+router.use('/api/v1/chat', require('./chat'));
 
 // Newsletter unsubscribe route (public, from email link)
 router.get('/api/v1/user/newsletter/unsubscribe', unsubscribeFromNewsletter);

@@ -1,6 +1,7 @@
 jest.mock("axios");
 
 const axios = require("axios");
+const { CUSTOM_QUIZ_MAP } = require("../data/customQuizzes");
 const { getQuiz } = require("./quizService");
 
 describe("quizService", () => {
@@ -60,6 +61,26 @@ describe("quizService", () => {
     expect(result.source).toBe("custom");
     expect(result.questions.length).toBeGreaterThan(0);
     expect(axios.get).not.toHaveBeenCalled();
+  });
+
+  it("shuffles custom quiz answers while preserving the correct answer", async () => {
+    const randomSpy = jest.spyOn(Math, "random").mockImplementation(() => 0);
+
+    const result = await getQuiz("payslip-gross-net");
+    const returnedQuestion = result.questions.find((q) => q.id === "payslip-1");
+
+    expect(returnedQuestion).toBeDefined();
+    expect(returnedQuestion.answers.length).toBe(4);
+    expect(returnedQuestion.answers[0].text).not.toBe(
+      CUSTOM_QUIZ_MAP["payslip-gross-net"][0].answers[0].text,
+    );
+    expect(
+      returnedQuestion.answers.some(
+        (answer) => answer.correct && answer.text === "Pay before deductions",
+      ),
+    ).toBe(true);
+
+    randomSpy.mockRestore();
   });
 
   it("returns a random custom quiz when no topic is provided", async () => {

@@ -16,7 +16,7 @@ const Forecast = () => {
     const fetchForecast = async () => {
       try {
         const data = await getForecast(token);
-        setForecast(data.regressionResults || data.projections || {});
+        setForecast(data.projections || {});
         setError(null);
       } catch (err) {
         console.error("Failed to fetch forecast:", err);
