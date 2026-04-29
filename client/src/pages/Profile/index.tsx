@@ -119,29 +119,6 @@ const Profile = () => {
     }
   };
 
-  // XP system (same as XPBar)
-  const BASE_XP = 100;
-  const GROWTH_RATE = 1.2;
-
-  const getXpForLevel = (level: number) =>
-    Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
-
-  // total accumulated XP (from backend)
-  const xpTotal = userData?.xp || 0;
-
-  // calculate level + progress
-  let level = 0;
-  let remainingXp = xpTotal;
-
-  while (remainingXp >= getXpForLevel(level)) {
-    remainingXp -= getXpForLevel(level);
-    level++;
-  }
-
-  const xpIntoLevel = remainingXp;
-  const xpNeeded = getXpForLevel(level);
-  const xpProgressPercent =
-    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
 
   // XP system (same as XPBar)
   const xpTotal = gamification?.xp ?? 0;
