@@ -1,12 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { ForecastPayload } from "../../types/forecast";
+
+type DashboardData = {
+  healthScore: number;
+  takeHome: number;
+  budgetLeft: number;
+  totalBudget: number;
+  actualSpending: { name: string; value: number }[];
+  budgetAllocation: { name: string; value: number }[];
+  averageSalary?: number;
+  adzunaTips?: {
+    type: string;
+    title: string;
+    description: string;
+    priority: "high" | "medium" | "low";
+  }[];
+  healthBreakdown?: any;
+  expenses?: {
+    _id: string;
+    category: string;
+    amount: number;
+    day: number;
+    month: number;
+    year: number;
+    date: string;
+    note?: string;
+    createdAt: string;
+  }[];
+};
 
 type Props = {
   categories?: { name: string; value: number }[];
+  onExpenseCreated?: (
+    dashboard: DashboardData | undefined,
+    forecast: ForecastPayload | undefined,
+  ) => void;
 };
 
-const Expenses = ({ categories }: Props) => {
+const Expenses = ({ categories, onExpenseCreated }: Props) => {
   const { token } = useAuth();
 
   const [amount, setAmount] = useState("");
@@ -22,7 +55,7 @@ const Expenses = ({ categories }: Props) => {
     categories?.map((item) => item.name) || [],
   );
 
-  // Sync categories from dashboard → form
+  // Sync categories from dashboard -> form
   useEffect(() => {
     if (!categories) return;
 
@@ -33,7 +66,7 @@ const Expenses = ({ categories }: Props) => {
     if (!category && next.length > 0) {
       setCategory(next[0]);
     }
-  }, [categories]);
+  }, [categories, category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +74,8 @@ const Expenses = ({ categories }: Props) => {
     setFormSuccess("");
 
     try {
+      console.log("[Expenses] handleSubmit called");
+
       const payload: any = {
         amount: Number(amount),
         date,
@@ -62,13 +97,17 @@ const Expenses = ({ categories }: Props) => {
         payload.category = category;
       }
 
-      await axios.post(
+      console.log("[Expenses] POST payload =", payload);
+
+      const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
+
+      console.log("[Expenses] POST /expenses response =", res.data);
 
       const createdCategory =
         category === "create-new" ? newCategoryName.trim() : category;
@@ -77,6 +116,12 @@ const Expenses = ({ categories }: Props) => {
         setAvailableCategories((prev) =>
           prev.includes(createdCategory) ? prev : [...prev, createdCategory],
         );
+      }
+
+      // Push updated dashboard + forecast back to parent immediately
+      if (onExpenseCreated) {
+        console.log("[Expenses] Calling onExpenseCreated callback");
+        onExpenseCreated(res.data?.dashboard, res.data?.forecast);
       }
 
       // reset form
@@ -89,6 +134,8 @@ const Expenses = ({ categories }: Props) => {
 
       setFormSuccess("Expense saved.");
     } catch (err) {
+      console.error("[Expenses] Failed to save expense:", err);
+
       if (axios.isAxiosError(err)) {
         setFormError(err.response?.data?.error || "Failed to add expense");
       } else {
@@ -102,7 +149,6 @@ const Expenses = ({ categories }: Props) => {
       <h5 className="mb-3">Log Expense</h5>
 
       <form onSubmit={handleSubmit}>
-        {/* Amount */}
         <div className="mb-2">
           <input
             className="form-control"
@@ -113,7 +159,6 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Category */}
         <div className="mb-2">
           <select
             className="form-select"
@@ -132,7 +177,6 @@ const Expenses = ({ categories }: Props) => {
           </select>
         </div>
 
-        {/* Create new category */}
         {category === "create-new" && (
           <>
             <div className="mb-2">
@@ -157,7 +201,6 @@ const Expenses = ({ categories }: Props) => {
           </>
         )}
 
-        {/* Date */}
         <div className="mb-2">
           <input
             type="date"
@@ -168,7 +211,6 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Note */}
         <div className="mb-2">
           <input
             className="form-control"
@@ -178,7 +220,6 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Feedback */}
         {formSuccess && (
           <div className="alert alert-success py-1">{formSuccess}</div>
         )}
@@ -186,7 +227,6 @@ const Expenses = ({ categories }: Props) => {
           <div className="alert alert-danger py-1">{formError}</div>
         )}
 
-        {/* Submit */}
         <button className="btn btn-success w-100 mt-2">Save expense</button>
       </form>
     </div>
