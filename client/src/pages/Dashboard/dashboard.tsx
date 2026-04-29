@@ -17,8 +17,9 @@ import MonthlySnapshot, {
   type MonthlySnapshotData,
 } from "../../components/MonthlySnapshot";
 import GroqChat from "./groqChat.tsx";
-import Modal from "../../components/Modal";
+import { useStreakWarning } from "../../hooks/useStreakWarning";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
+import Modal from "../../components/Modal";
 import { attachDashboardDebug } from "../../dev/dashboardDebug";
 
 const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
@@ -87,6 +88,10 @@ type DashboardData = {
     note?: string;
     createdAt: string;
   }[];
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
 };
 
 // year, month select helper
@@ -370,23 +375,22 @@ const Dashboard = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
-
         {showStreakWarning && (
-        <div
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            background: "#fff3cd",
-            border: "1px solid #ffeeba",
-            borderRadius: "6px",
-            fontSize: "13px",
-            color: "#856404",
-          }}
-        >
-          ⚠️ Complete a quiz this week to keep your streak alive
-        </div>
-      )}
-      
+          <div
+            style={{
+              padding: "10px",
+              marginBottom: "10px",
+              background: "#fff3cd",
+              border: "1px solid #ffeeba",
+              borderRadius: "6px",
+              fontSize: "13px",
+              color: "#856404",
+            }}
+          >
+            ⚠️ Complete a quiz this week to keep your streak alive
+          </div>
+        )}
+
         {isSnapshotMode && selectedSnapshot && (
           <div
             style={{ marginBottom: "20px" }}
@@ -766,6 +770,25 @@ const Dashboard = () => {
               ✕
             </button>
 
+            {/* EXTRA LINES */}
+            {/* Moved from component to popup */}
+            <h2 style={{ margin: 0 }}>
+              Monthly Snapshot: {monthName(popupSnapshot.month)}{" "}
+              {popupSnapshot.year}
+            </h2>
+
+            <p style={{ marginTop: "10px", color: "#555" }}>
+              Snapshot created:{" "}
+              {new Date(popupSnapshot.createdAt).toLocaleString()}
+            </p>
+
+            <p style={{ marginTop: "10px", color: "#000" }}>
+              This is your monthly summary for the past month. Past snapshots
+              can be found on your dashboard page using nav buttons and a
+              dropdown.
+            </p>
+            {/* Reuse snapshot component */}
+            <MonthlySnapshot snapshot={popupSnapshot} />
             {showSnapshotPopup && popupSnapshot && (
               <Modal onClose={() => setShowSnapshotPopup(false)}>
                 <MonthlySnapshot snapshot={popupSnapshot} />

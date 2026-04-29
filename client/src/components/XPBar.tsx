@@ -5,14 +5,9 @@ import { useGamification } from "../context/GamificationContext";
 export default function XPBar() {
   const { data } = useGamification();
 
-  console.log("gamification data:", data); //DEBUGGING
-
+  // Don't show loading state - just hide until data is ready
   if (!data) {
-    return (
-      <div style={{ marginTop: "10px", marginRight: "20px" }}>
-        Loading XP...
-      </div>
-    );
+    return null;
   }
 
   const xp = data.xp;
@@ -21,17 +16,15 @@ export default function XPBar() {
   const xpNeeded = data.xpNeeded;
 
   const progress =
-    xpNeeded > 0
-      ? Math.min((xpIntoLevel / xpNeeded) * 100, 100)
-      : 0;
+    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
 
   return (
     <div
       style={{
         position: "fixed",
-        bottom: 75,
+        top: 80,
         right: 20,
-        width: "340px",
+        width: "300px",
         padding: "10px 12px",
         background: "#ffffff",
         borderRadius: "0", // no card feel

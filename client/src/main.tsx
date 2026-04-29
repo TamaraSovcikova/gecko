@@ -23,9 +23,17 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <AuthProvider>
         <GamificationProvider>
           <App />
+<<<<<<< HEAD
         </GamificationProvider>,
       </AuthProvider>
     </BrowserRouter>,
 
   </React.StrictMode>
+=======
+        </GamificationProvider>
+      </AuthProvider>
+    </BrowserRouter>
+    ,
+  </React.StrictMode>,
+>>>>>>> origin/dev
 );

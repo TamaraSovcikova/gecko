@@ -1,6 +1,12 @@
 // context/GamificationContext
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
@@ -18,67 +24,44 @@ type GamificationContextType = {
   refreshGamification: () => Promise<void>;
 };
 
-const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
+const GamificationContext = createContext<GamificationContextType | undefined>(
+  undefined,
+);
 
 export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const { token } = useAuth();
   const [data, setData] = useState<GamificationData | null>(null);
-
-  // =========================
-  // DEBUGGING: render tracking
-  // =========================
-  console.log("GamificationProvider render - token:", token); //DEBUGGING
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchGamification = async () => {
-    // =========================
-    // DEBUGGING: fetch guard
-    // =========================
     if (!token) {
-      console.log("fetchGamification aborted - no token"); //DEBUGGING
+      setIsLoading(false);
       return;
     }
 
-    console.log("fetchGamification started"); //DEBUGGING
-
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/quiz/gamification`, // CHANGE
+        `${import.meta.env.VITE_API_URL}/api/v1/quiz/gamification`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
-      // =========================
-      // DEBUGGING: API response
-      // =========================
-      console.log("gamification API response:", res.data); //DEBUGGING
-
-      // FIXED CODE BELOW
       setData(res.data);
-      // setData(res.data.gamification);
-
-      // DEBUGGING
-      console.log("TOKEN:", token);
-      console.log("RAW RESPONSE:", res.data);
-      console.log("GAMIFICATION:", res.data?.gamification);
-
-      // =========================
-      // DEBUGGING: state update
-      // =========================
-      console.log("gamification state updated"); //DEBUGGING
-
+      setIsLoading(false);
     } catch (err) {
-      console.error("Gamification fetch failed:", err); //DEBUGGING
+      console.error("Gamification fetch failed:", err);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // =========================
-    // DEBUGGING: effect trigger
-    // =========================
-    console.log("useEffect triggered with token:", token); //DEBUGGING
-
-    fetchGamification();
+    // Only fetch when token is available and auth is done loading
+    if (token) {
+      fetchGamification();
+    } else {
+      setIsLoading(false);
+    }
   }, [token]);
 
   return (

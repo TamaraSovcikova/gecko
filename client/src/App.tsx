@@ -27,13 +27,10 @@ import MainLayout from "./MainLayout";
 function App() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* PUBLIC ROUTES */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
-      {/* <Route path="/expenses" element={<Expenses />} /> 
-      Route commented out -> choosing to embed the expenses form in the /Dashboard route*/}
 
       {/* LAYOUT WRAPPER (XP BAR LIVES HERE) */}
       <Route
