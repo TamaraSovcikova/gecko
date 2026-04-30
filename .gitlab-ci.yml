@@ -35,22 +35,11 @@ build:       # This job runs in the build stage, which runs first.
 
 deploy:
   stage: deploy
-  image: alpine:latest
-
-  before_script:
-    - apk add --no-cache openssh-client git
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
-
   script:
-    - ssh "$SERVER_USER@$SERVER_IP" "
-        cd COM2042_Zoar_App &&
-        git pull --rebase origin main &&
-        ./start.sh
-      "
-
+    - cd ~/COM2042_Zoar_App
+    - git pull origin main
+    - ./start.sh
   only:
     - main
+  tags:
+    - vm
