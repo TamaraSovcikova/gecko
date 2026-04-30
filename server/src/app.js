@@ -9,11 +9,15 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const authMiddleware = require('./middleware/auth');
 
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
 const authRouter = require('./routes/auth');
+const quizRouter = require('./routes/quiz');
+const payslipRouter = require('./routes/payslip');
+const userRouter = require('./routes/user');
 
 const app = express();
 
@@ -39,11 +43,20 @@ require("./jobs/monthlySnapshotJob");
 const snapshotRoutes = require("./routes/snapshot");
 
 
+// All API routes mounted under /api/v1/*
+// Caddy proxies /api/* directly to the backend without stripping the prefix.
+// Public routes (no auth required)
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/dashboard", dashboardRouter);
-app.use("/api/v1/expenses", expenseRoutes);
-app.use("/api/v1/snapshots", snapshotRoutes);
 
+// Protected routes (auth required)
+app.use("/api/v1/dashboard", authMiddleware, dashboardRouter);
+app.use("/api/v1/expenses", authMiddleware, expenseRoutes);
+app.use("/api/v1/snapshots", authMiddleware, snapshotRoutes);
+app.use("/api/v1/quiz", authMiddleware, quizRouter);
+app.use("/api/v1/payslip", authMiddleware, payslipRouter);
+app.use("/api/v1/user", authMiddleware, userRouter);
+
+// Public routes (health checks, login page, etc.)
 app.use('/', router);
 
 module.exports = app;

@@ -8,10 +8,10 @@ const express = require("express");
 const { getQuiz } = require("../services/quizService");
 const quizRouter = require("./quiz");
 
-describe("GET /v1/quiz", () => {
+describe("GET /api/v1/quiz", () => {
   it("routes a topic query to getQuiz with the original topic", async () => {
     const app = express();
-    app.use("/v1/quiz", quizRouter);
+    app.use("/api/v1/quiz", quizRouter);
 
     getQuiz.mockResolvedValue({
       topic: "payslip-gross-net",
@@ -19,7 +19,7 @@ describe("GET /v1/quiz", () => {
       questions: [{ id: "1", question: "Placeholder", type: "multiple", answers: [] }],
     });
 
-    const res = await request(app).get("/v1/quiz?topic=payslip-gross-net");
+    const res = await request(app).get("/api/v1/quiz?topic=payslip-gross-net");
 
     expect(res.status).toBe(200);
     expect(res.body.topic).toBe("payslip-gross-net");
