@@ -5,6 +5,8 @@ const TopNav = () => {
   return (
     <header
       style={{
+        width: "100vw",
+        marginLeft: "calc(50% - 50vw)",
         backgroundColor: "#fdfaf7",
         borderBottom: "1px solid #dcd7cc",
         padding: "12px 20px",
@@ -13,7 +15,7 @@ const TopNav = () => {
         justifyContent: "space-between",
         fontFamily: "Arial, sans-serif",
         gap: "20px",
-        borderRadius: "12px",
+        boxSizing: "border-box",
       }}
     >
       <div style={{ display: "inline-flex", alignItems: "center", gap: "0px", whiteSpace: "nowrap" }}>
