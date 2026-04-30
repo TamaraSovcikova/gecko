@@ -4,22 +4,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
-import Profile from "../src/pages/Profile";
+import Profile from "../../src/pages/Profile";
+import React from "react";
 
 vi.mock("axios");
-vi.mock("../src/firebase/config", () => ({auth: {}, app: {}}));
+vi.mock("../../src/firebase/config", () => ({auth: {}, app: {}}));
 vi.mock("firebase/auth", () => ({signOut: vi.fn().mockResolvedValue(undefined)}));
-vi.mock("../src/context/AuthContext", () => ({
+vi.mock("../../src/context/AuthContext", () => ({
     useAuth: () => ({
         currentUser: { uid: "testuser", email: "test@example.com" },
         token: "fake-token",
         loading: false,
     })
 }));
-vi.mock("../src/components/TopNav", () => ({default: () => <div>Mocked TopNav</div>}));
-vi.mock("../src/components/ProfileAvatar", () => ({default: () => <div>Mocked ProfileAvatar</div>}));
-vi.mock("../src/components/TooltipGuide", () => ({default: () => <div>Mocked TooltipGuide</div>}));
-vi.mock("../src/hooks/usePageOnboarding", () => ({
+vi.mock("../../src/components/TopNav", () => ({default: () => <div>Mocked TopNav</div>}));
+vi.mock("../../src/components/ProfileAvatar", () => ({default: () => <div>Mocked ProfileAvatar</div>}));
+vi.mock("../../src/components/TooltipGuide", () => ({default: () => <div>Mocked TooltipGuide</div>}));
+vi.mock("../../src/hooks/usePageOnboarding", () => ({
     usePageOnboarding: () => ({
         isOpen: false,
         activeStepNumber: 0,
@@ -55,6 +56,6 @@ describe("Frontend: Profile deletion cofirmation", () => {beforeEach(() => {vi.c
         fireEvent.click(deleteButton);
 
         // THEN: The confirmation message should be shown to the user where they can decide to delete or not
-        expect(confirmSpy).toHaveBeenCalledWith("Are you sure you want to delete your profile? This cannot be undone.");
+        expect(confirmSpy).toHaveBeenCalledWith("Deleting your account is irreversible. This will permanently remove your profile and associated data, including monthly snapshots and newsletter subscriptions ");
     })
 });

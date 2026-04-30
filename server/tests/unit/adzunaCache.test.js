@@ -16,7 +16,7 @@ describe("Backend: Adzuna cache hit", () => {
                 results: [{ salary_max: 3000 }, { salary_max: 6000 }, { salary_max: 9000 }]
             }
         });
-        const { getAverageSalary } = require("../src/services/adzunaCalculator");
+        const { getAverageSalary } = require("../../src/services/adzunaCalculator");
         // WHEN: The benchmark is requested for the first time
         const firstResult = await getAverageSalary("Software Engineer Intern", "London");
 

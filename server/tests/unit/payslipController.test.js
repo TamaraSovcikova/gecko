@@ -1,26 +1,26 @@
-jest.mock("../src/models/MonthlyBudget", () => ({
+jest.mock("../../src/models/MonthlyBudget", () => ({
   create: jest.fn(),
 }));
 
-jest.mock("../src/models/User", () => ({
+jest.mock("../../src/models/User", () => ({
   findByIdAndUpdate: jest.fn(),
 }));
 
-jest.mock("../src/models/Expense", () => ({
+jest.mock("../../src/models/Expense", () => ({
   updateMany: jest.fn(),
 }));
 
-jest.mock("../src/services/hmrcCalculator", () => jest.fn());
+jest.mock("../../src/services/hmrcCalculator", () => jest.fn());
 
-jest.mock("../src/services/dashboardAggregate", () => ({
+jest.mock("../../src/services/dashboardAggregate", () => ({
   computeDashboard: jest.fn(),
 }));
 
-const MonthlyBudget = require("../src/models/MonthlyBudget");
-const User = require("../src/models/User");
-const calculatePayslip = require("../src/services/hmrcCalculator");
-const { computeDashboard } = require("../src/services/dashboardAggregate");
-const { createPayslip } = require("../src/controllers/payslipController");
+const MonthlyBudget = require("../../src/models/MonthlyBudget");
+const User = require("../../src/models/User");
+const calculatePayslip = require("../../src/services/hmrcCalculator");
+const { computeDashboard } = require("../../src/services/dashboardAggregate");
+const { createPayslip } = require("../../src/controllers/payslipController");
 
 const makeResponse = () => {
   const res = {};
