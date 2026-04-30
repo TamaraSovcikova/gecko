@@ -11,7 +11,8 @@
 stages:          # List of stages for jobs, and their order of execution
   - lint
   - build
-  - deploy
+  # no deploy stage because we don't have high enough permission in gitlab
+  # developers can't use SSH or runner tokens
 
 lint:          # lint stage
   stage: lint
@@ -32,14 +33,3 @@ build:       # This job runs in the build stage, which runs first.
     - cd client
     - npm install
     - npm run build
-
-deploy:
-  stage: deploy
-  script:
-    - cd ~/COM2042_Zoar_App
-    - git pull origin main
-    - ./start.sh
-  only:
-    - main
-  tags:
-    - vm
