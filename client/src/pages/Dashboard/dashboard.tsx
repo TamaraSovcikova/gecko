@@ -155,7 +155,7 @@ const Dashboard = () => {
     const fetchDashboard = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/dashboard`,
+          `${import.meta.env.VITE_API_URL}/v1/dashboard`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         setData(res.data);
@@ -238,7 +238,7 @@ const Dashboard = () => {
   const deleteExpense = async (expenseId: string) => {
     try {
       await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        `${import.meta.env.VITE_API_URL}/v1/expenses/${expenseId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -270,7 +270,7 @@ const Dashboard = () => {
       console.log("Updating expense:", expenseId, editForm);
 
       const res = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        `${import.meta.env.VITE_API_URL}/v1/expenses/${expenseId}`,
         {
           category: editForm.category,
           amount: editForm.amount,

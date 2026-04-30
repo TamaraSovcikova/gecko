@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { CUSTOM_QUIZ_MAP, CUSTOM_TOPICS_LIST } = require("../data/customQuizzes");
 
-const BASE_URL = "https://quizapi.io/api/v1/questions";
+const BASE_URL = "https://quizapi.io/v1/questions";
 
 const DYNAMIC_TOPICS = ["JavaScript", "HTML", "CSS", "SQL", "Linux", "Docker"];
 

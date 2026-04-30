@@ -34,8 +34,8 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setUserData(res.data);
         setLoadingData(false);
@@ -53,11 +53,11 @@ const Profile = () => {
     setExporting(true);
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/user/export-data`,
+        `${import.meta.env.VITE_API_URL}/v1/user/export-data`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
-        }
+        },
       );
 
       // Create a download link for the PDF
@@ -80,15 +80,14 @@ const Profile = () => {
   const handleDeleteProfile = async () => {
     if (
       window.confirm(
-        "Deleting your account is irreversible. This will permanently remove your profile and associated data, including monthly snapshots and newsletter subscriptions "
+        "Deleting your account is irreversible. This will permanently remove your profile and associated data, including monthly snapshots and newsletter subscriptions ",
       )
     ) {
       setDeleting(true);
       try {
-        await axios.delete(
-          `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.delete(`${import.meta.env.VITE_API_URL}/v1/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         // Sign out
         await signOut(auth);
@@ -134,7 +133,14 @@ const Profile = () => {
 
   if (error) {
     return (
-      <div style={{ padding: "20px", color: "#d9534f", backgroundColor: "#f8f6f3", minHeight: "100vh" }}>
+      <div
+        style={{
+          padding: "20px",
+          color: "#d9534f",
+          backgroundColor: "#f8f6f3",
+          minHeight: "100vh",
+        }}
+      >
         <p>{error}</p>
         <button
           onClick={() => navigate("/dashboard")}
@@ -209,23 +215,61 @@ const Profile = () => {
               border: "1px solid #e0ddd5",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "20px", marginBottom: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
+            >
               <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                <p
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "12px",
+                    color: "#999",
+                  }}
+                >
                   Name
                 </p>
-                <p style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#333" }}>
+                <p
+                  style={{
+                    margin: "0 0 16px 0",
+                    fontSize: "16px",
+                    color: "#333",
+                  }}
+                >
                   {userData?.displayName || "Not set"}
                 </p>
 
-                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                <p
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "12px",
+                    color: "#999",
+                  }}
+                >
                   Email
                 </p>
-                <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#666" }}>
+                <p
+                  style={{
+                    margin: "0 0 16px 0",
+                    fontSize: "14px",
+                    color: "#666",
+                  }}
+                >
                   {userData?.email || currentUser?.email}
                 </p>
 
-                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+                <p
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "12px",
+                    color: "#999",
+                  }}
+                >
                   Member Since
                 </p>
                 <p style={{ margin: "0", fontSize: "14px", color: "#666" }}>
@@ -235,7 +279,15 @@ const Profile = () => {
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "142px", marginTop: "34px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  minWidth: "142px",
+                  marginTop: "34px",
+                }}
+              >
                 <ProfileAvatar size={74} />
                 <button
                   onClick={() => navigate("/settings")}
@@ -259,17 +311,35 @@ const Profile = () => {
 
             {/* Payslip Details */}
             <div style={{ borderTop: "1px solid #e8dfd5", paddingTop: "16px" }}>
-              <h3 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#333", fontWeight: "600" }}>
+              <h3
+                style={{
+                  margin: "0 0 12px 0",
+                  fontSize: "14px",
+                  color: "#333",
+                  fontWeight: "600",
+                }}
+              >
                 Current Payslip Details
               </h3>
-              <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+              <p
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+              >
                 Gross Salary
               </p>
-              <p style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#2d8659", fontWeight: "500" }}>
+              <p
+                style={{
+                  margin: "0 0 16px 0",
+                  fontSize: "16px",
+                  color: "#2d8659",
+                  fontWeight: "500",
+                }}
+              >
                 £{userData?.payslipData?.grossSalary?.toFixed(2) || "0.00"}
               </p>
 
-              <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+              <p
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+              >
                 Job Title
               </p>
               <p
@@ -282,7 +352,9 @@ const Profile = () => {
                 {userData?.payslipData?.jobTitle || "Not set"}
               </p>
 
-              <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+              <p
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+              >
                 Location
               </p>
               <p
@@ -308,8 +380,12 @@ const Profile = () => {
                   transition: "background-color 0.2s",
                   marginTop: "8px",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ead966")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f5d899")}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#ead966")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#f5d899")
+                }
               >
                 Edit Payslip/Budget
               </button>
@@ -331,29 +407,93 @@ const Profile = () => {
             {/* Tree SVG */}
             <svg width="280" height="240" viewBox="0 0 280 240">
               {/* Ground */}
-              <ellipse cx="140" cy="230" rx="120" ry="15" fill="#2d8659" opacity="0.3" />
+              <ellipse
+                cx="140"
+                cy="230"
+                rx="120"
+                ry="15"
+                fill="#2d8659"
+                opacity="0.3"
+              />
 
               {/* Tree trunk */}
-              <rect x="125" y="130" width="30" height="100" fill="#6b4423" rx="3" />
-              
+              <rect
+                x="125"
+                y="130"
+                width="30"
+                height="100"
+                fill="#6b4423"
+                rx="3"
+              />
+
               {/* Tree shadow on trunk */}
-              <rect x="125" y="130" width="8" height="100" fill="#5a3a1a" opacity="0.4" rx="3" />
+              <rect
+                x="125"
+                y="130"
+                width="8"
+                height="100"
+                fill="#5a3a1a"
+                opacity="0.4"
+                rx="3"
+              />
 
               {/* Foliage - three levels with better styling */}
               {/* Bottom crown - largest */}
               <ellipse cx="140" cy="140" rx="70" ry="65" fill="#2d8659" />
-              <ellipse cx="135" cy="145" rx="10" ry="12" fill="#3d9969" opacity="0.6" />
-              <ellipse cx="160" cy="148" rx="12" ry="14" fill="#3d9969" opacity="0.5" />
-              <ellipse cx="145" cy="168" rx="11" ry="13" fill="#3d9969" opacity="0.6" />
+              <ellipse
+                cx="135"
+                cy="145"
+                rx="10"
+                ry="12"
+                fill="#3d9969"
+                opacity="0.6"
+              />
+              <ellipse
+                cx="160"
+                cy="148"
+                rx="12"
+                ry="14"
+                fill="#3d9969"
+                opacity="0.5"
+              />
+              <ellipse
+                cx="145"
+                cy="168"
+                rx="11"
+                ry="13"
+                fill="#3d9969"
+                opacity="0.6"
+              />
 
               {/* Middle crown */}
               <ellipse cx="140" cy="95" rx="55" ry="50" fill="#1d6649" />
-              <ellipse cx="130" cy="100" rx="9" ry="11" fill="#2d7659" opacity="0.5" />
-              <ellipse cx="155" cy="98" rx="10" ry="12" fill="#2d7659" opacity="0.6" />
+              <ellipse
+                cx="130"
+                cy="100"
+                rx="9"
+                ry="11"
+                fill="#2d7659"
+                opacity="0.5"
+              />
+              <ellipse
+                cx="155"
+                cy="98"
+                rx="10"
+                ry="12"
+                fill="#2d7659"
+                opacity="0.6"
+              />
 
               {/* Top crown - smallest */}
               <ellipse cx="140" cy="50" rx="40" ry="38" fill="#2d8659" />
-              <ellipse cx="140" cy="45" rx="8" ry="10" fill="#3d9969" opacity="0.6" />
+              <ellipse
+                cx="140"
+                cy="45"
+                rx="8"
+                ry="10"
+                fill="#3d9969"
+                opacity="0.6"
+              />
             </svg>
 
             {/* XP Bar Under Tree */}
@@ -368,7 +508,9 @@ const Profile = () => {
                 textAlign: "center",
               }}
             >
-              <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}>
+              <p
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+              >
                 LEVEL
               </p>
               <h2

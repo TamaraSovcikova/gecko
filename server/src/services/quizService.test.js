@@ -30,7 +30,7 @@ describe("quizService", () => {
     expect(result.topic).toBe("JavaScript");
     expect(result.source).toBe("dynamic");
     expect(result.questions.length).toBe(1);
-    expect(axios.get).toHaveBeenCalledWith("https://quizapi.io/api/v1/questions", {
+    expect(axios.get).toHaveBeenCalledWith("https://quizapi.io/v1/questions", {
       params: {
         tags: "JavaScript",
         include_answers: "true",

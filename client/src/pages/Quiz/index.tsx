@@ -43,8 +43,8 @@ export default function QuizPage() {
     const topic = params.get("topic");
 
     const url = topic
-      ? `${API_URL}/api/v1/quiz?topic=${encodeURIComponent(topic)}`
-      : `${API_URL}/api/v1/quiz`;
+      ? `${API_URL}/v1/quiz?topic=${encodeURIComponent(topic)}`
+      : `${API_URL}/v1/quiz`;
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },

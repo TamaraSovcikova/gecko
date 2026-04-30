@@ -25,7 +25,7 @@ type LocationOption = {
   label: string;
 };
 
-// Shape returned by POST /api/v1/payslip and GET /api/v1/payslip
+// Shape returned by POST /v1/payslip and GET /v1/payslip
 type PayslipResponse = {
   grossSalary: number;
   taxPaid: number;
@@ -76,8 +76,8 @@ const PayslipSetup = () => {
 
       try {
         const response = await axios.get<PayslipResponse>(
-          `${API_URL}/api/v1/payslip`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `${API_URL}/v1/payslip`,
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         if (response.data) {
@@ -90,7 +90,7 @@ const PayslipSetup = () => {
               response.data.categories.map((cat) => ({
                 name: cat.name,
                 amount: cat.budget.toString(),
-              }))
+              })),
             );
           }
         }
@@ -113,13 +113,10 @@ const PayslipSetup = () => {
     const searchJobs = async () => {
       setJobSearchLoading(true);
       try {
-        const res = await axios.get(
-          `${API_URL}/api/v1/user/job-search`,
-          {
-            params: { query: jobSearchQuery },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axios.get(`${API_URL}/v1/user/job-search`, {
+          params: { query: jobSearchQuery },
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setJobOptions(res.data.jobs || []);
       } catch (err) {
         console.error("Error searching jobs:", err);
@@ -140,13 +137,10 @@ const PayslipSetup = () => {
     const searchLocations = async () => {
       setLocationSearchLoading(true);
       try {
-        const res = await axios.get(
-          `${API_URL}/api/v1/user/location-search`,
-          {
-            params: { query: locationSearchQuery },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axios.get(`${API_URL}/v1/user/location-search`, {
+          params: { query: locationSearchQuery },
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setLocationOptions(res.data.locations || []);
       } catch (err) {
         console.error("Error searching locations:", err);
@@ -168,7 +162,9 @@ const PayslipSetup = () => {
   }, [categories]);
 
   const isOverAllocated =
-    grossSalary !== "" && !Number.isNaN(Number(grossSalary)) && totalCategoryAmount > Number(grossSalary);
+    grossSalary !== "" &&
+    !Number.isNaN(Number(grossSalary)) &&
+    totalCategoryAmount > Number(grossSalary);
 
   const addCategory = () => {
     setCategories((prev) => [...prev, { name: "", amount: "" }]);
@@ -212,12 +208,16 @@ const PayslipSetup = () => {
       }
     });
 
-    if (new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length) {
+    if (
+      new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length
+    ) {
       nextErrors.push("Category names must be unique.");
     }
 
     if (!Number.isNaN(salary) && totalCategoryAmount > salary) {
-      nextErrors.push("Total category amount cannot be more than gross salary.");
+      nextErrors.push(
+        "Total category amount cannot be more than gross salary.",
+      );
     }
 
     setErrors(nextErrors);
@@ -252,9 +252,9 @@ const PayslipSetup = () => {
       if (isEditing) {
         // Update existing payslip
         const response = await axios.put<PayslipResponse>(
-          `${API_URL}/api/v1/payslip`,
+          `${API_URL}/v1/payslip`,
           payload,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setResult(response.data);
         setApiError("");
@@ -262,15 +262,15 @@ const PayslipSetup = () => {
         // Also update user profile with job title and location if provided
         if (jobTitle || location) {
           await axios.patch(
-            `${API_URL}/api/v1/user/profile`,
+            `${API_URL}/v1/user/profile`,
             {
               payslipData: {
                 grossSalary: Number(grossSalary),
                 jobTitle: jobTitle,
-                location: location
-              }
+                location: location,
+              },
             },
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${token}` } },
           );
         }
 
@@ -278,10 +278,9 @@ const PayslipSetup = () => {
       } else {
         // Create new payslip
         const fetchExistingPayslip = async () => {
-          return axios.get<PayslipResponse>(
-            `${API_URL}/api/v1/payslip`,
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
+          return axios.get<PayslipResponse>(`${API_URL}/v1/payslip`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
         };
 
         // Avoid creating duplicates when a payslip already exists.
@@ -296,7 +295,7 @@ const PayslipSetup = () => {
                 existing.data.categories.map((cat) => ({
                   name: cat.name,
                   amount: cat.budget.toString(),
-                }))
+                })),
               );
             }
             setApiError("");
@@ -312,11 +311,9 @@ const PayslipSetup = () => {
         }
 
         const submitPayslip = () =>
-          axios.post<PayslipResponse>(
-            `${API_URL}/api/v1/payslip`,
-            payload,
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
+          axios.post<PayslipResponse>(`${API_URL}/v1/payslip`, payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
         try {
           const response = await submitPayslip();
@@ -326,15 +323,15 @@ const PayslipSetup = () => {
           // Also update user profile with job title and location if provided
           if (jobTitle || location) {
             await axios.patch(
-              `${API_URL}/api/v1/user/profile`,
+              `${API_URL}/v1/user/profile`,
               {
                 payslipData: {
                   grossSalary: Number(grossSalary),
                   jobTitle: jobTitle,
-                  location: location
-                }
+                  location: location,
+                },
               },
-              { headers: { Authorization: `Bearer ${token}` } }
+              { headers: { Authorization: `Bearer ${token}` } },
             );
           }
 
@@ -348,26 +345,27 @@ const PayslipSetup = () => {
           if (firstError.response?.status === 500) {
             // If backend saved payslip but failed after write, recover via GET.
             try {
-
-            // Also update user profile with job title and location if provided
-            if (jobTitle || location) {
-              await axios.patch(
-                `${API_URL}/api/v1/user/profile`,
-                {
-                  payslipData: {
-                    grossSalary: Number(grossSalary),
-                    jobTitle: jobTitle,
-                    location: location
-                  }
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-            }
+              // Also update user profile with job title and location if provided
+              if (jobTitle || location) {
+                await axios.patch(
+                  `${API_URL}/v1/user/profile`,
+                  {
+                    payslipData: {
+                      grossSalary: Number(grossSalary),
+                      jobTitle: jobTitle,
+                      location: location,
+                    },
+                  },
+                  { headers: { Authorization: `Bearer ${token}` } },
+                );
+              }
               const existingAfterFailure = await fetchExistingPayslip();
               if (existingAfterFailure.data) {
                 setResult(existingAfterFailure.data);
                 setIsEditing(true);
-                setApiError("Payslip appears saved. Refresh or continue to dashboard.");
+                setApiError(
+                  "Payslip appears saved. Refresh or continue to dashboard.",
+                );
                 return;
               }
             } catch {
@@ -388,8 +386,8 @@ const PayslipSetup = () => {
       if (axios.isAxiosError(error)) {
         setApiError(
           error.response?.data?.error ||
-          error.response?.data?.message ||
-          "Unable to save payslip setup."
+            error.response?.data?.message ||
+            "Unable to save payslip setup.",
         );
       } else {
         setApiError("Unable to save payslip setup.");
@@ -424,7 +422,9 @@ const PayslipSetup = () => {
         <div className="col-12 col-lg-9">
           <div className="card border-0 shadow-sm">
             <div className="card-body p-4 p-md-5">
-              <h1 className="h3 mb-2">Payslip {isEditing ? "Details" : "Setup"}</h1>
+              <h1 className="h3 mb-2">
+                Payslip {isEditing ? "Details" : "Setup"}
+              </h1>
               <p className="text-muted mb-4">
                 {isEditing
                   ? "Update your gross salary and category allocations."
@@ -459,14 +459,36 @@ const PayslipSetup = () => {
                     borderRadius: "8px",
                   }}
                 >
-                  <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <div style={{ fontSize: "24px", minWidth: "30px" }}>💡</div>
                     <div>
-                      <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600", color: "#333" }}>
+                      <h4
+                        style={{
+                          margin: "0 0 8px 0",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#333",
+                        }}
+                      >
                         Add Job Title & Location for Tips
                       </h4>
-                      <p style={{ margin: "0", fontSize: "13px", color: "#666", lineHeight: "1.5" }}>
-                        Providing your job title and location unlocks personalized financial insights, salary comparisons with market data, and tailored tips on your dashboard.
+                      <p
+                        style={{
+                          margin: "0",
+                          fontSize: "13px",
+                          color: "#666",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        Providing your job title and location unlocks
+                        personalized financial insights, salary comparisons with
+                        market data, and tailored tips on your dashboard.
                       </p>
                     </div>
                   </div>
@@ -509,7 +531,13 @@ const PayslipSetup = () => {
                       }}
                     >
                       {jobSearchLoading ? (
-                        <div style={{ padding: "10px", color: "#999", fontSize: "12px" }}>
+                        <div
+                          style={{
+                            padding: "10px",
+                            color: "#999",
+                            fontSize: "12px",
+                          }}
+                        >
                           Loading jobs...
                         </div>
                       ) : jobOptions.length > 0 ? (
@@ -526,16 +554,23 @@ const PayslipSetup = () => {
                               borderBottom: "1px solid #f0f0f0",
                               cursor: "pointer",
                               backgroundColor: "transparent",
-                              transition: "background-color 0.2s"
+                              transition: "background-color 0.2s",
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.backgroundColor = "#f5f5f5";
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = "transparent";
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
                             }}
                           >
-                            <div style={{ fontSize: "14px", color: "#333", fontWeight: "500" }}>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                color: "#333",
+                                fontWeight: "500",
+                              }}
+                            >
                               {job.label}
                             </div>
                             {job.count && (
@@ -546,7 +581,13 @@ const PayslipSetup = () => {
                           </div>
                         ))
                       ) : (
-                        <div style={{ padding: "10px", color: "#999", fontSize: "12px" }}>
+                        <div
+                          style={{
+                            padding: "10px",
+                            color: "#999",
+                            fontSize: "12px",
+                          }}
+                        >
                           No jobs found
                         </div>
                       )}
@@ -591,7 +632,13 @@ const PayslipSetup = () => {
                       }}
                     >
                       {locationSearchLoading ? (
-                        <div style={{ padding: "10px", color: "#999", fontSize: "12px" }}>
+                        <div
+                          style={{
+                            padding: "10px",
+                            color: "#999",
+                            fontSize: "12px",
+                          }}
+                        >
                           Loading locations...
                         </div>
                       ) : locationOptions.length > 0 ? (
@@ -608,22 +655,35 @@ const PayslipSetup = () => {
                               borderBottom: "1px solid #f0f0f0",
                               cursor: "pointer",
                               backgroundColor: "transparent",
-                              transition: "background-color 0.2s"
+                              transition: "background-color 0.2s",
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.backgroundColor = "#f5f5f5";
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = "transparent";
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
                             }}
                           >
-                            <div style={{ fontSize: "14px", color: "#333", fontWeight: "500" }}>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                color: "#333",
+                                fontWeight: "500",
+                              }}
+                            >
                               {loc.label}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div style={{ padding: "10px", color: "#999", fontSize: "12px" }}>
+                        <div
+                          style={{
+                            padding: "10px",
+                            color: "#999",
+                            fontSize: "12px",
+                          }}
+                        >
                           No locations found
                         </div>
                       )}
@@ -653,11 +713,23 @@ const PayslipSetup = () => {
                   </div>
                 )}
 
-                {apiError && <div className="alert alert-danger">{apiError}</div>}
+                {apiError && (
+                  <div className="alert alert-danger">{apiError}</div>
+                )}
 
                 <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Payslip" : "Save Payslip")}
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? isEditing
+                        ? "Updating..."
+                        : "Saving..."
+                      : isEditing
+                        ? "Update Payslip"
+                        : "Save Payslip"}
                   </button>
                 </div>
               </form>

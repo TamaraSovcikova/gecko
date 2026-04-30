@@ -62,13 +62,9 @@ const Expenses = ({ categories }: Props) => {
         payload.category = category;
       }
 
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await axios.post(`${import.meta.env.VITE_API_URL}/v1/expenses`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const createdCategory =
         category === "create-new" ? newCategoryName.trim() : category;
