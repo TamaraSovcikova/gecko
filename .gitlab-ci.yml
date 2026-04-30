@@ -25,7 +25,7 @@ lint:          # lint stage
     - npm run lint
 
 build:       # This job runs in the build stage, which runs first.
-  stage: build.  # only runs if lint passes
+  stage: build  # only runs if lint passes
   image: node:18
   script:
     - cd client
