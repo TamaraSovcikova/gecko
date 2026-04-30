@@ -43,16 +43,10 @@ deploy:      # This job runs in the deploy stage.
     - chmod 700 ~/.ssh
     - ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
   script:
-#     - echo "test"
     - ssh "$SERVER_USER@$SERVER_IP" "
-        cd /var/www/zoar &&
+        cd COM2042_Zoar_App &&
         git pull origin main &&
-        cd server &&
-        npm install &&
-        cd ../client &&
-        npm install &&
-        npm run build &&
-        pm2 restart all
+        ./start.sh
       "
   only:
     - main
