@@ -95,25 +95,6 @@ type BudgetUpdatePayload = {
   forecast?: ForecastPayload;
 };
 
-// year, month select helper
-const monthName = (month: number) => {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return months[month - 1] || "Unknown";
-};
-
 const Dashboard = () => {
   // monthly snapshot popup states
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
@@ -771,78 +752,9 @@ const Dashboard = () => {
 
       {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.55)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: "14px",
-              width: "900px",
-              maxWidth: "100%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-              padding: "30px",
-              fontFamily: "Arial, sans-serif",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-              position: "relative",
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowSnapshotPopup(false)}
-              style={{
-                position: "absolute",
-                top: "16px",
-                right: "16px",
-                border: "none",
-                background: "transparent",
-                fontSize: "20px",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
-            >
-              ✕
-            </button>
-
-            {/* EXTRA LINES */}
-            {/* Moved from component to popup */}
-            <h2 style={{ margin: 0 }}>
-              Monthly Snapshot: {monthName(popupSnapshot.month)}{" "}
-              {popupSnapshot.year}
-            </h2>
-
-            <p style={{ marginTop: "10px", color: "#555" }}>
-              Snapshot created:{" "}
-              {new Date(popupSnapshot.createdAt).toLocaleString()}
-            </p>
-
-            <p style={{ marginTop: "10px", color: "#000" }}>
-              This is your monthly summary for the past month. Past snapshots
-              can be found on your dashboard page using nav buttons and a
-              dropdown.
-            </p>
-            {/* Reuse snapshot component */}
-            <MonthlySnapshot snapshot={popupSnapshot} />
-            {showSnapshotPopup && popupSnapshot && (
-              <Modal onClose={() => setShowSnapshotPopup(false)}>
-                <MonthlySnapshot snapshot={popupSnapshot} />
-              </Modal>
-            )}
-          </div>
-        </div>
+        <Modal onClose={() => setShowSnapshotPopup(false)}>
+          <MonthlySnapshot snapshot={popupSnapshot} />
+        </Modal>
       )}
     </>
   );

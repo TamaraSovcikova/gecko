@@ -8,7 +8,9 @@
 
 const Expense = require('../models/Expense');
 const MonthlyBudget = require('../models/MonthlyBudget');
+const extractTotalFromText = require('../utils/extractTotal');
 const { computeDashboard } = require('../services/dashboardAggregate');
+const { scanReceipt: runOcrScan } = require('../services/ocrService');
 const { computeForecastForUser } = require('../services/forecastService');
 
 /**
@@ -334,6 +336,40 @@ exports.deleteExpense = async (req, res) => {
       success: false,
       error: 'Failed to delete expense',
       details: err.message,
+    });
+  }
+};
+
+// POST api/v1/expenses/scan
+exports.scanReceipt = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image uploaded',
+      });
+    }
+
+    const ocrResult = await runOcrScan(req.file.buffer);
+    const parsedText = ocrResult?.ParsedResults?.[0]?.ParsedText || '';
+    const amount = extractTotalFromText(parsedText);
+
+    if (!amount) {
+      return res.status(200).json({
+        success: false,
+        message: 'Could not detect total',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      amount,
+    });
+  } catch (error) {
+    console.error('Scan receipt error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Receipt scanning failed',
     });
   }
 };
