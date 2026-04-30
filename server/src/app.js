@@ -13,6 +13,7 @@ const helmet = require('helmet');
 const router = require('./routes/index');
 const dashboardRouter = require('./routes/dashboard');
 const expenseRoutes = require('./routes/expense');
+const authRouter = require('./routes/auth');
 
 const app = express();
 
@@ -32,26 +33,16 @@ app.use(
 
 app.use(express.json());
 
-//
-// TEST ROUTES FOR CRON JOB
-//
-
-// !! ACTUAL SNAPSHOT TEST !!
 // IMPORTANT: Import the cron job so it runs automatically
 require("./jobs/monthlySnapshotJob");
 
-// Snapshots route
 const snapshotRoutes = require("./routes/snapshot");
-app.use("/api/snapshots", snapshotRoutes);
-// !! ACTUAL CRON JOB TEST !!
 
-//
-// TEST ROUTES FOR CRON JOB
-//
 
-app.use("/v1/dashboard", dashboardRouter);
-
-app.use('/v1/expenses', expenseRoutes);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/expenses", expenseRoutes);
+app.use("/api/v1/snapshots", snapshotRoutes);
 
 app.use('/', router);
 
