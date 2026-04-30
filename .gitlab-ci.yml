@@ -32,9 +32,10 @@ build:       # This job runs in the build stage, which runs first.
     - npm install
     - npm run build
 
-deploy:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
-  environment: production
+deploy:
+  stage: deploy
+  image: alpine:latest
+
   before_script:
     - apk add --no-cache openssh-client git
     - eval $(ssh-agent -s)
@@ -42,11 +43,13 @@ deploy:      # This job runs in the deploy stage.
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+
   script:
     - ssh "$SERVER_USER@$SERVER_IP" "
         cd COM2042_Zoar_App &&
-        git pull origin main &&
+        git pull --rebase origin main &&
         ./start.sh
       "
+
   only:
     - main
