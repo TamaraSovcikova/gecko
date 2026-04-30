@@ -22,6 +22,7 @@
     "ml-regression-simple-linear": "^3.0.1",
     "mongodb": "^7.1.0",
     "mongoose": "^8.23.0",
+    "multer": "^2.1.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.1",
     "pdfkit": "^0.18.0",

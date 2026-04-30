@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { ForecastPayload } from "../../types/forecast";
@@ -50,12 +50,14 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
   const [newCategoryBudget, setNewCategoryBudget] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [scanSuccess, setScanSuccess] = useState("");
 
   const [availableCategories, setAvailableCategories] = useState<string[]>(
     categories?.map((item) => item.name) || [],
   );
 
-  // Sync categories from dashboard -> form
   useEffect(() => {
     if (!categories) return;
 
@@ -74,8 +76,6 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
     setFormSuccess("");
 
     try {
-      console.log("[Expenses] handleSubmit called");
-
       const payload: any = {
         amount: Number(amount),
         date,
@@ -97,8 +97,6 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         payload.category = category;
       }
 
-      console.log("[Expenses] POST payload =", payload);
-
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses`,
         payload,
@@ -106,8 +104,6 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-
-      console.log("[Expenses] POST /expenses response =", res.data);
 
       const createdCategory =
         category === "create-new" ? newCategoryName.trim() : category;
@@ -118,13 +114,10 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         );
       }
 
-      // Push updated dashboard + forecast back to parent immediately
       if (onExpenseCreated) {
-        console.log("[Expenses] Calling onExpenseCreated callback");
         onExpenseCreated(res.data?.dashboard, res.data?.forecast);
       }
 
-      // reset form
       setCategory(createdCategory);
       setAmount("");
       setDate("");
@@ -134,13 +127,57 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
 
       setFormSuccess("Expense saved.");
     } catch (err) {
-      console.error("[Expenses] Failed to save expense:", err);
-
       if (axios.isAxiosError(err)) {
         setFormError(err.response?.data?.error || "Failed to add expense");
       } else {
         setFormError("Failed to add expense");
       }
+    }
+  };
+
+  const handleReceiptFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setIsScanning(true);
+    setScanError("");
+    setScanSuccess("");
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/scan`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const scannedAmount = response.data?.amount;
+      if (response.data?.success && scannedAmount) {
+        setAmount(String(scannedAmount));
+        if (!date) {
+          setDate(new Date().toISOString().slice(0, 10));
+        }
+        setScanSuccess("Receipt scanned. Amount added to the form.");
+      } else {
+        setScanError(response.data?.message || "Could not detect total.");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setScanError(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            "Failed to scan receipt.",
+        );
+      } else {
+        setScanError("Failed to scan receipt.");
+      }
+    } finally {
+      setIsScanning(false);
+      e.target.value = "";
     }
   };
 
@@ -219,6 +256,20 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
             placeholder="Note"
           />
         </div>
+
+        <div className="mb-2">
+          <label className="form-label mb-1">Scan receipt (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="form-control"
+            onChange={handleReceiptFileChange}
+            disabled={isScanning}
+          />
+        </div>
+
+        {scanSuccess && <div className="alert alert-info py-1">{scanSuccess}</div>}
+        {scanError && <div className="alert alert-warning py-1">{scanError}</div>}
 
         {formSuccess && (
           <div className="alert alert-success py-1">{formSuccess}</div>
