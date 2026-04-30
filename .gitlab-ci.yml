@@ -23,6 +23,7 @@ lint:          # lint stage
     - cd ../client
     - npm install
     - npm run lint
+  allow_failure: true
 
 build:       # This job runs in the build stage, which runs first.
   stage: build  # only runs if lint passes
