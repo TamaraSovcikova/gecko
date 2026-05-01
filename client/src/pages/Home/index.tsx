@@ -366,10 +366,11 @@ const Home = () => {
           .hero-image-shell {
             min-height: 300px !important;
             justify-content: center !important;
+            padding-left: clamp(0px, 4vw, 40px) !important;
           }
 
           .hero-gecko-image {
-            width: clamp(420px, 88vw, 760px) !important;
+            width: min(88vw, 660px) !important;
             transform: scaleX(1) rotate(-4deg) translate(0, 0) !important;
           }
 
@@ -395,8 +396,13 @@ const Home = () => {
             grid-template-columns: 1fr;
           }
 
+          .hero-image-shell {
+            min-height: 220px !important;
+            padding-left: 0 !important;
+          }
+
           .hero-gecko-image {
-            width: clamp(360px, 92vw, 560px) !important;
+            width: min(94vw, 420px) !important;
             transform: rotate(-2deg) translate(0, 0) !important;
           }
         }
