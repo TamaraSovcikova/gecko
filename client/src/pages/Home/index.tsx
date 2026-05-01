@@ -364,14 +364,12 @@ const Home = () => {
           }
 
           .hero-image-shell {
-            min-height: 300px !important;
-            justify-content: center !important;
-            padding-left: clamp(0px, 4vw, 40px) !important;
+            min-height: 260px !important;
           }
 
           .hero-gecko-image {
-            width: min(88vw, 660px) !important;
-            transform: scaleX(1) rotate(-4deg) translate(0, 0) !important;
+            width: min(72vw, 480px) !important;
+            transform: rotate(-4deg) !important;
           }
 
           .hero-title {
@@ -397,13 +395,12 @@ const Home = () => {
           }
 
           .hero-image-shell {
-            min-height: 220px !important;
-            padding-left: 0 !important;
+            min-height: 200px !important;
           }
 
           .hero-gecko-image {
-            width: min(94vw, 420px) !important;
-            transform: rotate(-2deg) translate(0, 0) !important;
+            width: min(82vw, 320px) !important;
+            transform: rotate(-2deg) !important;
           }
         }
       `}</style>
@@ -604,13 +601,12 @@ const Home = () => {
               className="home-fade delay-1 hero-image-shell"
               aria-label="Gecko artwork"
               style={{
-                minHeight: "560px",
+                minHeight: "420px",
                 display: "flex",
-                alignItems: "stretch",
-                justifyContent: "flex-end",
-                paddingRight: "clamp(0px, 0.4vw, 6px)",
-                paddingLeft: "clamp(78px, 12vw, 234px)",
-                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingRight: "clamp(0px, 1vw, 16px)",
+                paddingLeft: "clamp(0px, 4vw, 48px)",
                 pointerEvents: "none",
               }}
             >
@@ -619,10 +615,10 @@ const Home = () => {
                 src="/gecko-transparent.png?v=3"
                 alt="Gecko and coin"
                 style={{
-                  width: "clamp(700px, 78vw, 1200px)",
-                  transform: "scaleX(1) rotate(-8deg) translate(4%, -2%)",
+                  width: "clamp(260px, 46vw, 640px)",
+                  maxWidth: "100%",
+                  transform: "rotate(-6deg)",
                   transformOrigin: "center center",
-                  marginRight: "clamp(-14px, -1.4vw, 4px)",
                   filter: "drop-shadow(0 20px 18px rgba(63, 89, 70, 0.16))",
                   imageRendering: "auto",
                   userSelect: "none",
