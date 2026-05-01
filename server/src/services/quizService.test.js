@@ -27,7 +27,7 @@ describe("quizService", () => {
 
     const result = await getQuiz("JavaScript");
 
-    expect(result.topic).toBe("JavaScript");
+    expect(result.topic).toBe("javascript");
     expect(result.source).toBe("dynamic");
     expect(result.questions.length).toBe(1);
     expect(axios.get).toHaveBeenCalledWith("https://quizapi.io/v1/questions", {

@@ -25,21 +25,41 @@ const PANEL_MIN_WIDTH = 220;
 const PANEL_MIN_HEIGHT = 170;
 const PANEL_MAX_WIDTH = 560;
 const PANEL_MAX_HEIGHT = 620;
-const PANEL_DEFAULT_TOP = 196;
+const PANEL_DEFAULT_TOP = 220;
 
 const clamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
 };
 
-const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, onGoToStep }: Props) => {
+const TooltipGuide = ({
+  isOpen,
+  activeStepNumber,
+  steps,
+  onClose,
+  onComplete,
+  onGoToStep,
+}: Props) => {
   const [anchorRect, setAnchorRect] = useState<AnchorRect>(null);
-  const [panelMode, setPanelMode] = useState<"open" | "minimized" | "closed">("open");
-  const [panelPosition, setPanelPosition] = useState({ left: 16, top: PANEL_DEFAULT_TOP });
+  const [panelMode, setPanelMode] = useState<"open" | "minimized" | "closed">(
+    "open",
+  );
+  const [panelPosition, setPanelPosition] = useState({
+    left: 16,
+    top: PANEL_DEFAULT_TOP,
+  });
   const [panelSize, setPanelSize] = useState({ width: 320, height: 300 });
   const dragRef = useRef<{ offsetX: number; offsetY: number } | null>(null);
-  const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
+  const resizeRef = useRef<{
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
 
-  const activeIndex = useMemo(() => steps.findIndex((step) => step.number === activeStepNumber), [activeStepNumber, steps]);
+  const activeIndex = useMemo(
+    () => steps.findIndex((step) => step.number === activeStepNumber),
+    [activeStepNumber, steps],
+  );
   const activeStep = activeIndex >= 0 ? steps[activeIndex] : null;
   const isMinimized = panelMode === "minimized";
 
@@ -51,8 +71,16 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
       const viewportHeight = window.innerHeight;
       const defaultLeft = Math.max(16, viewportWidth - panelSize.width - 16);
       setPanelPosition((prev) => ({
-        left: clamp(prev.left, 16, Math.max(16, viewportWidth - panelSize.width - 16)),
-        top: clamp(prev.top || PANEL_DEFAULT_TOP, PANEL_DEFAULT_TOP, Math.max(PANEL_DEFAULT_TOP, viewportHeight - 56)),
+        left: clamp(
+          prev.left,
+          16,
+          Math.max(16, viewportWidth - panelSize.width - 16),
+        ),
+        top: clamp(
+          prev.top || PANEL_DEFAULT_TOP,
+          PANEL_DEFAULT_TOP,
+          Math.max(PANEL_DEFAULT_TOP, viewportHeight - 56),
+        ),
       }));
 
       if (!Number.isFinite(panelPosition.left)) {
@@ -64,16 +92,32 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   useEffect(() => {
     const handlePointerMove = (event: MouseEvent) => {
       if (dragRef.current) {
-        const nextLeft = clamp(event.clientX - dragRef.current.offsetX, 8, window.innerWidth - 80);
-        const nextTop = clamp(event.clientY - dragRef.current.offsetY, 8, window.innerHeight - 60);
+        const nextLeft = clamp(
+          event.clientX - dragRef.current.offsetX,
+          8,
+          window.innerWidth - 80,
+        );
+        const nextTop = clamp(
+          event.clientY - dragRef.current.offsetY,
+          8,
+          window.innerHeight - 60,
+        );
         setPanelPosition({ left: nextLeft, top: nextTop });
       }
 
       if (resizeRef.current) {
         const deltaX = event.clientX - resizeRef.current.startX;
         const deltaY = event.clientY - resizeRef.current.startY;
-        const nextWidth = clamp(resizeRef.current.startWidth + deltaX, PANEL_MIN_WIDTH, Math.min(PANEL_MAX_WIDTH, window.innerWidth - 32));
-        const nextHeight = clamp(resizeRef.current.startHeight + deltaY, PANEL_MIN_HEIGHT, Math.min(PANEL_MAX_HEIGHT, window.innerHeight - 32));
+        const nextWidth = clamp(
+          resizeRef.current.startWidth + deltaX,
+          PANEL_MIN_WIDTH,
+          Math.min(PANEL_MAX_WIDTH, window.innerWidth - 32),
+        );
+        const nextHeight = clamp(
+          resizeRef.current.startHeight + deltaY,
+          PANEL_MIN_HEIGHT,
+          Math.min(PANEL_MAX_HEIGHT, window.innerHeight - 32),
+        );
         setPanelSize({ width: nextWidth, height: nextHeight });
       }
     };
@@ -95,7 +139,11 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   useEffect(() => {
     const keepPanelInViewport = () => {
       setPanelPosition((previous) => ({
-        left: clamp(previous.left, 8, Math.max(8, window.innerWidth - panelSize.width - 8)),
+        left: clamp(
+          previous.left,
+          8,
+          Math.max(8, window.innerWidth - panelSize.width - 8),
+        ),
         top: clamp(previous.top, 8, Math.max(8, window.innerHeight - 56)),
       }));
     };
@@ -159,7 +207,10 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
     let top = anchorRect.top + anchorRect.height + TOOLTIP_VERTICAL_GAP;
 
     if (top + TOOLTIP_ESTIMATED_HEIGHT > viewportHeight - 16) {
-      top = Math.max(TOOLTIP_MIN_TOP, anchorRect.top - TOOLTIP_ESTIMATED_HEIGHT - TOOLTIP_VERTICAL_GAP);
+      top = Math.max(
+        TOOLTIP_MIN_TOP,
+        anchorRect.top - TOOLTIP_ESTIMATED_HEIGHT - TOOLTIP_VERTICAL_GAP,
+      );
     }
 
     if (anchorRect.width > TOOLTIP_WIDTH) {
@@ -182,12 +233,12 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
         }}
         style={{
           position: "fixed",
-          right: "16px",
+          left: "16px",
           bottom: "20px",
           zIndex: 1200,
-          border: "1px solid #2d6a4f",
+          border: "1px solid #5c3fa3",
           borderRadius: "999px",
-          background: "#2d6a4f",
+          background: "#5c3fa3",
           color: "#fff",
           padding: "10px 14px",
           fontWeight: 700,
@@ -251,7 +302,14 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1100, pointerEvents: "none" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1100,
+        pointerEvents: "none",
+      }}
+    >
       {anchorRect && (
         <div
           style={{
@@ -261,7 +319,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
             width: anchorRect.width + 8,
             height: anchorRect.height + 8,
             borderRadius: "8px",
-            border: "2px solid #2d6a4f",
+            border: "2px solid #5c3fa3",
             boxShadow: "0 0 0 4px rgba(45, 106, 79, 0.15)",
             pointerEvents: "none",
           }}
@@ -277,18 +335,37 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
           left: tooltipPosition.left,
           width: `min(${TOOLTIP_WIDTH}px, calc(100vw - 32px))`,
           backgroundColor: "#fff",
-          border: "1px solid #d9dfd6",
+          border: "1px solid #c9bde8",
           borderRadius: "12px",
           boxShadow: "0 14px 28px rgba(0, 0, 0, 0.16)",
           padding: "14px",
           pointerEvents: "auto",
         }}
       >
-        <p style={{ margin: 0, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#6f7a70" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: "11px",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#7a6e99",
+          }}
+        >
           Tooltip #{activeStep.number} of {steps.length}
         </p>
-        <h3 style={{ margin: "4px 0 6px", fontSize: "16px", color: "#244735" }}>{activeStep.title}</h3>
-        <p style={{ margin: 0, color: "#444", fontSize: "14px", lineHeight: 1.45 }}>{activeStep.body}</p>
+        <h3 style={{ margin: "4px 0 6px", fontSize: "16px", color: "#5c3fa3" }}>
+          {activeStep.title}
+        </h3>
+        <p
+          style={{
+            margin: 0,
+            color: "#4a3f6b",
+            fontSize: "14px",
+            lineHeight: 1.45,
+          }}
+        >
+          {activeStep.body}
+        </p>
       </div>
 
       {panelMode === "closed" ? (
@@ -300,9 +377,9 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
             right: "16px",
             bottom: "20px",
             zIndex: 1200,
-            border: "1px solid #2d6a4f",
+            border: "1px solid #5c3fa3",
             borderRadius: "999px",
-            background: "#2d6a4f",
+            background: "#5c3fa3",
             color: "#fff",
             padding: "10px 14px",
             fontWeight: 700,
@@ -319,8 +396,9 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
             left: `${panelPosition.left}px`,
             top: `${panelPosition.top}px`,
             width: panelMode === "minimized" ? "132px" : `${panelSize.width}px`,
-            height: panelMode === "minimized" ? "auto" : `${panelSize.height}px`,
-            border: "1px solid #d9dfd6",
+            height:
+              panelMode === "minimized" ? "auto" : `${panelSize.height}px`,
+            border: "1px solid #c9bde8",
             borderRadius: "12px",
             backgroundColor: "#fff",
             boxShadow: "0 16px 30px rgba(0, 0, 0, 0.16)",
@@ -334,14 +412,52 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
         >
           <div
             onMouseDown={startDragPanel}
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", cursor: "move", userSelect: "none" }}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "move",
+              userSelect: "none",
+            }}
           >
-            <strong style={{ color: "#244735", fontSize: panelMode === "minimized" ? "12px" : "14px" }}>#{activeStep.number}</strong>
+            <strong
+              style={{
+                color: "#5c3fa3",
+                fontSize: panelMode === "minimized" ? "12px" : "14px",
+              }}
+            >
+              #{activeStep.number}
+            </strong>
             <div style={{ display: "flex", gap: "6px" }}>
-              <button type="button" onClick={() => setPanelMode(panelMode === "minimized" ? "open" : "minimized")} style={{ border: "1px solid #ccd4cc", borderRadius: "8px", background: "#fff", padding: isMinimized ? "2px 6px" : "4px 8px", fontSize: isMinimized ? "11px" : "13px", cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={() =>
+                  setPanelMode(panelMode === "minimized" ? "open" : "minimized")
+                }
+                style={{
+                  border: "1px solid #c9bde8",
+                  borderRadius: "8px",
+                  background: "#fff",
+                  padding: isMinimized ? "2px 6px" : "4px 8px",
+                  fontSize: isMinimized ? "11px" : "13px",
+                  cursor: "pointer",
+                }}
+              >
                 {panelMode === "minimized" ? "Expand" : "Min"}
               </button>
-              <button type="button" onClick={onClose} style={{ border: "1px solid #ccd4cc", borderRadius: "8px", background: "#fff", padding: isMinimized ? "2px 6px" : "4px 8px", fontSize: isMinimized ? "11px" : "13px", cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  border: "1px solid #c9bde8",
+                  borderRadius: "8px",
+                  background: "#fff",
+                  padding: isMinimized ? "2px 6px" : "4px 8px",
+                  fontSize: isMinimized ? "11px" : "13px",
+                  cursor: "pointer",
+                }}
+              >
                 Close
               </button>
             </div>
@@ -350,25 +466,67 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
           {panelMode === "open" && (
             <>
               <div style={{ overflow: "auto", marginTop: "10px", flex: 1 }}>
-                <h4 style={{ margin: "0 0 8px", color: "#244735", fontSize: "16px" }}>{activeStep.title}</h4>
-                <p style={{ margin: 0, color: "#444", fontSize: "14px", lineHeight: 1.45 }}>{activeStep.body}</p>
+                <h4
+                  style={{
+                    margin: "0 0 8px",
+                    color: "#5c3fa3",
+                    fontSize: "16px",
+                  }}
+                >
+                  {activeStep.title}
+                </h4>
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#4a3f6b",
+                    fontSize: "14px",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {activeStep.body}
+                </p>
               </div>
             </>
           )}
 
-          <div style={{ marginTop: "12px", display: "flex", justifyContent: "space-between", gap: "8px" }}>
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "8px",
+            }}
+          >
             <button
               type="button"
               onClick={goPrevious}
               disabled={isFirstStep}
-              style={{ border: "1px solid #cfd7ce", borderRadius: "8px", background: "#fff", color: isFirstStep ? "#a8b0a8" : "#4f5a52", padding: isMinimized ? "5px 8px" : "8px 10px", fontSize: isMinimized ? "12px" : "14px", fontWeight: 700, cursor: isFirstStep ? "default" : "pointer" }}
+              style={{
+                border: "1px solid #c9bde8",
+                borderRadius: "8px",
+                background: "#fff",
+                color: isFirstStep ? "#c9bde8" : "#4a3f6b",
+                padding: isMinimized ? "5px 8px" : "8px 10px",
+                fontSize: isMinimized ? "12px" : "14px",
+                fontWeight: 700,
+                cursor: isFirstStep ? "default" : "pointer",
+              }}
             >
               ←
             </button>
             <button
               type="button"
               onClick={goNext}
-              style={{ border: "1px solid #2d6a4f", borderRadius: "8px", background: "#2d6a4f", color: "#fff", padding: isMinimized ? "5px 8px" : "8px 10px", fontSize: isMinimized ? "12px" : "14px", fontWeight: 700, cursor: "pointer" }}
+              style={{
+                border: "1px solid #5c3fa3",
+                borderRadius: "8px",
+                background: "#5c3fa3",
+                color: "#fff",
+                padding: isMinimized ? "5px 8px" : "8px 10px",
+                fontSize: isMinimized ? "12px" : "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
             >
               {isLastStep ? "Finish" : "→"}
             </button>
@@ -376,13 +534,49 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
 
           {!isMinimized && (
             <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-              <button type="button" onClick={goToFirstStep} style={{ border: "1px solid #cfd7ce", borderRadius: "8px", background: "#fff", color: "#4f5a52", padding: "7px 10px", fontWeight: 600, cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={goToFirstStep}
+                style={{
+                  border: "1px solid #c9bde8",
+                  borderRadius: "8px",
+                  background: "#fff",
+                  color: "#4a3f6b",
+                  padding: "7px 10px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
                 First
               </button>
-              <button type="button" onClick={onClose} style={{ border: "1px solid #cfd7ce", borderRadius: "8px", background: "#fff", color: "#4f5a52", padding: "7px 10px", fontWeight: 600, cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  border: "1px solid #c9bde8",
+                  borderRadius: "8px",
+                  background: "#fff",
+                  color: "#4a3f6b",
+                  padding: "7px 10px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
                 Dismiss
               </button>
-              <button type="button" onClick={onComplete} style={{ border: "1px solid #2d6a4f", borderRadius: "8px", background: "#2d6a4f", color: "#fff", padding: "7px 10px", fontWeight: 600, cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={onComplete}
+                style={{
+                  border: "1px solid #5c3fa3",
+                  borderRadius: "8px",
+                  background: "#5c3fa3",
+                  color: "#fff",
+                  padding: "7px 10px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
                 Skip all
               </button>
             </div>
@@ -400,7 +594,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
                 height: "16px",
                 cursor: "nwse-resize",
                 background:
-                  "linear-gradient(135deg, transparent 0 45%, #9aa79f 45% 55%, transparent 55% 100%)",
+                  "linear-gradient(135deg, transparent 0 45%, #b8a4e8 45% 55%, transparent 55% 100%)",
               }}
             />
           )}

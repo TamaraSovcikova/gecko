@@ -1,12 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { ForecastPayload } from "../../types/forecast";
+
+type DashboardData = {
+  healthScore: number;
+  takeHome: number;
+  budgetLeft: number;
+  totalBudget: number;
+  actualSpending: { name: string; value: number }[];
+  budgetAllocation: { name: string; value: number }[];
+  averageSalary?: number;
+  adzunaTips?: {
+    type: string;
+    title: string;
+    description: string;
+    priority: "high" | "medium" | "low";
+  }[];
+  healthBreakdown?: any;
+  expenses?: {
+    _id: string;
+    category: string;
+    amount: number;
+    day: number;
+    month: number;
+    year: number;
+    date: string;
+    note?: string;
+    createdAt: string;
+  }[];
+};
 
 type Props = {
   categories?: { name: string; value: number }[];
+  onExpenseCreated?: (
+    dashboard: DashboardData | undefined,
+    forecast: ForecastPayload | undefined,
+  ) => void;
 };
 
-const Expenses = ({ categories }: Props) => {
+const Expenses = ({ categories, onExpenseCreated }: Props) => {
   const { token } = useAuth();
 
   const [amount, setAmount] = useState("");
@@ -17,12 +50,14 @@ const Expenses = ({ categories }: Props) => {
   const [newCategoryBudget, setNewCategoryBudget] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [scanSuccess, setScanSuccess] = useState("");
 
   const [availableCategories, setAvailableCategories] = useState<string[]>(
     categories?.map((item) => item.name) || [],
   );
 
-  // Sync categories from dashboard → form
   useEffect(() => {
     if (!categories) return;
 
@@ -33,7 +68,7 @@ const Expenses = ({ categories }: Props) => {
     if (!category && next.length > 0) {
       setCategory(next[0]);
     }
-  }, [categories]);
+  }, [categories, category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +97,7 @@ const Expenses = ({ categories }: Props) => {
         payload.category = category;
       }
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/v1/expenses`, payload, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/expenses`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +110,10 @@ const Expenses = ({ categories }: Props) => {
         );
       }
 
-      // reset form
+      if (onExpenseCreated) {
+        onExpenseCreated(res.data?.dashboard, res.data?.forecast);
+      }
+
       setCategory(createdCategory);
       setAmount("");
       setDate("");
@@ -93,12 +131,67 @@ const Expenses = ({ categories }: Props) => {
     }
   };
 
+  const handleReceiptFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setIsScanning(true);
+    setScanError("");
+    setScanSuccess("");
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/scan`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const scannedAmount = response.data?.amount;
+      if (response.data?.success && scannedAmount) {
+        setAmount(String(scannedAmount));
+        if (!date) {
+          setDate(new Date().toISOString().slice(0, 10));
+        }
+        setScanSuccess("Receipt scanned. Amount added to the form.");
+      } else {
+        setScanError(response.data?.message || "Could not detect total.");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setScanError(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            "Failed to scan receipt.",
+        );
+      } else {
+        setScanError("Failed to scan receipt.");
+      }
+    } finally {
+      setIsScanning(false);
+      e.target.value = "";
+    }
+  };
+
   return (
-    <div className="card shadow-sm p-3">
-      <h5 className="mb-3">Log Expense</h5>
+    <div
+      className="p-3"
+      style={{
+        border: "1px solid #c9bde8",
+        borderRadius: "14px",
+        background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+        boxShadow: "0 4px 20px rgba(92, 63, 163, 0.08)",
+      }}
+    >
+      <h5 className="mb-3" style={{ color: "#5c3fa3", fontWeight: 700 }}>
+        Log Expense
+      </h5>
 
       <form onSubmit={handleSubmit}>
-        {/* Amount */}
         <div className="mb-2">
           <input
             className="form-control"
@@ -109,7 +202,6 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Category */}
         <div className="mb-2">
           <select
             className="form-select"
@@ -128,7 +220,6 @@ const Expenses = ({ categories }: Props) => {
           </select>
         </div>
 
-        {/* Create new category */}
         {category === "create-new" && (
           <>
             <div className="mb-2">
@@ -153,7 +244,6 @@ const Expenses = ({ categories }: Props) => {
           </>
         )}
 
-        {/* Date */}
         <div className="mb-2">
           <input
             type="date"
@@ -164,7 +254,6 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Note */}
         <div className="mb-2">
           <input
             className="form-control"
@@ -174,7 +263,20 @@ const Expenses = ({ categories }: Props) => {
           />
         </div>
 
-        {/* Feedback */}
+        <div className="mb-2">
+          <label className="form-label mb-1">Scan receipt (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="form-control"
+            onChange={handleReceiptFileChange}
+            disabled={isScanning}
+          />
+        </div>
+
+        {scanSuccess && <div className="alert alert-info py-1">{scanSuccess}</div>}
+        {scanError && <div className="alert alert-warning py-1">{scanError}</div>}
+
         {formSuccess && (
           <div className="alert alert-success py-1">{formSuccess}</div>
         )}
@@ -182,8 +284,17 @@ const Expenses = ({ categories }: Props) => {
           <div className="alert alert-danger py-1">{formError}</div>
         )}
 
-        {/* Submit */}
-        <button className="btn btn-success w-100 mt-2">Save expense</button>
+        <button
+          className="btn w-100 mt-2"
+          style={{
+            backgroundColor: "#5c3fa3",
+            border: "1px solid #4e358f",
+            color: "#ffffff",
+            fontWeight: 600,
+          }}
+        >
+          Save expense
+        </button>
       </form>
     </div>
   );

@@ -25,7 +25,7 @@ type LocationOption = {
   label: string;
 };
 
-// Shape returned by POST /v1/payslip and GET /v1/payslip
+// Shape returned by POST /api/v1/payslip and GET /api/v1/payslip
 type PayslipResponse = {
   grossSalary: number;
   taxPaid: number;
@@ -76,7 +76,7 @@ const PayslipSetup = () => {
 
       try {
         const response = await axios.get<PayslipResponse>(
-          `${API_URL}/v1/payslip`,
+          `${API_URL}/api/v1/payslip`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
@@ -113,7 +113,7 @@ const PayslipSetup = () => {
     const searchJobs = async () => {
       setJobSearchLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/v1/user/job-search`, {
+        const res = await axios.get(`${API_URL}/api/v1/user/job-search`, {
           params: { query: jobSearchQuery },
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -137,7 +137,7 @@ const PayslipSetup = () => {
     const searchLocations = async () => {
       setLocationSearchLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/v1/user/location-search`, {
+        const res = await axios.get(`${API_URL}/api/v1/user/location-search`, {
           params: { query: locationSearchQuery },
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -252,7 +252,7 @@ const PayslipSetup = () => {
       if (isEditing) {
         // Update existing payslip
         const response = await axios.put<PayslipResponse>(
-          `${API_URL}/v1/payslip`,
+          `${API_URL}/api/v1/payslip`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -262,7 +262,7 @@ const PayslipSetup = () => {
         // Also update user profile with job title and location if provided
         if (jobTitle || location) {
           await axios.patch(
-            `${API_URL}/v1/user/profile`,
+            `${API_URL}/api/v1/user/profile`,
             {
               payslipData: {
                 grossSalary: Number(grossSalary),
@@ -278,7 +278,7 @@ const PayslipSetup = () => {
       } else {
         // Create new payslip
         const fetchExistingPayslip = async () => {
-          return axios.get<PayslipResponse>(`${API_URL}/v1/payslip`, {
+          return axios.get<PayslipResponse>(`${API_URL}/api/v1/payslip`, {
             headers: { Authorization: `Bearer ${token}` },
           });
         };
@@ -311,7 +311,7 @@ const PayslipSetup = () => {
         }
 
         const submitPayslip = () =>
-          axios.post<PayslipResponse>(`${API_URL}/v1/payslip`, payload, {
+          axios.post<PayslipResponse>(`${API_URL}/api/v1/payslip`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -323,7 +323,7 @@ const PayslipSetup = () => {
           // Also update user profile with job title and location if provided
           if (jobTitle || location) {
             await axios.patch(
-              `${API_URL}/v1/user/profile`,
+              `${API_URL}/api/v1/user/profile`,
               {
                 payslipData: {
                   grossSalary: Number(grossSalary),
@@ -348,7 +348,7 @@ const PayslipSetup = () => {
               // Also update user profile with job title and location if provided
               if (jobTitle || location) {
                 await axios.patch(
-                  `${API_URL}/v1/user/profile`,
+                  `${API_URL}/api/v1/user/profile`,
                   {
                     payslipData: {
                       grossSalary: Number(grossSalary),
@@ -551,13 +551,13 @@ const PayslipSetup = () => {
                             }}
                             style={{
                               padding: "10px 12px",
-                              borderBottom: "1px solid #f0f0f0",
+                              borderBottom: "1px solid #ede8f8",
                               cursor: "pointer",
                               backgroundColor: "transparent",
                               transition: "background-color 0.2s",
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f5f5f5";
+                              e.currentTarget.style.backgroundColor = "#f4f1fb";
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.backgroundColor =
@@ -652,13 +652,13 @@ const PayslipSetup = () => {
                             }}
                             style={{
                               padding: "10px 12px",
-                              borderBottom: "1px solid #f0f0f0",
+                              borderBottom: "1px solid #ede8f8",
                               cursor: "pointer",
                               backgroundColor: "transparent",
                               transition: "background-color 0.2s",
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f5f5f5";
+                              e.currentTarget.style.backgroundColor = "#f4f1fb";
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.backgroundColor =

@@ -8,7 +8,9 @@
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "server": "npm run dev --prefix server",
     "client": "npm run dev --prefix client",
-    "clear:expenses": "node scripts/clearExpenses.js"
+    "clear:expenses": "node scripts/clearExpenses.js",
+    "seed:data": "npm run seed --prefix server",
+    "verify:seed": "npm run verify:seed --prefix server"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
     "concurrently": "^9.2.1",
     "node-cron": "^4.2.1",
     "pdfkit": "^0.18.0",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.8.0"
   }
 }

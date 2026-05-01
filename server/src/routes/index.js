@@ -14,5 +14,4 @@ router.get('/', (req, res) => res.send('<h1>Zoar API - use /api/v1/* endpoints f
 // Frontend calls: /api/v1/user/newsletter/unsubscribe
 // Caddy proxies /api/* unchanged, so backend receives /api/v1/user/newsletter/unsubscribe
 router.get('/api/v1/user/newsletter/unsubscribe', unsubscribeFromNewsletter);
-
 module.exports = router;

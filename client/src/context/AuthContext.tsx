@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
         {
           headers: {
             Authorization: `Bearer ${activeToken}`,
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const refreshedToken = await auth.currentUser.getIdToken(true);
           const retryResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+            `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
             {
               headers: {
                 Authorization: `Bearer ${refreshedToken}`,

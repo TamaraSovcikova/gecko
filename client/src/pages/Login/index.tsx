@@ -4,7 +4,7 @@
 //   2. Google Sign-In via Firebase signInWithPopup
 //
 // After a successful sign-in:
-//   - Calls the backend /v1/auth/register to ensure a User doc exists in MongoDB
+//   - Calls the backend /api/v1/auth/register to ensure a User doc exists in MongoDB
 //   - If firstLogin is true  → redirect to /payslip
 //   - If firstLogin is false → redirect to /dashboard
 
@@ -98,39 +98,56 @@ const Login = () => {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+    <div
+      className="container d-flex justify-content-center align-items-center min-vh-100"
+      style={{
+        maxWidth: "100%",
+        background:
+          "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232, 224, 250, 0) 32%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245, 240, 254, 0) 36%), #f4f1fb",
+      }}
+    >
       <div
         className="card p-4 shadow"
-        style={{ width: "100%", maxWidth: "420px" }}
+        style={{
+          width: "100%",
+          maxWidth: "440px",
+          borderRadius: "18px",
+          border: "1px solid #c9bde8",
+          background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+          boxShadow: "0 20px 30px rgba(92, 63, 163, 0.12)",
+        }}
       >
-        <h2 className="text-center mb-4">Login</h2>
+        <h2 className="text-center mb-4" style={{ color: "#5c3fa3", fontWeight: 700, letterSpacing: "0.6px" }}>Login</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleEmailLogin}>
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Email</label>
             <input
               type="email"
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
           <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Password</label>
             <input
               type="password"
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
           <button
             type="submit"
-            className="btn btn-primary w-100"
+            className="btn w-100"
+            style={{ backgroundColor: "#5c3fa3", color: "#ffffff", border: "1px solid #4e358f", fontWeight: 700 }}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
@@ -140,7 +157,8 @@ const Login = () => {
         <div className="text-center my-3 text-muted">or</div>
 
         <button
-          className="btn btn-outline-danger w-100"
+          className="btn w-100"
+          style={{ border: "1px solid #c9bde8", color: "#5c3fa3", backgroundColor: "#ede8f8", fontWeight: 600 }}
           onClick={handleGoogleLogin}
           disabled={loading}
         >

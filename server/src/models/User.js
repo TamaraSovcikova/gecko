@@ -2,6 +2,20 @@
 
 const mongoose = require('mongoose');
 
+const ForecastWarningStateSchema = new mongoose.Schema(
+  {
+    monthKey: {
+      type: String,
+      default: "",
+    },
+    dismissedWarningIds: {
+      type: [String],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     // Firebase UID used as the primary key instead of MongoDB ObjectId
@@ -43,10 +57,40 @@ const UserSchema = new mongoose.Schema(
       // payFrequency: { type: String, enum: ['weekly', 'monthly'], default: 'monthly' },
     },
 
-    // XP system
-    xpTotal: {
+    // XP system and gamification
+    // 1. compiling xp total per user
+    // 2. user's level based on their total xp
+    // 3. their weekly quiz streak
+    // 4. date of last time they completed quiz (to calcualte 3.)
+    // 5. # of completed quizzes for the given month
+    xp: {
       type: Number,
       default: 0,
+    },
+
+    level: {
+      type: Number,
+      default: 0,
+    },
+
+    weeklyStreak: {
+      type: Number,
+      default: 0,
+    },
+
+    lastQuizCompletedAt: {
+      type: Date,
+      default: null,
+    },
+
+    completedQuizzesThisMonth: {
+      type: Number,
+      default: 0,
+    },
+
+    streakAtRisk: {
+      type: Boolean,
+      default: false,
     },
 
     // Drives post-login redirect:
@@ -83,6 +127,14 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    forecastWarningState: {
+      type: ForecastWarningStateSchema,
+      default: () => ({
+        monthKey: "",
+        dismissedWarningIds: []
+      }),
+    },
+
     accountChangeLog: [
       {
         action: {
@@ -108,7 +160,7 @@ const UserSchema = new mongoose.Schema(
 // e.g. 0 XP = level 1, 100 XP = level 2, 250 XP = level 3
 // virtuals are included when calling user.toJSON() or user.toObject()
 UserSchema.virtual('xpLevel').get(function () {
-  return Math.floor(this.xpTotal / 100) + 1;
+  return Math.floor(this.xp / 100) + 1;
 });
 
 // Ensure virtuals like xpLevel are included when the document is

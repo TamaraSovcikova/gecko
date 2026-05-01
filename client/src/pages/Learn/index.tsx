@@ -142,13 +142,13 @@ export default function Learn() {
       : [{ category: activeCategory, topics: filteredTopics }];
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
+    <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto", minHeight: "100vh", backgroundColor: "#faf9fd" }}>
       <TopNav />
 
       {/* HERO */}
       <div
         style={{
-          background: "#EEF2FF",
+          background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
           borderRadius: 10,
           padding: "1.75rem",
           marginBottom: "1.5rem",
@@ -159,14 +159,14 @@ export default function Learn() {
         </h1>
 
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 11, color: "#818CF8", marginBottom: 5 }}>
+          <div style={{ fontSize: 11, color: "#8b6fd4", marginBottom: 5 }}>
             {readCount} of {totalTopics} topics explored
           </div>
 
           <div
             style={{
               height: 6,
-              background: "#C7D2FE",
+              background: "#c9bde8",
               borderRadius: 99,
               overflow: "hidden",
             }}
@@ -174,7 +174,7 @@ export default function Learn() {
             <div
               style={{
                 height: "100%",
-                background: "#6366F1",
+                background: "#8b6fd4",
                 width: `${progressPct}%`,
                 transition: "width 0.4s ease",
               }}
@@ -189,7 +189,7 @@ export default function Learn() {
 
         return (
           <div key={category} style={{ marginBottom: "2rem" }}>
-            <h3 style={{ fontSize: 12, color: "#6B7280" }}>
+            <h3 style={{ fontSize: 12, color: "#7a6e99" }}>
               {category} ({topics.length})
             </h3>
 

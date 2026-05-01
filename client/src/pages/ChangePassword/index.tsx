@@ -11,12 +11,12 @@ import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const strengthLabel = (password: string) => {
-  if (!password) return { text: "Enter a new password", color: "#7d7a72" };
+  if (!password) return { text: "Enter a new password", color: "#7a6e99" };
   const hasLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
 
   if (hasLength && hasNumber) {
-    return { text: "Strong enough", color: "#3c7b52" };
+    return { text: "Strong enough", color: "#5bb8c4" };
   }
 
   if (password.length >= 6) {
@@ -26,7 +26,7 @@ const strengthLabel = (password: string) => {
     };
   }
 
-  return { text: "Too weak", color: "#b54848" };
+  return { text: "Too weak", color: "#e05c5c" };
 };
 
 const ChangePasswordPage = () => {
@@ -85,7 +85,7 @@ const ChangePasswordPage = () => {
       const freshToken = await currentUser.getIdToken(true);
 
       await axios.patch(
-        `${import.meta.env.VITE_API_URL}/v1/user/${currentUser.uid}/profile`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${currentUser.uid}/profile`,
         { auditEvent: "password_changed" },
         { headers: { Authorization: `Bearer ${freshToken || token}` } },
       );
@@ -120,7 +120,7 @@ const ChangePasswordPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#fafaf8",
+        backgroundColor: "#faf9fd",
         padding: "24px",
       }}
     >
@@ -130,17 +130,17 @@ const ChangePasswordPage = () => {
           maxWidth: "860px",
           margin: "24px auto 0",
           backgroundColor: "#fff",
-          border: "1px solid #e5dfd6",
+          border: "1px solid #c9bde8",
           borderRadius: "14px",
           padding: "24px",
-          boxShadow: "0 12px 24px rgba(77, 87, 69, 0.06)",
+          boxShadow: "0 12px 24px rgba(92, 63, 163, 0.08)",
         }}
         data-onboarding="change-password-heading"
       >
         <p
           style={{
             margin: 0,
-            color: "#7e887e",
+            color: "#7a6e99",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
           }}
@@ -150,7 +150,7 @@ const ChangePasswordPage = () => {
         <h1
           style={{
             margin: "8px 0 20px",
-            color: "#355f46",
+            color: "#5c3fa3",
             fontSize: "42px",
             fontWeight: 300,
           }}
@@ -164,9 +164,9 @@ const ChangePasswordPage = () => {
               marginBottom: "20px",
               padding: "16px",
               borderRadius: "12px",
-              border: "1px solid #ecd8ad",
-              backgroundColor: "#fff7e9",
-              color: "#70571f",
+              border: "1px solid #c9bde8",
+              backgroundColor: "#fef9e7",
+              color: "#4a3f6b",
             }}
           >
             Google-only sign-in accounts do not currently manage passwords
@@ -182,7 +182,7 @@ const ChangePasswordPage = () => {
               display: "block",
               marginBottom: "8px",
               fontSize: "12px",
-              color: "#7d7a72",
+              color: "#7a6e99",
               textTransform: "uppercase",
             }}
           >
@@ -197,7 +197,7 @@ const ChangePasswordPage = () => {
               width: "100%",
               padding: "12px 14px",
               borderRadius: "10px",
-              border: "1px solid #d6d0c8",
+              border: "1px solid #c9bde8",
               marginBottom: "16px",
             }}
             disabled={isGoogleOnlyAccount}
@@ -209,7 +209,7 @@ const ChangePasswordPage = () => {
               display: "block",
               marginBottom: "8px",
               fontSize: "12px",
-              color: "#7d7a72",
+              color: "#7a6e99",
               textTransform: "uppercase",
             }}
           >
@@ -224,7 +224,7 @@ const ChangePasswordPage = () => {
               width: "100%",
               padding: "12px 14px",
               borderRadius: "10px",
-              border: "1px solid #d6d0c8",
+              border: "1px solid #c9bde8",
             }}
             disabled={isGoogleOnlyAccount}
           />
@@ -244,7 +244,7 @@ const ChangePasswordPage = () => {
               display: "block",
               margin: "16px 0 8px",
               fontSize: "12px",
-              color: "#7d7a72",
+              color: "#7a6e99",
               textTransform: "uppercase",
             }}
           >
@@ -259,24 +259,24 @@ const ChangePasswordPage = () => {
               width: "100%",
               padding: "12px 14px",
               borderRadius: "10px",
-              border: "1px solid #d6d0c8",
+              border: "1px solid #c9bde8",
             }}
             disabled={isGoogleOnlyAccount}
           />
           {confirmPassword && !passwordsMatch && (
             <p
-              style={{ margin: "10px 0 0", color: "#b54848", fontSize: "13px" }}
+              style={{ margin: "10px 0 0", color: "#e05c5c", fontSize: "13px" }}
             >
               Passwords must match before saving.
             </p>
           )}
           {state.message && (
-            <p style={{ margin: "14px 0 0", color: "#3c7b52" }}>
+            <p style={{ margin: "14px 0 0", color: "#5bb8c4" }}>
               {state.message}
             </p>
           )}
           {state.error && (
-            <p style={{ margin: "14px 0 0", color: "#b54848" }}>
+            <p style={{ margin: "14px 0 0", color: "#e05c5c" }}>
               {state.error}
             </p>
           )}
@@ -294,9 +294,9 @@ const ChangePasswordPage = () => {
               marginTop: "18px",
               padding: "12px 16px",
               borderRadius: "10px",
-              border: "1px solid #8db095",
-              backgroundColor: "#dcebdc",
-              color: "#2d5237",
+              border: "1px solid #c9bde8",
+              backgroundColor: "#ede8f8",
+              color: "#5c3fa3",
               fontWeight: 600,
             }}
           >

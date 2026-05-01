@@ -54,11 +54,11 @@ const isValidEmail = (value: string) => {
 };
 
 const cardStyle = {
-  backgroundColor: "#fff",
-  border: "1px solid #e5dfd6",
-  borderRadius: "14px",
+  backgroundColor: "#faf9fd",
+  border: "1px solid #c9bde8",
+  borderRadius: "16px",
   padding: "24px",
-  boxShadow: "0 12px 24px rgba(77, 87, 69, 0.06)",
+  boxShadow: "0 4px 20px rgba(92, 63, 163, 0.08)",
 };
 
 const labelStyle = {
@@ -67,15 +67,17 @@ const labelStyle = {
   fontSize: "12px",
   letterSpacing: "0.08em",
   textTransform: "uppercase" as const,
-  color: "#7d7a72",
+  color: "#7a6e99",
+  fontWeight: 600,
 };
 
 const inputStyle = {
   width: "100%",
   padding: "12px 14px",
   borderRadius: "10px",
-  border: "1px solid #d6d0c8",
-  backgroundColor: "#fffdf9",
+  border: "1px solid #c9bde8",
+  backgroundColor: "#faf9fd",
+  fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
 };
 
 const SettingsPage = () => {
@@ -162,7 +164,7 @@ const SettingsPage = () => {
 
     try {
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/v1/user/${currentUser.uid}/profile`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${currentUser.uid}/profile`,
         { displayName: nextName },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -362,7 +364,7 @@ const SettingsPage = () => {
 
     try {
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/v1/user/${currentUser.uid}/profile`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${currentUser.uid}/profile`,
         { newsletterOptIn },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -400,7 +402,7 @@ const SettingsPage = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/v1/user/newsletter/send-test`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/newsletter/send-test`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -438,7 +440,7 @@ const SettingsPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#fafaf8",
+        backgroundColor: "#faf9fd",
         padding: "24px",
       }}
     >
@@ -451,7 +453,7 @@ const SettingsPage = () => {
           <p
             style={{
               margin: 0,
-              color: "#7e887e",
+              color: "#7a6e99",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
             }}
@@ -461,7 +463,7 @@ const SettingsPage = () => {
           <h1
             style={{
               margin: "8px 0 0",
-              color: "#355f46",
+              color: "#5c3fa3",
               fontSize: "44px",
               fontWeight: 300,
             }}
@@ -474,20 +476,20 @@ const SettingsPage = () => {
           <div
             style={{
               ...cardStyle,
-              backgroundColor: "#fff7e9",
-              borderColor: "#ecd8ad",
+              backgroundColor: "#ede8f8",
+              borderColor: "#c9bde8",
             }}
           >
             <h2
               style={{
                 fontSize: "18px",
                 marginBottom: "10px",
-                color: "#7b5a17",
+                color: "#4a3f6b",
               }}
             >
               Google sign-in notice
             </h2>
-            <p style={{ margin: 0, color: "#70571f", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, color: "#4a3f6b", lineHeight: 1.6 }}>
               This account is currently managed through Google sign-in. Username
               changes still work here, but email and password changes are not
               handled inside this app for Google-only accounts. Use your Google
@@ -502,7 +504,7 @@ const SettingsPage = () => {
               style={{
                 fontSize: "20px",
                 marginBottom: "14px",
-                color: "#35483a",
+                color: "#4a3f6b",
               }}
             >
               Username
@@ -517,12 +519,12 @@ const SettingsPage = () => {
               style={inputStyle}
             />
             {usernameState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {usernameState.message}
               </p>
             )}
             {usernameState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {usernameState.error}
               </p>
             )}
@@ -535,9 +537,9 @@ const SettingsPage = () => {
                 marginTop: "16px",
                 padding: "12px 16px",
                 borderRadius: "10px",
-                border: "1px solid #8db095",
-                backgroundColor: "#dcebdc",
-                color: "#2d5237",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
@@ -550,7 +552,7 @@ const SettingsPage = () => {
               style={{
                 fontSize: "20px",
                 marginBottom: "14px",
-                color: "#35483a",
+                color: "#4a3f6b",
               }}
             >
               Email address
@@ -595,7 +597,7 @@ const SettingsPage = () => {
               disabled={isGoogleOnlyAccount}
             />
             <p
-              style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}
+              style={{ margin: "10px 0 0", color: "#7a6e99", fontSize: "13px" }}
             >
               Firebase may require recent sign-in before sensitive email
               changes.
@@ -608,31 +610,31 @@ const SettingsPage = () => {
                 marginTop: "10px",
                 padding: "10px 12px",
                 borderRadius: "10px",
-                border: "1px solid #d6d0c8",
+                border: "1px solid #c9bde8",
                 backgroundColor: "#fff",
-                color: "#355f46",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
               {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
             </button>
             {emailState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {emailState.message}
               </p>
             )}
             {emailState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {emailState.error}
               </p>
             )}
             {emailSyncState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {emailSyncState.message}
               </p>
             )}
             {emailSyncState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {emailSyncState.error}
               </p>
             )}
@@ -649,9 +651,9 @@ const SettingsPage = () => {
                 marginTop: "16px",
                 padding: "12px 16px",
                 borderRadius: "10px",
-                border: "1px solid #8db095",
-                backgroundColor: "#dcebdc",
-                color: "#2d5237",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
@@ -668,20 +670,20 @@ const SettingsPage = () => {
               style={{
                 fontSize: "20px",
                 marginBottom: "14px",
-                color: "#35483a",
+                color: "#4a3f6b",
               }}
             >
               Newsletter
             </h2>
             <p
-              style={{ margin: "0 0 12px", color: "#5f625c", lineHeight: 1.6 }}
+              style={{ margin: "0 0 12px", color: "#4a3f6b", lineHeight: 1.6 }}
             >
               Opt in to receive one monthly email with a concise financial
               snapshot. You can unsubscribe any time from this page or from the
               unsubscribe link in the email.
             </p>
             <p
-              style={{ margin: "0 0 14px", color: "#7d7a72", fontSize: "13px" }}
+              style={{ margin: "0 0 14px", color: "#7a6e99", fontSize: "13px" }}
             >
               Monthly comparison and history insights are not live yet and are
               currently placeholder content.
@@ -691,7 +693,7 @@ const SettingsPage = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                color: "#35483a",
+                color: "#4a3f6b",
                 fontWeight: 600,
               }}
             >
@@ -704,12 +706,12 @@ const SettingsPage = () => {
               Send me the monthly newsletter
             </label>
             {newsletterState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {newsletterState.message}
               </p>
             )}
             {newsletterState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {newsletterState.error}
               </p>
             )}
@@ -721,9 +723,9 @@ const SettingsPage = () => {
                 marginTop: "16px",
                 padding: "12px 16px",
                 borderRadius: "10px",
-                border: "1px solid #8db095",
-                backgroundColor: "#dcebdc",
-                color: "#2d5237",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
@@ -741,9 +743,9 @@ const SettingsPage = () => {
                 marginTop: "14px",
                 padding: "12px 16px",
                 borderRadius: "10px",
-                border: "1px solid #8db095",
-                backgroundColor: "#eef5eb",
-                color: "#2d5237",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
@@ -752,12 +754,12 @@ const SettingsPage = () => {
                 : "Get Last Month's Newsletter"}
             </button>
             {newsletterTestState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {newsletterTestState.message}
               </p>
             )}
             {newsletterTestState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {newsletterTestState.error}
               </p>
             )}
@@ -768,22 +770,22 @@ const SettingsPage = () => {
               style={{
                 fontSize: "20px",
                 marginBottom: "14px",
-                color: "#35483a",
+                color: "#4a3f6b",
               }}
             >
               Tutorial / Onboarding
             </h2>
-            <p style={{ margin: 0, color: "#5f625c", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, color: "#4a3f6b", lineHeight: 1.6 }}>
               Replay the financial walkthrough tooltips for completed areas of
               the app.
             </p>
             {onboardingState.message && (
-              <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
                 {onboardingState.message}
               </p>
             )}
             {onboardingState.error && (
-              <p style={{ margin: "10px 0 0", color: "#b54848" }}>
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
                 {onboardingState.error}
               </p>
             )}
@@ -795,9 +797,9 @@ const SettingsPage = () => {
                 marginTop: "16px",
                 padding: "12px 16px",
                 borderRadius: "10px",
-                border: "1px solid #8db095",
-                backgroundColor: "#dcebdc",
-                color: "#2d5237",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
                 fontWeight: 600,
               }}
             >
