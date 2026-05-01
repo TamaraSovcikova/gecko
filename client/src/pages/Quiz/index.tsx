@@ -109,8 +109,8 @@ export default function QuizPage() {
     didFetch.current = true;
 
     const url = topic
-      ? `${API_URL}/api/v1/quiz?topic=${topic}`
-      : `${API_URL}/api/v1/quiz`;
+      ? `${API_URL}/v1/quiz?topic=${encodeURIComponent(topic)}`
+      : `${API_URL}/v1/quiz`;
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -142,7 +142,7 @@ export default function QuizPage() {
 
   const handleNext = async () => {
     if (currentIndex + 1 >= questions.length) {
-      const res = await fetch(`${API_URL}/api/v1/quiz/complete`, {
+      const res = await fetch(`${API_URL}/v1/quiz/complete`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

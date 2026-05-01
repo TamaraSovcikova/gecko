@@ -97,13 +97,9 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         payload.category = category;
       }
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/v1/expenses`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const createdCategory =
         category === "create-new" ? newCategoryName.trim() : category;
@@ -148,7 +144,7 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/scan`,
+        `${import.meta.env.VITE_API_URL}/v1/expenses/scan`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },

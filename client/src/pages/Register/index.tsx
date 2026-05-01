@@ -5,7 +5,7 @@
 //   1. User fills in display name, email, and password
 //   2. Firebase createUserWithEmailAndPassword creates the account
 //   3. We update the Firebase profile with the display name
-//   4. Call the backend /api/v1/auth/register to create a User doc in MongoDB
+//   4. Call the backend /v1/auth/register to create a User doc in MongoDB
 //   5. Redirect to /payslip since this is always a first login
 
 import { useState } from "react";

@@ -11,7 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 // Returns firstLogin: true if this is a brand new user.
 export const registerUser = async (token: string) => {
   const response = await axios.post(
-    `${API_URL}/api/v1/auth/register`,
+    `${API_URL}/v1/auth/register`,
     {},
     { headers: { Authorization: `Bearer ${token}` } },
   );

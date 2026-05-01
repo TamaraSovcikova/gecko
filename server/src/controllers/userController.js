@@ -41,7 +41,7 @@ const buildFallbackDisplayName = (decodedUser = {}) => {
   return "User";
 };
 
-// GET /api/v1/user/profile
+// GET /v1/user/profile
 // Returns the current user's profile information
 const getUserProfile = async (req, res) => {
   try {
@@ -68,7 +68,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/export-data
+// GET /v1/user/export-data
 // Exports all user data as a PDF
 const exportUserData = async (req, res) => {
   try {
@@ -229,7 +229,7 @@ const exportUserData = async (req, res) => {
   }
 };
 
-// DELETE /api/v1/user/profile
+// DELETE /v1/user/profile
 // Deletes the user account and all associated data
 const deleteUserProfile = async (req, res) => {
   try {
@@ -259,7 +259,7 @@ const deleteUserProfile = async (req, res) => {
   }
 };
 
-// PATCH /api/v1/user/profile
+// PATCH /v1/user/profile
 // Updates user profile fields (e.g., payslipData, username, metadata)
 const updateUserProfile = async (req, res) => {
   try {
@@ -365,7 +365,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/newsletter/unsubscribe
+// GET /v1/user/newsletter/unsubscribe
 // Public route used from email links.
 const unsubscribeFromNewsletter = async (req, res) => {
   try {
@@ -398,7 +398,7 @@ const unsubscribeFromNewsletter = async (req, res) => {
   }
 };
 
-// POST /api/v1/user/newsletter/send-test
+// POST /v1/user/newsletter/send-test
 // Sends one test newsletter email to the authenticated user.
 const sendTestNewsletter = async (req, res) => {
   try {
@@ -440,7 +440,7 @@ const sendTestNewsletter = async (req, res) => {
 };
 
 
-// GET /api/v1/user/job-search
+// GET /v1/user/job-search
 // Searches for job titles from Adzuna
 const getJobTitleOptions = async (req, res) => {
   try {
@@ -453,7 +453,7 @@ const getJobTitleOptions = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/location-search
+// GET /v1/user/location-search
 // Searches for locations from Adzuna
 const getLocationOptions = async (req, res) => {
   try {

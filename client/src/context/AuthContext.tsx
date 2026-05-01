@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
+        `${import.meta.env.VITE_API_URL}/v1/user/profile`,
         {
           headers: {
             Authorization: `Bearer ${activeToken}`,
@@ -66,15 +66,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile({
         displayName: response.data?.displayName,
         email: response.data?.email,
-        onboardingCompletedPages: response.data?.financialOnboarding?.completedPages || [],
+        onboardingCompletedPages:
+          response.data?.financialOnboarding?.completedPages || [],
         newsletterOptIn: Boolean(response.data?.newsletterOptIn),
       });
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401 && auth.currentUser) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 401 &&
+        auth.currentUser
+      ) {
         try {
           const refreshedToken = await auth.currentUser.getIdToken(true);
           const retryResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
+            `${import.meta.env.VITE_API_URL}/v1/user/profile`,
             {
               headers: {
                 Authorization: `Bearer ${refreshedToken}`,
@@ -86,7 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setProfile({
             displayName: retryResponse.data?.displayName,
             email: retryResponse.data?.email,
-            onboardingCompletedPages: retryResponse.data?.financialOnboarding?.completedPages || [],
+            onboardingCompletedPages:
+              retryResponse.data?.financialOnboarding?.completedPages || [],
             newsletterOptIn: Boolean(retryResponse.data?.newsletterOptIn),
           });
           return;
@@ -126,7 +132,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, token, loading, profile, refreshProfile, setProfile }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        token,
+        loading,
+        profile,
+        refreshProfile,
+        setProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

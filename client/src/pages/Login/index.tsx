@@ -4,7 +4,7 @@
 //   2. Google Sign-In via Firebase signInWithPopup
 //
 // After a successful sign-in:
-//   - Calls the backend /api/v1/auth/register to ensure a User doc exists in MongoDB
+//   - Calls the backend /v1/auth/register to ensure a User doc exists in MongoDB
 //   - If firstLogin is true  → redirect to /payslip
 //   - If firstLogin is false → redirect to /dashboard
 
@@ -47,18 +47,27 @@ const Login = () => {
     setLoading(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const result = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      const result = await signInWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        password,
+      );
 
       await handlePostLogin(result.user);
     } catch (err: any) {
       const errorCode = String(err?.code || "");
       if (errorCode === "auth/invalid-credential") {
         try {
-          const methods = await fetchSignInMethodsForEmail(auth, email.trim().toLowerCase());
+          const methods = await fetchSignInMethodsForEmail(
+            auth,
+            email.trim().toLowerCase(),
+          );
           if (methods.length === 0) {
             setError("No account found for that email address.");
           } else if (!methods.includes("password")) {
-            setError("This account does not use password sign-in. Try another sign-in method.");
+            setError(
+              "This account does not use password sign-in. Try another sign-in method.",
+            );
           } else {
             setError("Invalid email or password.");
           }

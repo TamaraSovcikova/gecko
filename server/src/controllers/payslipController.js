@@ -1,8 +1,8 @@
 // Responsible for handling payslip related API requests 
 // Specifically: 
 // ------------
-// - POST /api/v1/payslip <- When the user submits their salary + categories
-// - GET  /api/v1/payslip <- Retrieving the submitted user data
+// - POST /v1/payslip <- When the user submits their salary + categories
+// - GET  /v1/payslip <- Retrieving the submitted user data
 // ___________________________________________________________________________________
 //
 // User Interaction Flow: 
@@ -73,7 +73,7 @@ const reconcileCurrentMonthExpenses = async (userId, previousCategories, nextCat
   }
 };
 
-// POST /api/v1/payslip
+// POST /v1/payslip
 exports.createPayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
@@ -116,7 +116,7 @@ exports.createPayslip = async (req, res) => {
 };
   
 
-// GET /api/v1/payslip
+// GET /v1/payslip
 exports.getPayslip = async (req, res) => {
 
     try {
@@ -134,7 +134,7 @@ exports.getPayslip = async (req, res) => {
     }
   };
 
-// PUT /api/v1/payslip
+// PUT /v1/payslip
 exports.updatePayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
