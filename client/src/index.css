@@ -1,0 +1,84 @@
+/* ============================================================
+   G.E.C.K.O — Global styles & CSS custom properties
+   Single source of truth for the design token values.
+   These mirror the constants in src/constants/theme.ts so
+   both inline-style (JS) and CSS-in-JS <style> strings can
+   reference the same palette.
+   ============================================================ */
+
+/* ── Inter font (swap for instant text rendering) ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
+
+/* ── Design tokens ── */
+:root {
+  /* Purple scale */
+  --c-purple-50:  #faf9fd;
+  --c-purple-100: #f4f1fb;
+  --c-purple-200: #ede8f8;
+  --c-purple-300: #c9bde8;
+  --c-purple-400: #b8a4e8;
+  --c-purple-500: #8b6fd4;
+  --c-purple-600: #5c3fa3;
+  --c-purple-700: #4e358f;
+
+  /* Gold accent */
+  --c-gold:       #f0b429;
+  --c-gold-deep:  #d4940e;
+
+  /* Text */
+  --c-text:           #1a1040;
+  --c-text-secondary: #4a3f6b;
+  --c-text-muted:     #7a6e99;
+
+  /* Shadows */
+  --shadow-sm:  0 2px 8px rgba(92, 63, 163, 0.10);
+  --shadow-md:  0 4px 20px rgba(92, 63, 163, 0.14);
+  --shadow-lg:  0 8px 32px rgba(92, 63, 163, 0.18);
+
+  /* Radii */
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-pill: 999px;
+
+  /* Typography */
+  --font-base: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ── Global reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--c-text);
+  background-color: var(--c-purple-50);
+  margin: 0;
+}
+
+/* ── Thin scrollbar ── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--c-purple-50); }
+::-webkit-scrollbar-thumb  { background: var(--c-purple-300); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-purple-500); }
+
+/* ── Bootstrap input override to match palette ── */
+.form-control:focus {
+  border-color: var(--c-purple-500) !important;
+  box-shadow: 0 0 0 3px rgba(139, 111, 212, 0.18) !important;
+}
+
+/* ── Link default colour ── */
+a {
+  color: var(--c-purple-500);
+}
+a:hover {
+  color: var(--c-purple-600);
+}

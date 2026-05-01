@@ -4,13 +4,14 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import ProfileAvatar from "./ProfileAvatar";
+import { COLORS } from "../constants/theme";
 
 const itemStyle = {
   display: "block",
   width: "100%",
   padding: "12px 14px",
   textDecoration: "none",
-  color: "#314f3c",
+  color: COLORS.textSecondary,
   background: "transparent",
   border: "none",
   textAlign: "left" as const,
@@ -92,10 +93,10 @@ const NavDropdown = () => {
             right: 0,
             top: "calc(100% + 10px)",
             minWidth: "230px",
-            backgroundColor: "#fffdf9",
-            border: "1px solid #d9d4ca",
+            backgroundColor: COLORS.purple50,
+            border: `1px solid ${COLORS.purple300}`,
             borderRadius: "12px",
-            boxShadow: "0 18px 32px rgba(48, 55, 44, 0.14)",
+            boxShadow: "0 18px 32px rgba(92, 63, 163, 0.12)",
             padding: "8px",
             zIndex: 200,
           }}
@@ -122,7 +123,7 @@ const NavDropdown = () => {
             Data Policy
           </Link>
           {isAuthenticated ? (
-            <button type="button" onClick={handleLogout} style={{ ...itemStyle, color: "#b54848", fontWeight: 700 }}>
+            <button type="button" onClick={handleLogout} style={{ ...itemStyle, color: COLORS.error, fontWeight: 700 }}>
               Logout
             </button>
           ) : (
@@ -131,7 +132,7 @@ const NavDropdown = () => {
             </Link>
           )}
           {logoutError && (
-            <p style={{ margin: "8px 14px 4px", color: "#b54848", fontSize: "12px" }}>
+            <p style={{ margin: "8px 14px 4px", color: COLORS.error, fontSize: "12px" }}>
               {logoutError}
             </p>
           )}

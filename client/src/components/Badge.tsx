@@ -5,9 +5,9 @@ type BadgeType = {
 };
 
 export const BADGES: BadgeType[] = [
-  { level: 1, label: "Finance Rookie", color: "#28a745" },
-  { level: 5, label: "Rich Gecko", color: "#17a2b8" },
-  { level: 10, label: "G.E.C.K.O Expert", color: "#d4af37" },
+  { level: 1, label: "Finance Rookie", color: "#b8a4e8" },
+  { level: 5, label: "Rich Gecko", color: "#8b6fd4" },
+  { level: 10, label: "G.E.C.K.O Expert", color: "#f0b429" },
 ];
 
 export default function Badge({ badge }: { badge: BadgeType }) {

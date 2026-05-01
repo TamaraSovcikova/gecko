@@ -30,7 +30,7 @@ export const saveOnboardingCompletions = async (
   pages: OnboardingPageKey[],
 ): Promise<OnboardingPageKey[]> => {
   const response = await axios.patch<ProfileResponse>(
-    `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+    `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
     {
       onboarding: {
         completePages: pages,
@@ -52,7 +52,7 @@ export const resetServerOnboarding = async (
   token: string,
 ): Promise<OnboardingPageKey[]> => {
   const response = await axios.patch<ProfileResponse>(
-    `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+    `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
     {
       onboarding: {
         reset: true,

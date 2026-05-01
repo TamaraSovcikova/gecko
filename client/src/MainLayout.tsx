@@ -3,7 +3,6 @@
 // seperate from App.tsx which stores routes
 
 import XPBar from "./components/XPBar";
-import LevelBadges from "./components/LevelBadges";
 import BadgePopup from "./components/BadgePopup";
 import { BADGES } from "./components/Badge";
 import { Outlet } from "react-router-dom";
@@ -37,7 +36,6 @@ export default function MainLayout() {
       {popupBadge && (
         <BadgePopup badge={popupBadge} onClose={() => setPopupBadge(null)} />
       )}
-      <LevelBadges />
       <XPBar />
       <Outlet />
     </>

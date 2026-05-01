@@ -34,12 +34,12 @@ export default function BadgePopup({
           borderRadius: "12px",
           padding: "24px",
           textAlign: "center",
-          border: "1px solid #ddd",
+          border: "1px solid #c9bde8",
         }}
       >
         <h2 style={{ margin: "0 0 10px 0" }}>🎉 Congratulations!</h2>
 
-        <p style={{ margin: "0 0 30px 0", fontSize: "14px", color: "#555" }}>
+        <p style={{ margin: "0 0 30px 0", fontSize: "14px", color: "#4a3f6b" }}>
           You unlocked the <b>{badge.label}</b> badge!
         </p>
 
@@ -61,7 +61,7 @@ export default function BadgePopup({
             padding: "10px 16px",
             borderRadius: "8px",
             border: "none",
-            background: "#6ba3d9",
+            background: "#8b6fd4",
             color: "white",
             fontWeight: 700,
             cursor: "pointer",

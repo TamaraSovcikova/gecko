@@ -34,7 +34,7 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/v1/user/profile`,
+          `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         setUserData(res.data);
@@ -53,7 +53,7 @@ const Profile = () => {
     setExporting(true);
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/v1/user/export-data`,
+          `${import.meta.env.VITE_API_URL}/api/v1/user/export-data`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
@@ -85,7 +85,7 @@ const Profile = () => {
     ) {
       setDeleting(true);
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/v1/user/profile`, {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -116,33 +116,9 @@ const Profile = () => {
     }
   };
 
-  // XP system (same as XPBar)
-  const BASE_XP = 100;
-  const GROWTH_RATE = 1.2;
-
-  const getXpForLevel = (level: number) =>
-    Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
-
-  // total accumulated XP (from backend)
-  const xpTotal = userData?.xp || 0;
-
-  // calculate level + progress
-  let level = 0;
-  let remainingXp = xpTotal;
-
-  while (remainingXp >= getXpForLevel(level)) {
-    remainingXp -= getXpForLevel(level);
-    level++;
-  }
-
-  const xpIntoLevel = remainingXp;
-  const xpNeeded = getXpForLevel(level);
-  const xpProgressPercent =
-    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
-
   if (loading || loadingData) {
     return (
-      <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+      <div style={{ padding: "20px", textAlign: "center", color: "#7a6e99" }}>
         Loading profile...
       </div>
     );
@@ -167,7 +143,7 @@ const Profile = () => {
             border: "1px solid #ddd4c9",
             borderRadius: "4px",
             cursor: "pointer",
-            color: "#666",
+            color: "#7a6e99",
           }}
         >
           ← Back to Dashboard
@@ -180,9 +156,9 @@ const Profile = () => {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#fafaf8",
+        backgroundColor: "#faf9fd",
         padding: "30px 20px",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
       }}
     >
       <TopNav />
@@ -202,7 +178,7 @@ const Profile = () => {
               fontSize: "56px",
               fontWeight: "300",
               margin: "0",
-              color: "#6ba3d9",
+              color: "#5c3fa3",
               letterSpacing: "2px",
             }}
           >
@@ -210,26 +186,23 @@ const Profile = () => {
           </h1>
         </div>
 
-        {/* Middle section: User info left, Tree + gecko right */}
+        {/* Middle section: User info */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "60px",
+            display: "block",
             marginBottom: "50px",
-            marginLeft: "80px",
-            marginRight: "80px",
+            maxWidth: "760px",
+            marginLeft: "auto",
+            marginRight: "auto",
           }}
         >
-          {/* User Info - Left */}
+          {/* User Info */}
           <div
             style={{
-              flex: 1,
               padding: "20px",
-              backgroundColor: "#ffffff",
+              backgroundColor: "#faf9fd",
               borderRadius: "8px",
-              border: "1px solid #e0ddd5",
+              border: "1px solid #c9bde8",
             }}
           >
             <div
@@ -246,7 +219,7 @@ const Profile = () => {
                   style={{
                     margin: "0 0 8px 0",
                     fontSize: "12px",
-                    color: "#999",
+                    color: "#7a6e99",
                   }}
                 >
                   Name
@@ -255,7 +228,7 @@ const Profile = () => {
                   style={{
                     margin: "0 0 16px 0",
                     fontSize: "16px",
-                    color: "#333",
+                    color: "#1a1040",
                   }}
                 >
                   {userData?.displayName || "Not set"}
@@ -265,7 +238,7 @@ const Profile = () => {
                   style={{
                     margin: "0 0 8px 0",
                     fontSize: "12px",
-                    color: "#999",
+                    color: "#7a6e99",
                   }}
                 >
                   Email
@@ -274,7 +247,7 @@ const Profile = () => {
                   style={{
                     margin: "0 0 16px 0",
                     fontSize: "14px",
-                    color: "#666",
+                    color: "#7a6e99",
                   }}
                 >
                   {userData?.email || currentUser?.email}
@@ -284,12 +257,12 @@ const Profile = () => {
                   style={{
                     margin: "0 0 8px 0",
                     fontSize: "12px",
-                    color: "#999",
+                    color: "#7a6e99",
                   }}
                 >
                   Member Since
                 </p>
-                <p style={{ margin: "0", fontSize: "14px", color: "#666" }}>
+                <p style={{ margin: "0", fontSize: "14px", color: "#7a6e99" }}>
                   {userData?.createdAt
                     ? new Date(userData.createdAt).toLocaleDateString()
                     : "Recently"}
@@ -312,9 +285,9 @@ const Profile = () => {
                     width: "100%",
                     marginTop: "44px",
                     padding: "8px 12px",
-                    backgroundColor: "#eef5eb",
-                    color: "#2d5237",
-                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#ede8f8",
+                    color: "#5c3fa3",
+                    border: "1px solid #c9bde8",
                     borderRadius: "999px",
                     cursor: "pointer",
                     fontSize: "13px",
@@ -327,19 +300,19 @@ const Profile = () => {
             </div>
 
             {/* Payslip Details */}
-            <div style={{ borderTop: "1px solid #e8dfd5", paddingTop: "16px" }}>
+            <div style={{ borderTop: "1px solid #c9bde8", paddingTop: "16px" }}>
               <h3
                 style={{
                   margin: "0 0 12px 0",
                   fontSize: "14px",
-                  color: "#333",
+                  color: "#1a1040",
                   fontWeight: "600",
                 }}
               >
                 Current Payslip Details
               </h3>
               <p
-                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#7a6e99" }}
               >
                 Gross Salary
               </p>
@@ -347,7 +320,7 @@ const Profile = () => {
                 style={{
                   margin: "0 0 16px 0",
                   fontSize: "16px",
-                  color: "#2d8659",
+                  color: "#5c3fa3",
                   fontWeight: "500",
                 }}
               >
@@ -355,7 +328,7 @@ const Profile = () => {
               </p>
 
               <p
-                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#7a6e99" }}
               >
                 Job Title
               </p>
@@ -363,14 +336,14 @@ const Profile = () => {
                 style={{
                   margin: "0 0 16px 0",
                   fontSize: "14px",
-                  color: "#333",
+                  color: "#1a1040",
                 }}
               >
                 {userData?.payslipData?.jobTitle || "Not set"}
               </p>
 
               <p
-                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
+                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#7a6e99" }}
               >
                 Location
               </p>
@@ -378,7 +351,7 @@ const Profile = () => {
                 style={{
                   margin: "0 0 16px 0",
                   fontSize: "14px",
-                  color: "#333",
+                  color: "#1a1040",
                 }}
               >
                 {userData?.payslipData?.location || "Not set"}
@@ -389,7 +362,7 @@ const Profile = () => {
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#f5d899",
-                  color: "#333",
+                  color: "#1a1040",
                   border: "1px solid #ead966",
                   borderRadius: "4px",
                   cursor: "pointer",
@@ -406,169 +379,6 @@ const Profile = () => {
               >
                 Edit Payslip/Budget
               </button>
-            </div>
-          </div>
-
-          {/* Tree + Gecko + XP Bar - Right */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              position: "relative",
-              gap: "20px",
-            }}
-          >
-            {/* Tree SVG */}
-            <svg width="280" height="240" viewBox="0 0 280 240">
-              {/* Ground */}
-              <ellipse
-                cx="140"
-                cy="230"
-                rx="120"
-                ry="15"
-                fill="#2d8659"
-                opacity="0.3"
-              />
-
-              {/* Tree trunk */}
-              <rect
-                x="125"
-                y="130"
-                width="30"
-                height="100"
-                fill="#6b4423"
-                rx="3"
-              />
-
-              {/* Tree shadow on trunk */}
-              <rect
-                x="125"
-                y="130"
-                width="8"
-                height="100"
-                fill="#5a3a1a"
-                opacity="0.4"
-                rx="3"
-              />
-
-              {/* Foliage - three levels with better styling */}
-              {/* Bottom crown - largest */}
-              <ellipse cx="140" cy="140" rx="70" ry="65" fill="#2d8659" />
-              <ellipse
-                cx="135"
-                cy="145"
-                rx="10"
-                ry="12"
-                fill="#3d9969"
-                opacity="0.6"
-              />
-              <ellipse
-                cx="160"
-                cy="148"
-                rx="12"
-                ry="14"
-                fill="#3d9969"
-                opacity="0.5"
-              />
-              <ellipse
-                cx="145"
-                cy="168"
-                rx="11"
-                ry="13"
-                fill="#3d9969"
-                opacity="0.6"
-              />
-
-              {/* Middle crown */}
-              <ellipse cx="140" cy="95" rx="55" ry="50" fill="#1d6649" />
-              <ellipse
-                cx="130"
-                cy="100"
-                rx="9"
-                ry="11"
-                fill="#2d7659"
-                opacity="0.5"
-              />
-              <ellipse
-                cx="155"
-                cy="98"
-                rx="10"
-                ry="12"
-                fill="#2d7659"
-                opacity="0.6"
-              />
-
-              {/* Top crown - smallest */}
-              <ellipse cx="140" cy="50" rx="40" ry="38" fill="#2d8659" />
-              <ellipse
-                cx="140"
-                cy="45"
-                rx="8"
-                ry="10"
-                fill="#3d9969"
-                opacity="0.6"
-              />
-            </svg>
-
-            {/* XP Bar Under Tree */}
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "300px",
-                padding: "16px",
-                backgroundColor: "#f0f4f8",
-                borderRadius: "8px",
-                border: "1px solid #d9e3ed",
-                textAlign: "center",
-              }}
-            >
-              <p
-                style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#999" }}
-              >
-                LEVEL
-              </p>
-              <h2
-                style={{
-                  margin: "0 0 12px 0",
-                  fontSize: "28px",
-                  fontWeight: "300",
-                  color: "#6ba3d9",
-                }}
-              >
-                {level}
-              </h2>
-
-              {/* XP Bar */}
-              <div
-                style={{
-                  marginBottom: "8px",
-                  backgroundColor: "#e8eef6",
-                  height: "10px",
-                  borderRadius: "5px",
-                  overflow: "hidden",
-                  border: "1px solid #d9e3ed",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${xpProgressPercent}%`,
-                    backgroundColor: "#6ba3d9",
-                    transition: "width 0.3s ease",
-                  }}
-                />
-              </div>
-
-              <p style={{ margin: "0", fontSize: "11px", color: "#999" }}>
-                {xpIntoLevel} / {xpNeeded} XP
-              </p>
-
-              <p style={{ margin: "6px 0 0 0", fontSize: "11px", color: "#999" }}>
-                Total XP: {xpTotal}
-              </p>
             </div>
           </div>
         </div>
@@ -588,9 +398,9 @@ const Profile = () => {
             disabled={loggingOut}
             style={{
               padding: "12px 20px",
-              backgroundColor: "#f2ece4",
-              color: "#6a4a3a",
-              border: "1px solid #ddccb8",
+              backgroundColor: "#f4f1fb",
+              color: "#4a3f6b",
+              border: "1px solid #c9bde8",
               borderRadius: "4px",
               cursor: loggingOut ? "not-allowed" : "pointer",
               fontSize: "14px",
@@ -598,10 +408,10 @@ const Profile = () => {
               transition: "background-color 0.2s",
             }}
             onMouseEnter={(e) =>
-              !loggingOut && (e.currentTarget.style.backgroundColor = "#eadfce")
+              !loggingOut && (e.currentTarget.style.backgroundColor = "#ede8f8")
             }
             onMouseLeave={(e) =>
-              !loggingOut && (e.currentTarget.style.backgroundColor = "#f2ece4")
+              !loggingOut && (e.currentTarget.style.backgroundColor = "#f4f1fb")
             }
           >
             {loggingOut ? "Logging out..." : "Logout"}
@@ -613,7 +423,7 @@ const Profile = () => {
             style={{
               padding: "12px 20px",
               backgroundColor: "#f5d899",
-              color: "#333",
+              color: "#1a1040",
               border: "1px solid #ead966",
               borderRadius: "4px",
               cursor: exporting ? "not-allowed" : "pointer",
@@ -637,7 +447,7 @@ const Profile = () => {
             style={{
               padding: "12px 20px",
               backgroundColor: "#e8c8c8",
-              color: "#333",
+              color: "#1a1040",
               border: "1px solid #ddb5b5",
               borderRadius: "4px",
               cursor: deleting ? "not-allowed" : "pointer",

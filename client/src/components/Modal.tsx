@@ -22,7 +22,7 @@ export default function Modal({ children, onClose }: Props) {
     >
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "#faf9fd",
           borderRadius: "14px",
           width: "900px",
           maxWidth: "100%",

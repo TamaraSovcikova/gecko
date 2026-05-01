@@ -95,10 +95,10 @@ const Home = () => {
       style={{
         minHeight: "100vh",
         background:
-          "radial-gradient(circle at 10% 8%, #eaf4e5 0%, rgba(234, 244, 229, 0) 28%), radial-gradient(circle at 90% 80%, #e8f0f6 0%, rgba(232, 240, 246, 0) 32%), #f7f5ef",
+          "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232,224,250,0) 36%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245,240,254,0) 40%), #f4f1fb",
         padding: 0,
-        fontFamily: "Arial, sans-serif",
-        color: "#2e3f36",
+        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+        color: "#1a1040",
         scrollBehavior: "smooth",
         overflowX: "hidden",
       }}
@@ -152,7 +152,7 @@ const Home = () => {
         .nav-link {
           position: relative;
           text-decoration: none;
-          color: #415449;
+          color: #4a3f6b;
           font-weight: 700;
           letter-spacing: 0.2px;
           transition: color 0.25s ease;
@@ -165,14 +165,14 @@ const Home = () => {
           bottom: -6px;
           width: 100%;
           height: 2px;
-          background: #2f5a3a;
+          background: #8b6fd4;
           transform: scaleX(0);
           transform-origin: left;
           transition: transform 0.28s ease;
         }
 
         .nav-link:hover {
-          color: #2f5a3a;
+          color: #5c3fa3;
         }
 
         .nav-link:hover::after {
@@ -186,7 +186,7 @@ const Home = () => {
           text-decoration: none;
           font-size: 22px;
           font-weight: 800;
-          color: #2b5127;
+          color: #5c3fa3;
           letter-spacing: 1px;
           white-space: nowrap;
           border-bottom: 2px solid transparent;
@@ -194,7 +194,7 @@ const Home = () => {
         }
 
         .brand-link:hover {
-          border-bottom-color: #2b5127;
+          border-bottom-color: #5c3fa3;
         }
 
         .hero-cta {
@@ -207,11 +207,11 @@ const Home = () => {
 
         .hero-cta:hover {
           transform: translateY(-2px);
-          box-shadow: 0 14px 22px rgba(49, 83, 58, 0.2);
+          box-shadow: 0 14px 22px rgba(92, 63, 163, 0.22);
         }
 
         .hero-title-animate {
-          background: linear-gradient(90deg, #4f86be 20%, #8ac6ea 45%, #4f86be 70%);
+          background: linear-gradient(110deg, #8b6fd4 10%, #f0b429 48%, #8b6fd4 86%);
           background-size: 260% auto;
           color: transparent;
           -webkit-background-clip: text;
@@ -246,10 +246,10 @@ const Home = () => {
         }
 
         .about-video-box {
-          border: 1px solid #c8d8c6;
+          border: 1px solid #c9bde8;
           border-radius: 18px;
-          background: linear-gradient(145deg, #fdfaf7 0%, #f7f4ee 62%, #f2eee6 100%);
-          box-shadow: 0 14px 24px rgba(55, 63, 51, 0.08);
+          background: linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%);
+          box-shadow: 0 8px 24px rgba(92, 63, 163, 0.10);
           padding: 18px;
           display: grid;
           gap: 10px;
@@ -259,12 +259,12 @@ const Home = () => {
           width: 100%;
           aspect-ratio: 16 / 9;
           border-radius: 12px;
-          border: 1px dashed #95b495;
-          background: linear-gradient(145deg, #eaf4e5 0%, #e7eff5 100%);
+          border: 1px dashed #c9bde8;
+          background: linear-gradient(145deg, #ede8f8 0%, #f0ebfe 100%);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #2f5a3a;
+          color: #5c3fa3;
           font-weight: 700;
           letter-spacing: 0.3px;
         }
@@ -300,17 +300,17 @@ const Home = () => {
           0% {
             transform: scale(0.76) translate(0, 0);
             letter-spacing: 1px;
-            text-shadow: 0 0 0 rgba(125, 191, 237, 0);
+            text-shadow: 0 0 0 rgba(139, 111, 212, 0);
           }
           62% {
             transform: scale(1.34) translate(58px, -44px);
             letter-spacing: 3px;
-            text-shadow: 0 0 26px rgba(125, 191, 237, 0.52);
+            text-shadow: 0 0 32px rgba(139, 111, 212, 0.55);
           }
           100% {
             transform: scale(0.94) translate(0, 0);
             letter-spacing: 1px;
-            text-shadow: 0 0 0 rgba(125, 191, 237, 0);
+            text-shadow: 0 0 0 rgba(139, 111, 212, 0);
           }
         }
 
@@ -322,11 +322,11 @@ const Home = () => {
         @keyframes contactBoxFloat {
           0%, 100% {
             transform: translateY(0);
-            box-shadow: 0 14px 24px rgba(55, 63, 51, 0.08);
+            box-shadow: 0 8px 24px rgba(92, 63, 163, 0.10);
           }
           50% {
             transform: translateY(-5px);
-            box-shadow: 0 18px 28px rgba(55, 63, 51, 0.12);
+            box-shadow: 0 16px 32px rgba(92, 63, 163, 0.16);
           }
         }
 
@@ -379,8 +379,8 @@ const Home = () => {
         className="top-nav"
         style={{
           width: "100%",
-          backgroundColor: "#fdfaf7",
-          borderBottom: "1px solid #dcd7cc",
+          backgroundColor: "#faf9fd",
+          borderBottom: "1px solid #c9bde8",
           padding: "14px clamp(14px, 3.4vw, 44px)",
           display: "flex",
           alignItems: "center",
@@ -423,14 +423,14 @@ const Home = () => {
           to="/login"
           style={{
             textDecoration: "none",
-            border: "1px solid #7da88a",
-            background: "linear-gradient(135deg, #7cab7d 0%, #5d8c65 100%)",
-            color: "#fffdf8",
+            border: "1px solid #8b6fd4",
+            background: "linear-gradient(135deg, #8b6fd4 0%, #5c3fa3 100%)",
+            color: "#ffffff",
             fontWeight: 700,
             borderRadius: "999px",
             padding: "10px 18px",
             whiteSpace: "nowrap",
-            boxShadow: "0 8px 16px rgba(58, 95, 67, 0.18)",
+            boxShadow: "0 8px 16px rgba(92, 63, 163, 0.22)",
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
         >
@@ -446,7 +446,7 @@ const Home = () => {
             position: "relative",
             overflow: "hidden",
             background:
-              "linear-gradient(145deg, #ffffff 0%, #f6f9f4 55%, #eaf3e5 100%)",
+              "linear-gradient(145deg, #ffffff 0%, #f8f5ff 55%, #ede8f8 100%)",
           }}
         >
           <div
@@ -458,7 +458,7 @@ const Home = () => {
               width: "220px",
               height: "220px",
               borderRadius: "40% 60% 64% 36% / 42% 35% 65% 58%",
-              background: "linear-gradient(135deg, #d9edd4 0%, #b9d9bd 100%)",
+              background: "linear-gradient(135deg, #e0d6f7 0%, #c9bde8 100%)",
               opacity: 0.85,
               filter: "blur(0.2px)",
             }}
@@ -475,7 +475,7 @@ const Home = () => {
               width: "16px",
               height: "16px",
               borderRadius: "50%",
-              background: "#90c6ea",
+              background: "#b8a4e8",
               opacity: 0.85,
               transition: "transform 0.08s linear",
             }}
@@ -492,7 +492,7 @@ const Home = () => {
               width: "10px",
               height: "10px",
               borderRadius: "50%",
-              background: "#9fd7af",
+              background: "#f0b429",
               opacity: 0.8,
               transition: "transform 0.08s linear",
             }}
@@ -506,7 +506,7 @@ const Home = () => {
               width: "230px",
               height: "230px",
               borderRadius: "58% 42% 35% 65% / 56% 41% 59% 44%",
-              background: "linear-gradient(135deg, #d8e8f4 0%, #b8d2e7 100%)",
+              background: "linear-gradient(135deg, #d8d0f5 0%, #b8aee8 100%)",
               opacity: 0.74,
             }}
           />
@@ -536,16 +536,9 @@ const Home = () => {
               >
                 G.E.C.K.O
               </h1>
-              <p
-                className="delay-1 home-fade subtitle-glow"
-                style={{
-                  margin: "0 0 20px",
-                  color: "#2f5a3a",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  letterSpacing: "0.3px",
-                }}
-              >
+              <p className="delay-1 home-fade subtitle-glow"
+                style={{ margin: "0 0 20px", color: "#5c3fa3",
+                  fontWeight: 700, fontSize: "20px", letterSpacing: "0.3px" }}>
                 Goals, Earnings, Capital, Knowledge, Outcomes
               </p>
               <p
@@ -554,20 +547,20 @@ const Home = () => {
                   margin: "0 0 26px",
                   lineHeight: 1.75,
                   maxWidth: "860px",
-                  color: "#415248",
+                  color: "#4a3f6b",
                   fontSize: "18px",
                 }}
               >
                 A finance platform built to support young adults through their first job journey, from payslip understanding to budgeting confidence.
               </p>
               <div className="delay-3 home-fade" style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <a href="#about" className="hero-cta" style={{ backgroundColor: "#2f5a3a", color: "#fffdf8" }}>
+                <a href="#about" className="hero-cta" style={{ backgroundColor: "#5c3fa3", color: "#ffffff" }}>
                   Explore About
                 </a>
                 <a
                   href="#contact"
                   className="hero-cta"
-                  style={{ backgroundColor: "#ecf2e8", color: "#2f5a3a", border: "1px solid #bcd0c0" }}
+                  style={{ backgroundColor: "#ede8f8", color: "#5c3fa3", border: "1px solid #c9bde8" }}
                 >
                   Contact Team
                 </a>
@@ -616,7 +609,7 @@ const Home = () => {
             position: "relative",
             overflow: "hidden",
             background:
-              "linear-gradient(145deg, #f8fbf6 0%, #edf6ea 64%, #e3efe0 100%)",
+              "linear-gradient(145deg, #f8f5ff 0%, #ede8f8 64%, #e4ddf5 100%)",
           }}
         >
           <div
@@ -631,7 +624,7 @@ const Home = () => {
               width: "24px",
               height: "24px",
               borderRadius: "50%",
-              background: "#ffcb8a",
+              background: "#f0b429",
               opacity: 0.8,
               transition: "transform 0.08s linear",
             }}
@@ -648,7 +641,7 @@ const Home = () => {
               width: "15px",
               height: "15px",
               borderRadius: "50%",
-              background: "#8bb7e8",
+              background: "#b8a4e8",
               opacity: 0.78,
               transition: "transform 0.08s linear",
             }}
@@ -665,25 +658,25 @@ const Home = () => {
               width: "20px",
               height: "20px",
               borderRadius: "50%",
-              background: "#98d6b4",
+              background: "#8b6fd4",
               opacity: 0.72,
               transition: "transform 0.08s linear",
             }}
           />
           <div className="about-layout">
             <div style={{ maxWidth: "980px" }}>
-              <h2 style={{ marginTop: 0, marginBottom: "14px", fontSize: "36px", color: "#2d5237" }}>About Us</h2>
-              <p style={{ margin: "0 0 14px", lineHeight: 1.8, color: "#415248", fontSize: "17px" }}>
+              <h2 style={{ marginTop: 0, marginBottom: "14px", fontSize: "36px", color: "#5c3fa3" }}>About Us</h2>
+              <p style={{ margin: "0 0 14px", lineHeight: 1.8, color: "#4a3f6b", fontSize: "17px" }}>
                 G.E.C.K.O (Goals, Earnings, Capital, Knowledge, Outcomes) is Team Zoar's response to the problem statement
                 "Navigating your first job." Our project focuses on empowering young adults with essential financial knowledge
                 related to payslips, pensions, and budgeting through an accessible web app.
               </p>
-              <p style={{ margin: "0 0 14px", lineHeight: 1.8, color: "#415248", fontSize: "17px" }}>
+              <p style={{ margin: "0 0 14px", lineHeight: 1.8, color: "#4a3f6b", fontSize: "17px" }}>
                 This directly supports SDG 4 (Quality Education) by turning complex financial topics into practical, interactive
                 learning. Many young adults begin work with limited financial literacy, which can lead to financial stress,
                 poor money decisions, and missed long-term opportunities.
               </p>
-              <p style={{ margin: 0, lineHeight: 1.8, color: "#415248", fontSize: "17px" }}>
+              <p style={{ margin: 0, lineHeight: 1.8, color: "#4a3f6b", fontSize: "17px" }}>
                 UK Money Advice Service data highlights the urgency: 61% of young adults struggle with budgeting within their
                 first year of employment. G.E.C.K.O addresses this with clear guidance, budgeting tools, and gamified engagement
                 that rewards progress and builds healthy money habits.
@@ -691,9 +684,9 @@ const Home = () => {
             </div>
 
             <aside className="about-video-box" aria-label="Demo video placeholder">
-              <h3 style={{ margin: 0, color: "#2d5237", fontSize: "22px" }}>Demo Video</h3>
+              <h3 style={{ margin: 0, color: "#5c3fa3", fontSize: "22px" }}>Demo Video</h3>
               <div className="about-video-frame">Video Placeholder</div>
-              <p style={{ margin: 0, color: "#4a5a50", fontSize: "14px" }}>
+              <p style={{ margin: 0, color: "#4a3f6b", fontSize: "14px" }}>
                 Replace this box with your final demo recording.
               </p>
             </aside>
@@ -709,9 +702,9 @@ const Home = () => {
             position: "relative",
             overflow: "hidden",
             background:
-              "linear-gradient(145deg, #f4f8f1 0%, #edf4e8 100%)",
-            borderTop: "1px solid #c8d8c6",
-            borderBottom: "1px solid #c8d8c6",
+              "linear-gradient(145deg, #f8f5ff 0%, #f0ebfe 100%)",
+            borderTop: "1px solid #c9bde8",
+            borderBottom: "1px solid #c9bde8",
           }}
         >
           <div
@@ -723,7 +716,7 @@ const Home = () => {
               width: "210px",
               height: "210px",
               borderRadius: "40% 60% 64% 36% / 42% 35% 65% 58%",
-              background: "linear-gradient(135deg, #d9edd4 0%, #b9d9bd 100%)",
+              background: "linear-gradient(135deg, #e0d6f7 0%, #c9bde8 100%)",
               opacity: 0.7,
               filter: "blur(0.2px)",
             }}
@@ -737,7 +730,7 @@ const Home = () => {
               width: "210px",
               height: "210px",
               borderRadius: "58% 42% 35% 65% / 56% 41% 59% 44%",
-              background: "linear-gradient(135deg, #d8e8f4 0%, #b8d2e7 100%)",
+              background: "linear-gradient(135deg, #d8d0f5 0%, #b8aee8 100%)",
               opacity: 0.62,
             }}
           />
@@ -753,7 +746,7 @@ const Home = () => {
               width: "14px",
               height: "14px",
               borderRadius: "50%",
-              background: "#9fd7af",
+              background: "#f0b429",
               opacity: 0.82,
               transition: "transform 0.08s linear",
             }}
@@ -770,22 +763,22 @@ const Home = () => {
               width: "18px",
               height: "18px",
               borderRadius: "50%",
-              background: "#8bb7e8",
+              background: "#b8a4e8",
               opacity: 0.8,
               transition: "transform 0.08s linear",
             }}
           />
           <div style={{ width: "100%" }}>
-            <h2 style={{ marginTop: 0, marginBottom: "20px", fontSize: "42px", color: "#111111" }}>Contact Us</h2>
+            <h2 style={{ marginTop: 0, marginBottom: "20px", fontSize: "42px", color: "#1a1040", fontWeight: 700 }}>Contact Us</h2>
             <div
               className="contact-box-animate"
               style={{
-                background: "linear-gradient(145deg, #fdfaf7 0%, #f7f4ee 62%, #f2eee6 100%)",
-                border: "1px solid #d8d3c7",
+                background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+                border: "1px solid #c9bde8",
                 borderRadius: "18px",
                 marginTop: "32px",
                 padding: "20px 22px",
-                boxShadow: "0 14px 24px rgba(55, 63, 51, 0.08)",
+                boxShadow: "0 14px 24px rgba(92, 63, 163, 0.10)",
                 position: "relative",
                 zIndex: 1,
               }}
@@ -793,12 +786,12 @@ const Home = () => {
               <div
                 className="contact-grid"
                 style={{
-                  color: "#111111",
+                  color: "#4a3f6b",
                   fontSize: "19px",
                   lineHeight: 1.8,
                 }}
               >
-                <span style={{ gridColumn: "1 / -1", fontWeight: 700, color: "#111111", fontSize: "20px" }}>
+                <span style={{ gridColumn: "1 / -1", fontWeight: 700, color: "#5c3fa3", fontSize: "20px" }}>
                   Location: University of Surrey, Guildford, England, GU2 7XH
                 </span>
                 <span>Tamara: member@example.com</span>

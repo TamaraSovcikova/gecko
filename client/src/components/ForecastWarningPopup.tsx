@@ -18,8 +18,8 @@ const wrapperStyle: React.CSSProperties = {
 };
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff3cd",
-  border: "1px solid #ffe69c",
+  background: "#fef9e7",
+  border: "1px solid #f0d280",
   borderRadius: "8px",
   padding: "14px",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",

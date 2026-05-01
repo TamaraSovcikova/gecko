@@ -1,12 +1,10 @@
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { COLORS } from "../constants/theme";
 
 const COLOURS = [
-  "#e74c3c",
-  "#2ecc71",
-  "#3498db",
-  "#9b59b6",
-  "#f1c40f",
-  "#1abc9c",
+  ...COLORS.chart,
+  COLORS.purple400,
+  COLORS.success,
 ];
 
 type SnapshotCategory = {
@@ -36,8 +34,8 @@ type Props = {
 const cardStyle: React.CSSProperties = {
   padding: "12px",
   borderRadius: "10px",
-  border: "1px solid #eee",
-  background: "#fafafa",
+  border: `1px solid ${COLORS.purple300}`,
+  background: COLORS.purple50,
 };
 
 const MONTHS = [
@@ -65,11 +63,11 @@ export default function MonthlySnapshot({ snapshot }: Props) {
         Monthly Snapshot: {monthLabel} {snapshot.year}
       </h2>
 
-      <p style={{ marginTop: "10px", color: "#555" }}>
+      <p style={{ marginTop: "10px", color: COLORS.textSecondary }}>
         Snapshot created: {new Date(snapshot.createdAt).toLocaleString()}
       </p>
 
-      <p style={{ marginTop: "10px", color: "#000" }}>
+      <p style={{ marginTop: "10px", color: COLORS.textPrimary }}>
         This is your monthly summary for the past month.
       </p>
 
@@ -163,7 +161,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
       </div>
 
       {/* TABLE */}
-      <div style={{ borderTop: "1px solid #eee", paddingTop: "20px" }}>
+      <div style={{ borderTop: `1px solid ${COLORS.purple300}`, paddingTop: "20px" }}>
         <h4>Budget Adherence</h4>
 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -185,7 +183,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
                   <td>{cat.name}</td>
                   <td>£{cat.budget.toFixed(2)}</td>
                   <td>£{cat.actual.toFixed(2)}</td>
-                  <td style={{ color: diff >= 0 ? "green" : "red" }}>
+                  <td style={{ color: diff >= 0 ? COLORS.purple500 : COLORS.error }}>
                     {diff >= 0 ? `+£${diff}` : `-£${Math.abs(diff)}`}
                   </td>
                 </tr>
