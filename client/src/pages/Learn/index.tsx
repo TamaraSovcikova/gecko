@@ -71,7 +71,9 @@ function saveRead(userId: string, set: Set<string>) {
     if (!key) return;
 
     localStorage.setItem(key, JSON.stringify([...set]));
-  } catch {}
+  } catch {
+    // Ignore localStorage failures (private mode or quota limits).
+  }
 }
 
 // ---------- component ----------
@@ -79,11 +81,11 @@ export default function Learn() {
   const { currentUser } = useAuth();
   const userId = currentUser?.uid;
 
-  const [activeCategory, setActiveCategory] = useState<
+  const [activeCategory] = useState<
     LearningCategory | "all"
   >("all");
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery] = useState("");
 
   const [readTopics, setReadTopics] = useState<Set<string>>(() =>
     loadRead(userId),
@@ -189,9 +191,12 @@ export default function Learn() {
 
         return (
           <div key={category} style={{ marginBottom: "2rem" }}>
-            <h3 style={{ fontSize: 12, color: "#7a6e99" }}>
+            <h3 style={{ fontSize: 12, color: meta?.color ?? "#7a6e99", marginBottom: 4 }}>
               {category} ({topics.length})
             </h3>
+            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#5b4f7a" }}>
+              {meta?.description}
+            </p>
 
             <div
               style={{

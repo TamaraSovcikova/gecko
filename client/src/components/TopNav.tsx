@@ -16,6 +16,9 @@ const TopNav = () => {
   return (
     <>
       <style>{`
+        .topnav-root {
+          width: 100%;
+        }
         .topnav-link {
           position: relative;
           text-decoration: none;
@@ -24,6 +27,7 @@ const TopNav = () => {
           padding: 4px 2px;
           transition: color 0.2s ease;
           letter-spacing: 0.1px;
+          white-space: nowrap;
         }
         .topnav-link::after {
           content: "";
@@ -48,8 +52,49 @@ const TopNav = () => {
         .topnav-link.active {
           color: ${COLORS.purple600} !important;
         }
+
+        @media (max-width: 900px) {
+          .topnav-root {
+            padding: 8px 12px !important;
+            gap: 10px !important;
+          }
+          .topnav-brand-logo {
+            width: 66px !important;
+            height: 66px !important;
+          }
+          .topnav-brand-title {
+            font-size: 16px !important;
+            margin-left: -8px !important;
+            letter-spacing: 0.8px !important;
+          }
+          .topnav-links {
+            gap: 14px !important;
+          }
+          .topnav-link {
+            font-size: 14px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .topnav-root {
+            flex-wrap: wrap;
+            justify-content: center !important;
+            padding: 8px 10px !important;
+          }
+          .topnav-brand {
+            width: 100%;
+            justify-content: center;
+          }
+          .topnav-links {
+            width: 100%;
+            justify-content: center !important;
+            gap: 12px !important;
+            flex-wrap: wrap;
+          }
+        }
       `}</style>
       <header
+        className="topnav-root"
         style={{
           width: "100%",
           backgroundColor: "rgba(250, 249, 253, 0.88)",
@@ -72,15 +117,17 @@ const TopNav = () => {
         }}
       >
         {/* Brand */}
-        <div style={{ display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
+        <div className="topnav-brand" style={{ display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
           <img
             src="/gecko-transparent.png?v=2"
             alt="G.E.C.K.O logo"
+            className="topnav-brand-logo"
             style={{ width: "96px", height: "96px", objectFit: "contain", background: "transparent", display: "block" }}
           />
           <Link
             to="/dashboard"
             data-onboarding="nav-brand"
+            className="topnav-brand-title"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -99,6 +146,7 @@ const TopNav = () => {
 
         {/* Primary nav links */}
         <nav
+          className="topnav-links"
           style={{ display: "flex", alignItems: "center", gap: "28px", flex: 1, justifyContent: "center" }}
           data-onboarding="nav-primary-links"
         >

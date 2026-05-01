@@ -30,13 +30,6 @@ function toMoneyNumber(value) {
 }
 
 /**
- * Utility: clamp value
- */
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-/**
  * Utility: round to 2 dp
  */
 function round2(value) {

@@ -33,14 +33,14 @@ export default function XPBar() {
     <div
       style={{
         position: "fixed",
-        bottom: 20,
+        bottom: 14,
         left: "50%",
         transform: "translateX(-50%)",
-        width: "clamp(320px, 50vw, 640px)",
+        width: "min(640px, calc(100vw - 20px))",
         paddingTop: highestBadge ? HALF_CIRCLE + 10 : 10,
         paddingBottom: 10,
-        paddingLeft: 22,
-        paddingRight: 22,
+        paddingLeft: 16,
+        paddingRight: 16,
         background: "rgba(250, 249, 253, 0.82)",
         backdropFilter: "blur(18px)",
         WebkitBackdropFilter: "blur(18px)",

@@ -24,13 +24,13 @@ export default function Modal({ children, onClose }: Props) {
         style={{
           backgroundColor: "#faf9fd",
           borderRadius: "14px",
-          width: "900px",
-          maxWidth: "100%",
-          maxHeight: "85vh",
+          width: "min(900px, calc(100vw - 24px))",
+          maxHeight: "calc(100vh - 24px)",
           overflowY: "auto",
-          padding: "30px",
+          padding: "clamp(16px, 3vw, 30px)",
           boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
           position: "relative",
+          boxSizing: "border-box",
         }}
       >
         <button

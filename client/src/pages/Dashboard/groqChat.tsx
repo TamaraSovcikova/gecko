@@ -59,8 +59,8 @@ const GroqChat = () => {
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed",
-          bottom: 20,
-          right: 20,
+          bottom: 14,
+          right: 12,
           width: 60,
           height: 60,
           borderRadius: "50%",
@@ -71,6 +71,7 @@ const GroqChat = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 1300,
         }}
       >
         {/*imported react icons, it looks awesome so hope thats allowed...*/}
@@ -81,15 +82,17 @@ const GroqChat = () => {
         <div
           style={{
             position: "fixed",
-            bottom: 90,
-            right: 20,
-            width: 320,
-            height: 420,
+            bottom: 84,
+            right: 12,
+            width: "min(320px, calc(100vw - 24px))",
+            height: "min(420px, calc(100vh - 128px))",
+            maxHeight: "calc(100vh - 128px)",
             background: COLORS.purple100,
             borderRadius: 12,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            zIndex: 1300,
           }}
         >
           {/*Title currently called Grok API assisstant for easy understanding but could be given a nname or something?*/}

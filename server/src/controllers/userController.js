@@ -29,18 +29,6 @@ const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
   return entries;
 };
 
-const buildFallbackDisplayName = (decodedUser = {}) => {
-  if (decodedUser.name) {
-    return String(decodedUser.name).trim();
-  }
-
-  if (decodedUser.email) {
-    return String(decodedUser.email).split("@")[0] || "User";
-  }
-
-  return "User";
-};
-
 // GET /v1/user/profile
 // Returns the current user's profile information
 const getUserProfile = async (req, res) => {

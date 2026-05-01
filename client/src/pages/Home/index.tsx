@@ -193,6 +193,23 @@ const Home = () => {
           transition: border-bottom-color 0.2s ease;
         }
 
+        .home-brand-logo {
+          width: clamp(76px, 10vw, 114px);
+          height: clamp(76px, 10vw, 114px);
+          object-fit: contain;
+          background: transparent;
+        }
+
+        .hero-copy {
+          position: relative;
+          z-index: 2;
+        }
+
+        .hero-image-shell {
+          position: relative;
+          z-index: 1;
+        }
+
         .brand-link:hover {
           border-bottom-color: #5c3fa3;
         }
@@ -336,6 +353,11 @@ const Home = () => {
             gap: 14px !important;
           }
 
+          .home-brand-logo {
+            width: 74px !important;
+            height: 74px !important;
+          }
+
           .hero-layout {
             grid-template-columns: 1fr !important;
             gap: 26px !important;
@@ -347,8 +369,8 @@ const Home = () => {
           }
 
           .hero-gecko-image {
-            width: clamp(660px, 120vw, 1120px) !important;
-            transform: scaleX(1) rotate(-8deg) translate(11%, -2%) !important;
+            width: clamp(420px, 88vw, 760px) !important;
+            transform: scaleX(1) rotate(-4deg) translate(0, 0) !important;
           }
 
           .hero-title {
@@ -372,6 +394,11 @@ const Home = () => {
           .contact-grid {
             grid-template-columns: 1fr;
           }
+
+          .hero-gecko-image {
+            width: clamp(360px, 92vw, 560px) !important;
+            transform: rotate(-2deg) translate(0, 0) !important;
+          }
         }
       `}</style>
 
@@ -394,9 +421,9 @@ const Home = () => {
       >
         <Link to="/" className="brand-link">
           <img
+            className="home-brand-logo"
             src="/gecko-transparent.png?v=3"
             alt="Gecko logo"
-            style={{ width: "114px", height: "114px", objectFit: "contain", background: "transparent" }}
           />
           G.E.C.K.O
         </Link>
@@ -523,7 +550,7 @@ const Home = () => {
               gap: "28px",
             }}
           >
-            <div className="home-fade" style={{ maxWidth: "900px", paddingLeft: "clamp(10px, 2.2vw, 34px)" }}>
+            <div className="home-fade hero-copy" style={{ maxWidth: "900px", paddingLeft: "clamp(10px, 2.2vw, 34px)" }}>
               <h1
                 className="hero-title hero-title-animate"
                 style={{
@@ -577,8 +604,8 @@ const Home = () => {
                 justifyContent: "flex-end",
                 paddingRight: "clamp(0px, 0.4vw, 6px)",
                 paddingLeft: "clamp(78px, 12vw, 234px)",
-                position: "relative",
-                overflow: "visible",
+                overflow: "hidden",
+                pointerEvents: "none",
               }}
             >
               <img
@@ -586,8 +613,8 @@ const Home = () => {
                 src="/gecko-transparent.png?v=3"
                 alt="Gecko and coin"
                 style={{
-                  width: "clamp(1180px, 116vw, 1860px)",
-                  transform: "scaleX(1) rotate(-10deg) translate(4%, -4%)",
+                  width: "clamp(700px, 78vw, 1200px)",
+                  transform: "scaleX(1) rotate(-8deg) translate(4%, -2%)",
                   transformOrigin: "center center",
                   marginRight: "clamp(-14px, -1.4vw, 4px)",
                   filter: "drop-shadow(0 20px 18px rgba(63, 89, 70, 0.16))",

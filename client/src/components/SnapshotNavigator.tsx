@@ -11,7 +11,6 @@ const SnapshotNavigator = ({
   snapshotIndex,
   setSnapshotIndex,
 }: Props) => {
-  const currentIndex = snapshotIndex ?? -1;
   const hasSnapshots = snapshots.length > 0;
 
   const goOlder = () => {

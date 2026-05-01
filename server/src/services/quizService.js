@@ -73,7 +73,7 @@ const getRandomCustomTopic = () => {
 /**
  * Build custom quiz response
  */
-const getCustomQuiz = (topic, reason = "") => {
+const getCustomQuiz = (topic) => {
   const normalized = normalizeTopic(topic);
 
   const questions = CUSTOM_QUIZ_MAP[normalized] || [];
@@ -155,7 +155,7 @@ const getQuiz = async (topic) => {
 
     console.log("→ No topic provided, using RANDOM:", randomTopic);
 
-    return getCustomQuiz(randomTopic, "no topic provided");
+    return getCustomQuiz(randomTopic);
   }
 
   const dynamicTag = getDynamicTopicTag(requestedTopic);
@@ -179,12 +179,12 @@ const getQuiz = async (topic) => {
 
     console.warn("→ Falling back to RANDOM:", randomTopic);
 
-    return getCustomQuiz(randomTopic, "fallback (invalid topic)");
+    return getCustomQuiz(randomTopic);
   }
 
   console.log("→ Using EXACT custom topic:", requestedTopic);
 
-  return getCustomQuiz(requestedTopic, "exact match");
+  return getCustomQuiz(requestedTopic);
 };
 
 module.exports = {

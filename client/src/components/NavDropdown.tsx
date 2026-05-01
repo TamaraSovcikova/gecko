@@ -92,13 +92,14 @@ const NavDropdown = () => {
             position: "absolute",
             right: 0,
             top: "calc(100% + 10px)",
-            minWidth: "230px",
+            width: "min(230px, calc(100vw - 24px))",
             backgroundColor: COLORS.purple50,
             border: `1px solid ${COLORS.purple300}`,
             borderRadius: "12px",
             boxShadow: "0 18px 32px rgba(92, 63, 163, 0.12)",
             padding: "8px",
             zIndex: 200,
+            boxSizing: "border-box",
           }}
         >
           {isAuthenticated && (

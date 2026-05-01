@@ -29,12 +29,15 @@ export default function BadgePopup({
     >
       <div
         style={{
-          width: "360px",
+          width: "min(360px, calc(100vw - 24px))",
+          maxHeight: "calc(100vh - 24px)",
+          overflowY: "auto",
           background: "white",
           borderRadius: "12px",
-          padding: "24px",
+          padding: "clamp(16px, 3vw, 24px)",
           textAlign: "center",
           border: "1px solid #c9bde8",
+          boxSizing: "border-box",
         }}
       >
         <h2 style={{ margin: "0 0 10px 0" }}>🎉 Congratulations!</h2>

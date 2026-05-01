@@ -143,7 +143,7 @@ const BreakdownPanel = ({ isOpen, onClose, breakdown }: Props) => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: "12px",
                 marginTop: "16px",
               }}

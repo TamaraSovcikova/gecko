@@ -8,10 +8,12 @@ interface ForecastWarningPopupProps {
 
 const wrapperStyle: React.CSSProperties = {
   position: "fixed",
-  top: "20px",
-  right: "20px",
+  top: "12px",
+  right: "12px",
   zIndex: 9999,
-  width: "360px",
+  width: "min(360px, calc(100vw - 24px))",
+  maxHeight: "calc(100vh - 24px)",
+  overflowY: "auto",
   display: "flex",
   flexDirection: "column",
   gap: "12px",

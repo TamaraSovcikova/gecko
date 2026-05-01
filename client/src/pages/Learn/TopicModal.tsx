@@ -80,7 +80,7 @@ function renderDetail(text: string) {
                 lineHeight: 1.65,
               }}
             >
-              {b.replace(/^[•\-]\s*/, "")}
+              {b.replace(/^[•-]\s*/, "")}
             </li>
           ))}
         </ul>,
