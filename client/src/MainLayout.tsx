@@ -9,6 +9,8 @@ import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useGamification } from "./context/GamificationContext";
 
+const XP_BAR_CLEARANCE = 112;
+
 export default function MainLayout() {
   const { data } = useGamification();
   const [popupBadge, setPopupBadge] = useState<any>(null);
@@ -37,7 +39,9 @@ export default function MainLayout() {
         <BadgePopup badge={popupBadge} onClose={() => setPopupBadge(null)} />
       )}
       <XPBar />
-      <Outlet />
+      <div style={{ paddingBottom: `${XP_BAR_CLEARANCE}px` }}>
+        <Outlet />
+      </div>
     </>
   );
 }
