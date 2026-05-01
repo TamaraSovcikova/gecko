@@ -180,6 +180,9 @@ const Home = () => {
         }
 
         .brand-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
           text-decoration: none;
           font-size: 22px;
           font-weight: 800;
@@ -343,9 +346,9 @@ const Home = () => {
             justify-content: center !important;
           }
 
-          .hero-gecko {
-            font-size: clamp(196px, 40vw, 325px) !important;
-            transform: scaleX(-1) rotate(38deg) translate(-24%, 13%) !important;
+          .hero-gecko-image {
+            width: clamp(660px, 120vw, 1120px) !important;
+            transform: scaleX(1) rotate(-8deg) translate(11%, -2%) !important;
           }
 
           .hero-title {
@@ -390,6 +393,11 @@ const Home = () => {
         }}
       >
         <Link to="/" className="brand-link">
+          <img
+            src="/gecko-transparent.png?v=3"
+            alt="Gecko logo"
+            style={{ width: "114px", height: "114px", objectFit: "contain", background: "transparent" }}
+          />
           G.E.C.K.O
         </Link>
 
@@ -574,25 +582,28 @@ const Home = () => {
                 display: "flex",
                 alignItems: "stretch",
                 justifyContent: "flex-end",
-                paddingRight: "clamp(16px, 3.4vw, 52px)",
+                paddingRight: "clamp(0px, 0.4vw, 6px)",
+                paddingLeft: "clamp(78px, 12vw, 234px)",
                 position: "relative",
                 overflow: "visible",
               }}
             >
-              <div
-                className="hero-gecko"
+              <img
+                className="hero-gecko-image"
+                src="/gecko-transparent.png?v=3"
+                alt="Gecko and coin"
                 style={{
-                  fontSize: "clamp(330px, 45vw, 590px)",
-                  lineHeight: 0.9,
-                  transform: "scaleX(-1) rotate(44deg) translate(-22%, 15%)",
+                  width: "clamp(1180px, 116vw, 1860px)",
+                  transform: "scaleX(1) rotate(-10deg) translate(4%, -4%)",
                   transformOrigin: "center center",
-                  marginRight: "clamp(56px, 11.8vw, 182px)",
+                  marginRight: "clamp(-14px, -1.4vw, 4px)",
                   filter: "drop-shadow(0 20px 18px rgba(63, 89, 70, 0.16))",
+                  imageRendering: "auto",
                   userSelect: "none",
+                  objectFit: "contain",
+                  background: "transparent",
                 }}
-              >
-                🦎
-              </div>
+              />
             </div>
           </div>
         </section>
