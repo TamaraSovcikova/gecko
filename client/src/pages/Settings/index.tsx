@@ -14,9 +14,10 @@ import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 
 const mapFirebaseEmailError = (error: unknown) => {
-  const errorCode = typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code?: string }).code)
-    : "";
+  const errorCode =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: string }).code)
+      : "";
 
   switch (errorCode) {
     case "auth/requires-recent-login":
@@ -53,11 +54,11 @@ const isValidEmail = (value: string) => {
 };
 
 const cardStyle = {
-  backgroundColor: "#fff",
-  border: "1px solid #e5dfd6",
-  borderRadius: "14px",
+  backgroundColor: "#faf9fd",
+  border: "1px solid #c9bde8",
+  borderRadius: "16px",
   padding: "24px",
-  boxShadow: "0 12px 24px rgba(77, 87, 69, 0.06)",
+  boxShadow: "0 4px 20px rgba(92, 63, 163, 0.08)",
 };
 
 const labelStyle = {
@@ -66,30 +67,57 @@ const labelStyle = {
   fontSize: "12px",
   letterSpacing: "0.08em",
   textTransform: "uppercase" as const,
-  color: "#7d7a72",
+  color: "#7a6e99",
+  fontWeight: 600,
 };
 
 const inputStyle = {
   width: "100%",
   padding: "12px 14px",
   borderRadius: "10px",
-  border: "1px solid #d6d0c8",
-  backgroundColor: "#fffdf9",
+  border: "1px solid #c9bde8",
+  backgroundColor: "#faf9fd",
+  fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
 };
 
 const SettingsPage = () => {
-  const { currentUser, token, loading, profile, refreshProfile, setProfile } = useAuth();
+  const { currentUser, token, loading, profile, refreshProfile, setProfile } =
+    useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
-  const [usernameState, setUsernameState] = useState({ saving: false, message: "", error: "" });
-  const [emailState, setEmailState] = useState({ saving: false, message: "", error: "" });
-  const [emailSyncState, setEmailSyncState] = useState({ syncing: false, message: "", error: "" });
-  const [onboardingState, setOnboardingState] = useState({ saving: false, message: "", error: "" });
+  const [usernameState, setUsernameState] = useState({
+    saving: false,
+    message: "",
+    error: "",
+  });
+  const [emailState, setEmailState] = useState({
+    saving: false,
+    message: "",
+    error: "",
+  });
+  const [emailSyncState, setEmailSyncState] = useState({
+    syncing: false,
+    message: "",
+    error: "",
+  });
+  const [onboardingState, setOnboardingState] = useState({
+    saving: false,
+    message: "",
+    error: "",
+  });
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
-  const [newsletterState, setNewsletterState] = useState({ saving: false, message: "", error: "" });
-  const [newsletterTestState, setNewsletterTestState] = useState({ sending: false, message: "", error: "" });
+  const [newsletterState, setNewsletterState] = useState({
+    saving: false,
+    message: "",
+    error: "",
+  });
+  const [newsletterTestState, setNewsletterTestState] = useState({
+    sending: false,
+    message: "",
+    error: "",
+  });
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -111,10 +139,22 @@ const SettingsPage = () => {
   }, [profile, username]);
 
   const emailChanged = useMemo(() => {
-    return email.trim().toLowerCase() !== (profile?.email || currentUser?.email || "").trim().toLowerCase();
+    return (
+      email.trim().toLowerCase() !==
+      (profile?.email || currentUser?.email || "").trim().toLowerCase()
+    );
   }, [currentUser, email, profile]);
-  const supportsPasswordProvider = currentUser?.providerData?.some((provider: any) => provider.providerId === "password") ?? false;
-  const isGoogleOnlyAccount = Boolean(currentUser) && !supportsPasswordProvider && (currentUser?.providerData?.some((provider: any) => provider.providerId === "google.com") ?? false);
+  const supportsPasswordProvider =
+    currentUser?.providerData?.some(
+      (provider: any) => provider.providerId === "password",
+    ) ?? false;
+  const isGoogleOnlyAccount =
+    Boolean(currentUser) &&
+    !supportsPasswordProvider &&
+    (currentUser?.providerData?.some(
+      (provider: any) => provider.providerId === "google.com",
+    ) ??
+      false);
 
   const handleUsernameSave = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -129,9 +169,16 @@ const SettingsPage = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      setProfile((prev) => ({ ...prev, displayName: response.data.displayName }));
+      setProfile((prev) => ({
+        ...prev,
+        displayName: response.data.displayName,
+      }));
       setUsername(response.data.displayName || "");
-      setUsernameState({ saving: false, message: "Username updated.", error: "" });
+      setUsernameState({
+        saving: false,
+        message: "Username updated.",
+        error: "",
+      });
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error || "Unable to update username."
@@ -145,7 +192,11 @@ const SettingsPage = () => {
     setEmailState({ saving: true, message: "", error: "" });
 
     if (!currentUser?.email) {
-      setEmailState({ saving: false, message: "", error: "No authenticated user found." });
+      setEmailState({
+        saving: false,
+        message: "",
+        error: "No authenticated user found.",
+      });
       return;
     }
 
@@ -153,31 +204,49 @@ const SettingsPage = () => {
       setEmailState({
         saving: false,
         message: "",
-        error: "This account is managed by Google sign-in. Change the email in your Google account settings.",
+        error:
+          "This account is managed by Google sign-in. Change the email in your Google account settings.",
       });
       return;
     }
 
     const updatedEmail = email.trim().toLowerCase();
-    const currentEmail = String(profile?.email || currentUser?.email || "").trim().toLowerCase();
+    const currentEmail = String(profile?.email || currentUser?.email || "")
+      .trim()
+      .toLowerCase();
 
     if (!isValidEmail(updatedEmail)) {
-      setEmailState({ saving: false, message: "", error: "Enter a valid email address." });
+      setEmailState({
+        saving: false,
+        message: "",
+        error: "Enter a valid email address.",
+      });
       return;
     }
 
     if (updatedEmail === currentEmail) {
-      setEmailState({ saving: false, message: "", error: "Enter a different email address." });
+      setEmailState({
+        saving: false,
+        message: "",
+        error: "Enter a different email address.",
+      });
       return;
     }
 
     if (confirmEmail.trim().toLowerCase() !== updatedEmail) {
-      setEmailState({ saving: false, message: "", error: "New email and confirmation email must match." });
+      setEmailState({
+        saving: false,
+        message: "",
+        error: "New email and confirmation email must match.",
+      });
       return;
     }
 
     try {
-      const credential = EmailAuthProvider.credential(currentUser.email, emailPassword);
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        emailPassword,
+      );
       await reauthenticateWithCredential(currentUser, credential);
       const activeUser = auth.currentUser || currentUser;
 
@@ -193,7 +262,8 @@ const SettingsPage = () => {
       setEmailPassword("");
       setEmailState({
         saving: false,
-        message: "Verification email sent to your new address. Your email will update after you open that link.",
+        message:
+          "Verification email sent to your new address. Your email will update after you open that link.",
         error: "",
       });
     } catch (error) {
@@ -213,7 +283,11 @@ const SettingsPage = () => {
 
   const handleEmailSync = async () => {
     if (!currentUser) {
-      setEmailSyncState({ syncing: false, message: "", error: "No authenticated user found." });
+      setEmailSyncState({
+        syncing: false,
+        message: "",
+        error: "No authenticated user found.",
+      });
       return;
     }
 
@@ -223,13 +297,23 @@ const SettingsPage = () => {
       await currentUser.reload();
       const refreshedToken = await currentUser.getIdToken(true);
       await refreshProfile(refreshedToken);
-      const latestEmail = String(auth.currentUser?.email || currentUser.email || "").toLowerCase();
+      const latestEmail = String(
+        auth.currentUser?.email || currentUser.email || "",
+      ).toLowerCase();
       setEmail(latestEmail);
       setConfirmEmail(latestEmail);
-      setEmailSyncState({ syncing: false, message: "Email synced from Firebase.", error: "" });
+      setEmailSyncState({
+        syncing: false,
+        message: "Email synced from Firebase.",
+        error: "",
+      });
     } catch (error) {
       console.error("Failed to sync email", error);
-      setEmailSyncState({ syncing: false, message: "", error: "Unable to sync email right now." });
+      setEmailSyncState({
+        syncing: false,
+        message: "",
+        error: "Unable to sync email right now.",
+      });
     }
   };
 
@@ -251,12 +335,17 @@ const SettingsPage = () => {
 
       setOnboardingState({
         saving: false,
-        message: "Onboarding reset. Visit any supported page to replay numbered tips.",
+        message:
+          "Onboarding reset. Visit any supported page to replay numbered tips.",
         error: "",
       });
     } catch (error) {
       console.error("Failed to reset onboarding", error);
-      setOnboardingState({ saving: false, message: "", error: "Unable to reset onboarding right now." });
+      setOnboardingState({
+        saving: false,
+        message: "",
+        error: "Unable to reset onboarding right now.",
+      });
     }
   };
 
@@ -265,7 +354,11 @@ const SettingsPage = () => {
     setNewsletterState({ saving: true, message: "", error: "" });
 
     if (!currentUser?.uid || !token) {
-      setNewsletterState({ saving: false, message: "", error: "Please sign in again to update newsletter settings." });
+      setNewsletterState({
+        saving: false,
+        message: "",
+        error: "Please sign in again to update newsletter settings.",
+      });
       return;
     }
 
@@ -288,7 +381,8 @@ const SettingsPage = () => {
       });
     } catch (error) {
       const message = axios.isAxiosError(error)
-        ? error.response?.data?.error || "Unable to update newsletter preference."
+        ? error.response?.data?.error ||
+          "Unable to update newsletter preference."
         : "Unable to update newsletter preference.";
       setNewsletterState({ saving: false, message: "", error: message });
     }
@@ -298,7 +392,11 @@ const SettingsPage = () => {
     setNewsletterTestState({ sending: true, message: "", error: "" });
 
     if (!currentUser?.uid || !token) {
-      setNewsletterTestState({ sending: false, message: "", error: "Please sign in again to send a test email." });
+      setNewsletterTestState({
+        sending: false,
+        message: "",
+        error: "Please sign in again to send a test email.",
+      });
       return;
     }
 
@@ -309,14 +407,21 @@ const SettingsPage = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const sentTo = response.data?.email || profile?.email || currentUser?.email || "your email";
-      const period = response.data?.period?.label ? ` for ${response.data.period.label}` : "";
+      const sentTo =
+        response.data?.email ||
+        profile?.email ||
+        currentUser?.email ||
+        "your email";
+      const period = response.data?.period?.label
+        ? ` for ${response.data.period.label}`
+        : "";
       const consistencyChecks = Array.isArray(response.data?.consistencyChecks)
         ? response.data.consistencyChecks.join(" ")
         : "";
       setNewsletterTestState({
         sending: false,
-        message: `Test newsletter sent to ${sentTo}${period}. ${consistencyChecks}`.trim(),
+        message:
+          `Test newsletter sent to ${sentTo}${period}. ${consistencyChecks}`.trim(),
         error: "",
       });
     } catch (error) {
@@ -332,89 +437,266 @@ const SettingsPage = () => {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#fafaf8", padding: "24px" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#faf9fd",
+        padding: "24px",
+      }}
+    >
       <TopNav />
       <div style={{ maxWidth: "980px", margin: "24px auto 0" }}>
-        <div style={{ marginBottom: "24px" }} data-onboarding="settings-heading">
-          <p style={{ margin: 0, color: "#7e887e", letterSpacing: "0.08em", textTransform: "uppercase" }}>Account</p>
-          <h1 style={{ margin: "8px 0 0", color: "#355f46", fontSize: "44px", fontWeight: 300 }}>Edit Account Details</h1>
+        <div
+          style={{ marginBottom: "24px" }}
+          data-onboarding="settings-heading"
+        >
+          <p
+            style={{
+              margin: 0,
+              color: "#7a6e99",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            Account
+          </p>
+          <h1
+            style={{
+              margin: "8px 0 0",
+              color: "#5c3fa3",
+              fontSize: "44px",
+              fontWeight: 300,
+            }}
+          >
+            Edit Account Details
+          </h1>
         </div>
 
         {isGoogleOnlyAccount && (
-          <div style={{ ...cardStyle, backgroundColor: "#fff7e9", borderColor: "#ecd8ad" }}>
-            <h2 style={{ fontSize: "18px", marginBottom: "10px", color: "#7b5a17" }}>Google sign-in notice</h2>
-            <p style={{ margin: 0, color: "#70571f", lineHeight: 1.6 }}>
-              This account is currently managed through Google sign-in. Username changes still work here,
-              but email and password changes are not handled inside this app for Google-only accounts.
-              Use your Google account settings if you need to change those credentials.
+          <div
+            style={{
+              ...cardStyle,
+              backgroundColor: "#ede8f8",
+              borderColor: "#c9bde8",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "18px",
+                marginBottom: "10px",
+                color: "#4a3f6b",
+              }}
+            >
+              Google sign-in notice
+            </h2>
+            <p style={{ margin: 0, color: "#4a3f6b", lineHeight: 1.6 }}>
+              This account is currently managed through Google sign-in. Username
+              changes still work here, but email and password changes are not
+              handled inside this app for Google-only accounts. Use your Google
+              account settings if you need to change those credentials.
             </p>
           </div>
         )}
 
         <div style={{ display: "grid", gap: "20px" }}>
           <form onSubmit={handleUsernameSave} style={cardStyle}>
-            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Username</h2>
-            <label style={labelStyle} htmlFor="username">Display name</label>
-            <input id="username" value={username} onChange={(event) => setUsername(event.target.value)} style={inputStyle} />
-            {usernameState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{usernameState.message}</p>}
-            {usernameState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{usernameState.error}</p>}
+            <h2
+              style={{
+                fontSize: "20px",
+                marginBottom: "14px",
+                color: "#4a3f6b",
+              }}
+            >
+              Username
+            </h2>
+            <label style={labelStyle} htmlFor="username">
+              Display name
+            </label>
+            <input
+              id="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              style={inputStyle}
+            />
+            {usernameState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {usernameState.message}
+              </p>
+            )}
+            {usernameState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {usernameState.error}
+              </p>
+            )}
             <button
               type="submit"
-              disabled={!usernameChanged || usernameState.saving || !username.trim()}
-              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+              disabled={
+                !usernameChanged || usernameState.saving || !username.trim()
+              }
+              style={{
+                marginTop: "16px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
               {usernameState.saving ? "Saving..." : "Save username"}
             </button>
           </form>
 
           <form onSubmit={handleEmailSave} style={cardStyle}>
-            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Email address</h2>
-            <label style={labelStyle} htmlFor="email">Email</label>
-            <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="confirm-email">Confirm new email</label>
-            <input id="confirm-email" type="email" value={confirmEmail} onChange={(event) => setConfirmEmail(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <label style={{ ...labelStyle, marginTop: "14px" }} htmlFor="email-password">Current password</label>
-            <input id="email-password" type="password" value={emailPassword} onChange={(event) => setEmailPassword(event.target.value)} style={inputStyle} disabled={isGoogleOnlyAccount} />
-            <p style={{ margin: "10px 0 0", color: "#7d7a72", fontSize: "13px" }}>
-              Firebase may require recent sign-in before sensitive email changes.
+            <h2
+              style={{
+                fontSize: "20px",
+                marginBottom: "14px",
+                color: "#4a3f6b",
+              }}
+            >
+              Email address
+            </h2>
+            <label style={labelStyle} htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              style={inputStyle}
+              disabled={isGoogleOnlyAccount}
+            />
+            <label
+              style={{ ...labelStyle, marginTop: "14px" }}
+              htmlFor="confirm-email"
+            >
+              Confirm new email
+            </label>
+            <input
+              id="confirm-email"
+              type="email"
+              value={confirmEmail}
+              onChange={(event) => setConfirmEmail(event.target.value)}
+              style={inputStyle}
+              disabled={isGoogleOnlyAccount}
+            />
+            <label
+              style={{ ...labelStyle, marginTop: "14px" }}
+              htmlFor="email-password"
+            >
+              Current password
+            </label>
+            <input
+              id="email-password"
+              type="password"
+              value={emailPassword}
+              onChange={(event) => setEmailPassword(event.target.value)}
+              style={inputStyle}
+              disabled={isGoogleOnlyAccount}
+            />
+            <p
+              style={{ margin: "10px 0 0", color: "#7a6e99", fontSize: "13px" }}
+            >
+              Firebase may require recent sign-in before sensitive email
+              changes.
             </p>
             <button
               type="button"
               onClick={handleEmailSync}
               disabled={emailSyncState.syncing || isGoogleOnlyAccount}
-              style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d6d0c8", backgroundColor: "#fff", color: "#355f46", fontWeight: 600 }}
+              style={{
+                marginTop: "10px",
+                padding: "10px 12px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#fff",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
               {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
             </button>
-            {emailState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailState.message}</p>}
-            {emailState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{emailState.error}</p>}
-            {emailSyncState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{emailSyncState.message}</p>}
-            {emailSyncState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{emailSyncState.error}</p>}
+            {emailState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {emailState.message}
+              </p>
+            )}
+            {emailState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {emailState.error}
+              </p>
+            )}
+            {emailSyncState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {emailSyncState.message}
+              </p>
+            )}
+            {emailSyncState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {emailSyncState.error}
+              </p>
+            )}
             <button
               type="submit"
               disabled={
-                isGoogleOnlyAccount
-                || !emailChanged
-                || emailState.saving
-                || !emailPassword.trim()
-                || confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()
+                isGoogleOnlyAccount ||
+                !emailChanged ||
+                emailState.saving ||
+                !emailPassword.trim() ||
+                confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()
               }
-              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+              style={{
+                marginTop: "16px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
               {emailState.saving ? "Saving..." : "Save email"}
             </button>
           </form>
 
-          <form onSubmit={handleNewsletterSave} style={cardStyle} data-onboarding="settings-newsletter-card">
-            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Newsletter</h2>
-            <p style={{ margin: "0 0 12px", color: "#5f625c", lineHeight: 1.6 }}>
-              Opt in to receive one monthly email with a concise financial snapshot.
-              You can unsubscribe any time from this page or from the unsubscribe link in the email.
+          <form
+            onSubmit={handleNewsletterSave}
+            style={cardStyle}
+            data-onboarding="settings-newsletter-card"
+          >
+            <h2
+              style={{
+                fontSize: "20px",
+                marginBottom: "14px",
+                color: "#4a3f6b",
+              }}
+            >
+              Newsletter
+            </h2>
+            <p
+              style={{ margin: "0 0 12px", color: "#4a3f6b", lineHeight: 1.6 }}
+            >
+              Opt in to receive one monthly email with a concise financial
+              snapshot. You can unsubscribe any time from this page or from the
+              unsubscribe link in the email.
             </p>
-            <p style={{ margin: "0 0 14px", color: "#7d7a72", fontSize: "13px" }}>
-              Monthly comparison and history insights are not live yet and are currently placeholder content.
+            <p
+              style={{ margin: "0 0 14px", color: "#7a6e99", fontSize: "13px" }}
+            >
+              Monthly comparison and history insights are not live yet and are
+              currently placeholder content.
             </p>
-            <label style={{ display: "flex", alignItems: "center", gap: "10px", color: "#35483a", fontWeight: 600 }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                color: "#4a3f6b",
+                fontWeight: 600,
+              }}
+            >
               <input
                 type="checkbox"
                 checked={newsletterOptIn}
@@ -423,15 +705,33 @@ const SettingsPage = () => {
               />
               Send me the monthly newsletter
             </label>
-            {newsletterState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{newsletterState.message}</p>}
-            {newsletterState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{newsletterState.error}</p>}
+            {newsletterState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {newsletterState.message}
+              </p>
+            )}
+            {newsletterState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {newsletterState.error}
+              </p>
+            )}
             <button
               type="submit"
               disabled={newsletterState.saving}
               data-onboarding="settings-newsletter-save"
-              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+              style={{
+                marginTop: "16px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
-              {newsletterState.saving ? "Saving..." : "Save newsletter preference"}
+              {newsletterState.saving
+                ? "Saving..."
+                : "Save newsletter preference"}
             </button>
 
             <button
@@ -439,26 +739,69 @@ const SettingsPage = () => {
               onClick={handleSendNewsletterTest}
               disabled={newsletterTestState.sending || newsletterState.saving}
               data-onboarding="settings-newsletter-test-send"
-              style={{ marginTop: "14px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#eef5eb", color: "#2d5237", fontWeight: 600 }}
+              style={{
+                marginTop: "14px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
-              {newsletterTestState.sending ? "Sending test..." : "Get Last Month's Newsletter"}
+              {newsletterTestState.sending
+                ? "Sending test..."
+                : "Get Last Month's Newsletter"}
             </button>
-            {newsletterTestState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{newsletterTestState.message}</p>}
-            {newsletterTestState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{newsletterTestState.error}</p>}
+            {newsletterTestState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {newsletterTestState.message}
+              </p>
+            )}
+            {newsletterTestState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {newsletterTestState.error}
+              </p>
+            )}
           </form>
 
           <section style={cardStyle}>
-            <h2 style={{ fontSize: "20px", marginBottom: "14px", color: "#35483a" }}>Tutorial / Onboarding</h2>
-            <p style={{ margin: 0, color: "#5f625c", lineHeight: 1.6 }}>
-              Replay the financial walkthrough tooltips for completed areas of the app.
+            <h2
+              style={{
+                fontSize: "20px",
+                marginBottom: "14px",
+                color: "#4a3f6b",
+              }}
+            >
+              Tutorial / Onboarding
+            </h2>
+            <p style={{ margin: 0, color: "#4a3f6b", lineHeight: 1.6 }}>
+              Replay the financial walkthrough tooltips for completed areas of
+              the app.
             </p>
-            {onboardingState.message && <p style={{ margin: "10px 0 0", color: "#3c7b52" }}>{onboardingState.message}</p>}
-            {onboardingState.error && <p style={{ margin: "10px 0 0", color: "#b54848" }}>{onboardingState.error}</p>}
+            {onboardingState.message && (
+              <p style={{ margin: "10px 0 0", color: "#5bb8c4" }}>
+                {onboardingState.message}
+              </p>
+            )}
+            {onboardingState.error && (
+              <p style={{ margin: "10px 0 0", color: "#e05c5c" }}>
+                {onboardingState.error}
+              </p>
+            )}
             <button
               type="button"
               disabled={onboardingState.saving}
               onClick={handleReplayOnboarding}
-              style={{ marginTop: "16px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #8db095", backgroundColor: "#dcebdc", color: "#2d5237", fontWeight: 600 }}
+              style={{
+                marginTop: "16px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #c9bde8",
+                backgroundColor: "#ede8f8",
+                color: "#5c3fa3",
+                fontWeight: 600,
+              }}
             >
               {onboardingState.saving ? "Resetting..." : "Replay onboarding"}
             </button>

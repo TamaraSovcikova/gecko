@@ -97,13 +97,9 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         payload.category = category;
       }
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/expenses`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const createdCategory =
         category === "create-new" ? newCategoryName.trim() : category;
@@ -182,8 +178,18 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
   };
 
   return (
-    <div className="card shadow-sm p-3">
-      <h5 className="mb-3">Log Expense</h5>
+    <div
+      className="p-3"
+      style={{
+        border: "1px solid #c9bde8",
+        borderRadius: "14px",
+        background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+        boxShadow: "0 4px 20px rgba(92, 63, 163, 0.08)",
+      }}
+    >
+      <h5 className="mb-3" style={{ color: "#5c3fa3", fontWeight: 700 }}>
+        Log Expense
+      </h5>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-2">
@@ -278,7 +284,17 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
           <div className="alert alert-danger py-1">{formError}</div>
         )}
 
-        <button className="btn btn-success w-100 mt-2">Save expense</button>
+        <button
+          className="btn w-100 mt-2"
+          style={{
+            backgroundColor: "#5c3fa3",
+            border: "1px solid #4e358f",
+            color: "#ffffff",
+            fontWeight: 600,
+          }}
+        >
+          Save expense
+        </button>
       </form>
     </div>
   );

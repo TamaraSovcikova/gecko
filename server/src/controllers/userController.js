@@ -29,19 +29,7 @@ const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
   return entries;
 };
 
-const buildFallbackDisplayName = (decodedUser = {}) => {
-  if (decodedUser.name) {
-    return String(decodedUser.name).trim();
-  }
-
-  if (decodedUser.email) {
-    return String(decodedUser.email).split("@")[0] || "User";
-  }
-
-  return "User";
-};
-
-// GET /api/v1/user/profile
+// GET /v1/user/profile
 // Returns the current user's profile information
 const getUserProfile = async (req, res) => {
   try {
@@ -68,7 +56,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/export-data
+// GET /v1/user/export-data
 // Exports all user data as a PDF
 const exportUserData = async (req, res) => {
   try {
@@ -76,8 +64,9 @@ const exportUserData = async (req, res) => {
 
     // Fetch all user data
     const user = await User.findById(userId);
-    const expenses = await Expense.find({ userId });
-    const budgets = await MonthlyBudget.find({ userId });
+    const expenses = await Expense.find({ userId }).sort({ date: 1 });
+    const budgets = await MonthlyBudget.find({ userId }).sort({ createdAt: 1 });
+    const snapshots = await MonthlySnapshot.find({ userId }).sort({ year: 1, month: 1 });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -98,43 +87,34 @@ const exportUserData = async (req, res) => {
     doc.fontSize(10).font("Helvetica").text(`Export Date: ${new Date().toLocaleDateString()}`);
     doc.moveDown();
 
-    // User Information
-    doc
-      .fontSize(14)
-      .font("Helvetica-Bold")
-      .text("User Information");
+    // ── User Information ──────────────────────────────────────────────────────
+    doc.fontSize(14).font("Helvetica-Bold").text("User Information");
     doc.fontSize(11).font("Helvetica");
     doc.text(`Name: ${user.displayName}`);
     doc.text(`Email: ${user.email}`);
     doc.text(`Member Since: ${new Date(user.createdAt).toLocaleDateString()}`);
-    doc.text(`Total XP: ${user.xpTotal}`);
+    doc.text(`Level: ${user.level}`);
+    doc.text(`Total XP: ${user.xp}`);
+    doc.text(`Weekly Quiz Streak: ${user.weeklyStreak}`);
+    doc.text(`Quizzes Completed This Month: ${user.completedQuizzesThisMonth}`);
+    doc.text(`Newsletter Opt-In: ${user.newsletterOptIn ? "Yes" : "No"}`);
+    doc.text(`Onboarding Complete: ${user.hasCompletedOnboarding ? "Yes" : "No"}`);
     doc.moveDown();
 
-    // Payslip Data - Complete breakdown
+    // ── Payslip Data ──────────────────────────────────────────────────────────
     if (user.payslipData && user.payslipData.grossSalary > 0) {
-      doc
-        .fontSize(14)
-        .font("Helvetica-Bold")
-        .text("Payslip Information");
+      doc.fontSize(14).font("Helvetica-Bold").text("Payslip Information");
       doc.fontSize(11).font("Helvetica");
       doc.text(`Gross Salary: £${user.payslipData.grossSalary.toFixed(2)}`);
-      
-      if (user.payslipData.jobTitle) {
-        doc.text(`Job Title: ${user.payslipData.jobTitle}`);
-      }
-      if (user.payslipData.location) {
-        doc.text(`Location: ${user.payslipData.location}`);
-      }
+      if (user.payslipData.jobTitle) doc.text(`Job Title: ${user.payslipData.jobTitle}`);
+      if (user.payslipData.location) doc.text(`Location: ${user.payslipData.location}`);
       doc.moveDown();
     }
 
-    // Budget Breakdown - Most recent payslip
+    // ── Budget Breakdown ──────────────────────────────────────────────────────
     if (budgets.length > 0) {
       const latestBudget = budgets[budgets.length - 1];
-      doc
-        .fontSize(14)
-        .font("Helvetica-Bold")
-        .text("Latest Budget Breakdown");
+      doc.fontSize(14).font("Helvetica-Bold").text("Latest Budget Breakdown");
       doc.fontSize(11).font("Helvetica");
       doc.text(`Gross Salary: £${(latestBudget.grossSalary || 0).toFixed(2)}`);
       doc.text(`Tax Paid: £${(latestBudget.taxPaid || 0).toFixed(2)}`);
@@ -142,12 +122,8 @@ const exportUserData = async (req, res) => {
       doc.text(`Take-Home Pay: £${(latestBudget.takeHomePay || 0).toFixed(2)}`);
       doc.moveDown();
 
-      // Category Allocations
       if (latestBudget.categories && latestBudget.categories.length > 0) {
-        doc
-          .fontSize(12)
-          .font("Helvetica-Bold")
-          .text("Category Allocations");
+        doc.fontSize(12).font("Helvetica-Bold").text("Category Allocations");
         doc.fontSize(11).font("Helvetica");
         latestBudget.categories.forEach((category) => {
           doc.text(`  ${category.name}: £${(category.budget || 0).toFixed(2)}`);
@@ -155,16 +131,11 @@ const exportUserData = async (req, res) => {
         doc.moveDown();
       }
 
-      // All budgets history
       if (budgets.length > 1) {
-        doc
-          .fontSize(14)
-          .font("Helvetica-Bold")
-          .text("Budget History");
+        doc.fontSize(14).font("Helvetica-Bold").text("Budget History");
         doc.fontSize(10).font("Helvetica");
         budgets.forEach((budget, index) => {
-          doc.text(`\nBudget ${index + 1}:`);
-          doc.text(`  Created: ${new Date(budget.createdAt).toLocaleDateString()}`);
+          doc.text(`\nBudget ${index + 1} (${new Date(budget.createdAt).toLocaleDateString()}):`);
           doc.text(`  Gross: £${(budget.grossSalary || 0).toFixed(2)}`);
           doc.text(`  Tax: £${(budget.taxPaid || 0).toFixed(2)}`);
           doc.text(`  NI: £${(budget.niPaid || 0).toFixed(2)}`);
@@ -177,37 +148,48 @@ const exportUserData = async (req, res) => {
       }
     }
 
-    // Expenses - Detailed list with all information
-    if (expenses.length > 0) {
-      doc
-        .fontSize(14)
-        .font("Helvetica-Bold")
-        .text("All Expenses");
+    // ── Monthly Snapshots ─────────────────────────────────────────────────────
+    if (snapshots.length > 0) {
+      doc.fontSize(14).font("Helvetica-Bold").text("Monthly Snapshots");
       doc.fontSize(10).font("Helvetica");
+      snapshots.forEach((snap) => {
+        const monthName = new Date(snap.year, snap.month - 1).toLocaleString("default", { month: "long" });
+        doc.text(`\n${monthName} ${snap.year}:`);
+        doc.text(`  Health Score: ${snap.healthScore}`);
+        doc.text(`  Gross Salary: £${(snap.grossSalary || 0).toFixed(2)}`);
+        doc.text(`  Take-Home Pay: £${(snap.takeHomePay || 0).toFixed(2)}`);
+        doc.text(`  Total Expenses: £${(snap.totalExpenses || 0).toFixed(2)}`);
+        doc.text(`  Savings: £${(snap.savings || 0).toFixed(2)}`);
+        doc.text(`  XP Earned: ${snap.xpEarned || 0}`);
+        if (snap.categories && snap.categories.length > 0) {
+          doc.text(`  Categories:`);
+          snap.categories.forEach((c) => {
+            doc.text(`    ${c.name}: budget £${(c.budget || 0).toFixed(2)}, actual £${(c.actual || 0).toFixed(2)}`);
+          });
+        }
+      });
+      doc.moveDown();
+    }
 
+    // ── Expenses ──────────────────────────────────────────────────────────────
+    if (expenses.length > 0) {
+      doc.fontSize(14).font("Helvetica-Bold").text("All Expenses");
+      doc.fontSize(10).font("Helvetica");
       expenses.forEach((expense, index) => {
         doc.text(`${index + 1}. ${expense.category.toUpperCase()} - £${(expense.amount || 0).toFixed(2)}`);
         doc.text(`   Date: ${new Date(expense.date).toLocaleDateString()}`);
         doc.text(`   Month: ${expense.month}/${expense.year}`);
-        if (expense.note) {
-          doc.text(`   Note: ${expense.note}`);
-        }
+        if (expense.note) doc.text(`   Note: ${expense.note}`);
       });
       doc.moveDown();
 
-      // Expense Summary by Category
+      // Expense summary by category
       const expenseSummary = {};
       expenses.forEach((expense) => {
-        if (!expenseSummary[expense.category]) {
-          expenseSummary[expense.category] = 0;
-        }
-        expenseSummary[expense.category] += expense.amount || 0;
+        expenseSummary[expense.category] = (expenseSummary[expense.category] || 0) + (expense.amount || 0);
       });
 
-      doc
-        .fontSize(12)
-        .font("Helvetica-Bold")
-        .text("Expense Summary by Category");
+      doc.fontSize(12).font("Helvetica-Bold").text("Expense Summary by Category");
       doc.fontSize(10).font("Helvetica");
       Object.entries(expenseSummary).forEach(([category, total]) => {
         doc.text(`  ${category}: £${total.toFixed(2)}`);
@@ -218,9 +200,7 @@ const exportUserData = async (req, res) => {
     }
 
     // Footer
-    doc.fontSize(9).font("Helvetica").text("This is your personal data export from Zoar.", {
-      align: "center",
-    });
+    doc.fontSize(9).font("Helvetica").text("This is your personal data export from Zoar.", { align: "center" });
 
     doc.end();
   } catch (err) {
@@ -229,7 +209,7 @@ const exportUserData = async (req, res) => {
   }
 };
 
-// DELETE /api/v1/user/profile
+// DELETE /v1/user/profile
 // Deletes the user account and all associated data
 const deleteUserProfile = async (req, res) => {
   try {
@@ -259,7 +239,7 @@ const deleteUserProfile = async (req, res) => {
   }
 };
 
-// PATCH /api/v1/user/profile
+// PATCH /v1/user/profile
 // Updates user profile fields (e.g., payslipData, username, metadata)
 const updateUserProfile = async (req, res) => {
   try {
@@ -365,7 +345,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/newsletter/unsubscribe
+// GET /v1/user/newsletter/unsubscribe
 // Public route used from email links.
 const unsubscribeFromNewsletter = async (req, res) => {
   try {
@@ -398,7 +378,7 @@ const unsubscribeFromNewsletter = async (req, res) => {
   }
 };
 
-// POST /api/v1/user/newsletter/send-test
+// POST /v1/user/newsletter/send-test
 // Sends one test newsletter email to the authenticated user.
 const sendTestNewsletter = async (req, res) => {
   try {
@@ -440,7 +420,7 @@ const sendTestNewsletter = async (req, res) => {
 };
 
 
-// GET /api/v1/user/job-search
+// GET /v1/user/job-search
 // Searches for job titles from Adzuna
 const getJobTitleOptions = async (req, res) => {
   try {
@@ -453,7 +433,7 @@ const getJobTitleOptions = async (req, res) => {
   }
 };
 
-// GET /api/v1/user/location-search
+// GET /v1/user/location-search
 // Searches for locations from Adzuna
 const getLocationOptions = async (req, res) => {
   try {

@@ -31,11 +31,9 @@ const GamificationContext = createContext<GamificationContextType | undefined>(
 export const GamificationProvider = ({ children }: { children: ReactNode }) => {
   const { token } = useAuth();
   const [data, setData] = useState<GamificationData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const fetchGamification = async () => {
     if (!token) {
-      setIsLoading(false);
       return;
     }
 
@@ -48,10 +46,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
       );
 
       setData(res.data);
-      setIsLoading(false);
     } catch (err) {
       console.error("Gamification fetch failed:", err);
-      setIsLoading(false);
     }
   };
 
@@ -59,8 +55,6 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     // Only fetch when token is available and auth is done loading
     if (token) {
       fetchGamification();
-    } else {
-      setIsLoading(false);
     }
   }, [token]);
 

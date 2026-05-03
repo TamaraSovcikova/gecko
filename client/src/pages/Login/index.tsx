@@ -47,18 +47,27 @@ const Login = () => {
     setLoading(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      const result = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      const result = await signInWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        password,
+      );
 
       await handlePostLogin(result.user);
     } catch (err: any) {
       const errorCode = String(err?.code || "");
       if (errorCode === "auth/invalid-credential") {
         try {
-          const methods = await fetchSignInMethodsForEmail(auth, email.trim().toLowerCase());
+          const methods = await fetchSignInMethodsForEmail(
+            auth,
+            email.trim().toLowerCase(),
+          );
           if (methods.length === 0) {
             setError("No account found for that email address.");
           } else if (!methods.includes("password")) {
-            setError("This account does not use password sign-in. Try another sign-in method.");
+            setError(
+              "This account does not use password sign-in. Try another sign-in method.",
+            );
           } else {
             setError("Invalid email or password.");
           }
@@ -94,7 +103,7 @@ const Login = () => {
       style={{
         maxWidth: "100%",
         background:
-          "radial-gradient(circle at 14% 10%, #eaf4e5 0%, rgba(234, 244, 229, 0) 32%), radial-gradient(circle at 90% 88%, #e8f0f6 0%, rgba(232, 240, 246, 0) 36%), #f7f5ef",
+          "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232, 224, 250, 0) 32%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245, 240, 254, 0) 36%), #f4f1fb",
       }}
     >
       <div
@@ -103,49 +112,45 @@ const Login = () => {
           width: "100%",
           maxWidth: "440px",
           borderRadius: "18px",
-          border: "1px solid #d8d3c7",
-          background: "linear-gradient(145deg, #fdfaf7 0%, #f7f4ee 62%, #f2eee6 100%)",
-          boxShadow: "0 20px 30px rgba(55, 63, 51, 0.12)",
+          border: "1px solid #c9bde8",
+          background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+          boxShadow: "0 20px 30px rgba(92, 63, 163, 0.12)",
         }}
       >
-        <h2 className="text-center mb-4" style={{ color: "#2b5127", fontWeight: 700, letterSpacing: "0.6px" }}>Login</h2>
+        <h2 className="text-center mb-4" style={{ color: "#5c3fa3", fontWeight: 700, letterSpacing: "0.6px" }}>Login</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
         {/* Something form something*/}
         <form onSubmit={handleEmailLogin}>
           <div className="mb-3">
-            <label className="form-label" htmlFor="email">
-              Email
-            </label>
+            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Email</label>
             <input
               id="email"
               type="email"
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ borderColor: "#c6d3c8", backgroundColor: "#fcfdfb" }}
+              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
           <div className="mb-3">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
+            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Password</label>
             <input
               id="password"
               type="password"
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ borderColor: "#c6d3c8", backgroundColor: "#fcfdfb" }}
+              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
           <button
             type="submit"
             className="btn w-100"
-            style={{ backgroundColor: "#2f5a3a", color: "#fffdf8", border: "1px solid #2a5034", fontWeight: 700 }}
+            style={{ backgroundColor: "#5c3fa3", color: "#ffffff", border: "1px solid #4e358f", fontWeight: 700 }}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
@@ -157,7 +162,7 @@ const Login = () => {
 
         <button
           className="btn w-100"
-          style={{ border: "1px solid #b7cbb8", color: "#2f5a3a", backgroundColor: "#f4f8f1", fontWeight: 600 }}
+          style={{ border: "1px solid #c9bde8", color: "#5c3fa3", backgroundColor: "#ede8f8", fontWeight: 600 }}
           onClick={handleGoogleLogin}
           disabled={loading}
         >

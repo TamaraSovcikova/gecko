@@ -6,7 +6,6 @@ const router = express.Router();
 const Expense = require("../models/Expense"); //import Expense model
 const Payslip = require("../models/MonthlyBudget"); //import MonthlyBudget (this if fro payslip)
 const User = require("../models/User"); //import User model to get job title and location
-const authMiddleware = require("../middleware/auth"); //import middleware - this verifies token before (!!) the route runs - if not authenticated, can't use
 const { getAverageSalary } = require("../services/adzunaCalculator"); //import Adzuna service
 const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
 
@@ -218,7 +217,6 @@ router.get('/', async (req, res) => {
 async function retrieveDashboardData(user_id) {
     const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 });
     const takeHome = payslip?.takeHomePay || 0;
-    const budgetAllocation = (payslip?.categories || []).map(category => ({name: category.name, value: category.budget}));
     const totalBudget = (payslip?.categories || []).reduce((sum, category) => sum + category.budget, 0);
 
     const now = new Date();

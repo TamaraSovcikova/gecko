@@ -22,12 +22,15 @@
   "type": "commonjs",
   "dependencies": {
     "concurrently": "^9.2.1",
+    "ml-regression-simple-linear": "^3.0.1",
     "node-cron": "^4.2.1",
     "pdfkit": "^0.18.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.8.0"
   },
   "devDependencies": {
-    "@testing-library/user-event": "^14.6.1"
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^8.57.1"
   }
 }

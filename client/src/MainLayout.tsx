@@ -3,12 +3,13 @@
 // seperate from App.tsx which stores routes
 
 import XPBar from "./components/XPBar";
-import LevelBadges from "./components/LevelBadges";
 import BadgePopup from "./components/BadgePopup";
 import { BADGES } from "./components/Badge";
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useGamification } from "./context/GamificationContext";
+
+const XP_BAR_CLEARANCE = 112;
 
 export default function MainLayout() {
   const { data } = useGamification();
@@ -37,9 +38,10 @@ export default function MainLayout() {
       {popupBadge && (
         <BadgePopup badge={popupBadge} onClose={() => setPopupBadge(null)} />
       )}
-      <LevelBadges />
       <XPBar />
-      <Outlet />
+      <div style={{ paddingBottom: `${XP_BAR_CLEARANCE}px` }}>
+        <Outlet />
+      </div>
     </>
   );
 }

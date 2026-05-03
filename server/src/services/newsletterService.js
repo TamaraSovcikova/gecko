@@ -167,7 +167,7 @@ const buildUnsubscribeUrl = ({ uid, token }) => {
   const port = process.env.PORT || 3001;
   const apiBaseUrl = process.env.API_URL || process.env.SERVER_URL || `http://localhost:${port}`;
   const normalizedBase = String(apiBaseUrl).replace(/\/$/, "");
-  return `${normalizedBase}/api/v1/user/newsletter/unsubscribe?uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
+  return `${normalizedBase}/v1/user/newsletter/unsubscribe?uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
 };
 
 const createTransporter = () => {

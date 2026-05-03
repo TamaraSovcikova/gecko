@@ -8,7 +8,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const User = require('../models/User');
 
-// POST /api/v1/auth/register
+// POST /v1/auth/register
 // Protected - requires a valid Firebase token in the Authorization header.
 router.post('/register', authMiddleware, async (req, res) => {
   try {

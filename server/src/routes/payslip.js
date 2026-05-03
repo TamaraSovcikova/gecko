@@ -3,8 +3,6 @@
 const express = require("express");
 // Creating an express router to group endpoints together
 const router = express.Router();
-// To restrict access to users with auth
-const authMiddleware = require("../middleware/auth");
 
 // Importing POST or GET functions from the controller
 const {
