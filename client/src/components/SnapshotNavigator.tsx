@@ -6,8 +6,10 @@ type Props = {
   setSnapshotIndex: (i: number | null) => void;
 };
 
+// snapshots, --> snapshots = [],
+// for testing purposes - not sure if I broke anything
 const SnapshotNavigator = ({
-  snapshots,
+  snapshots = [],
   snapshotIndex,
   setSnapshotIndex,
 }: Props) => {

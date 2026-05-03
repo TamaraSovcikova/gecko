@@ -9,8 +9,20 @@ const Forecast = () => {
   const [forecast, setForecast] = useState<ForecastPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // FEATURE FLAG (test-safe bypass)
+  const isForecastDisabled =
+    import.meta.env.VITE_DISABLE_FORECAST === "true";
+
   useEffect(() => {
     if (loading || !token) return;
+
+    // skip API entirely in tests
+    if (isForecastDisabled) {
+      setForecast({
+        projections: {},
+      } as ForecastPayload);
+      return;
+    }
 
     const fetchForecast = async () => {
       try {

@@ -121,10 +121,17 @@ const Login = () => {
 
         {error && <div className="alert alert-danger">{error}</div>}
 
-        {/* Something form something*/}
+        {/* Login form */}
+        {/* changed to html handle */}
         <form onSubmit={handleEmailLogin}>
           <div className="mb-3">
-            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Email</label>
+            <label
+              htmlFor="email"
+              className="form-label"
+              style={{ color: "#4a3f6b", fontWeight: 600 }}
+            >
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -135,8 +142,15 @@ const Login = () => {
               required
             />
           </div>
+
           <div className="mb-3">
-            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Password</label>
+            <label
+              htmlFor="password"
+              className="form-label"
+              style={{ color: "#4a3f6b", fontWeight: 600 }}
+            >
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -147,16 +161,22 @@ const Login = () => {
               required
             />
           </div>
+
           <button
             type="submit"
             className="btn w-100"
-            style={{ backgroundColor: "#5c3fa3", color: "#ffffff", border: "1px solid #4e358f", fontWeight: 700 }}
+            style={{
+              backgroundColor: "#5c3fa3",
+              color: "#ffffff",
+              border: "1px solid #4e358f",
+              fontWeight: 700,
+            }}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        {/* Something form something*/}
+        {/* changed to html handle */}
 
         <div className="text-center my-3 text-muted">or</div>
 

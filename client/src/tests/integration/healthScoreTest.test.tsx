@@ -14,6 +14,7 @@ Assert the router redirects to /payslip-setup. Fill out the mocked form.
 Assert the router redirects to /dashboard and displays the correct health score
 based on the setup context.
 */
+vi.stubEnv("VITE_DISABLE_FORECAST", "true");
 
 import React from "react";
 import axios from "axios";
@@ -26,8 +27,12 @@ import Login from "../../pages/Login/index";
 import PayslipSetup from "../../pages/PayslipSetup/index";
 import Dashboard from "../../pages/Dashboard/dashboard";
 import { registerUser } from "../../api/authApi";
+import { userEvent } from "@testing-library/user-event";
+import { GamificationProvider } from "../../context/GamificationContext";
+
 
 // --------- Mocks ---------
+const listeners: ((user: any) => void)[] = [];
 
 vi.mock("firebase/auth", () => {
   const mockUser = {
@@ -44,6 +49,7 @@ vi.mock("firebase/auth", () => {
 
     // IMPORTANT: trigger auth callback immediately
     onIdTokenChanged: vi.fn((_auth, cb) => {
+      listeners.push(cb);
       cb(mockUser);
       return vi.fn();
     }),
@@ -57,6 +63,7 @@ vi.mock("../../api/authApi", () => ({
   })),
 }));
 
+/*
 vi.mock("axios", () => ({
   default: {
     get: vi.fn(),
@@ -64,19 +71,66 @@ vi.mock("axios", () => ({
     put: vi.fn(),
   },
 }));
+*/
+
+vi.mock("axios", () => ({
+  default: {
+    get: vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/api/v1/dashboard")) {
+        return Promise.resolve({
+          data: {
+            healthScore: 75,
+            takeHome: 2500,
+            budgetLeft: 500,
+            totalBudget: 2000,
+            actualSpending: [{ name: "Food", value: 300 }],
+            budgetAllocation: [{ name: "Food", value: 400 }],
+            expenses: [],
+            adzunaTips: [],
+          },
+        });
+      }
+
+      if (url.includes("/api/snapshots")) {
+        return Promise.resolve({
+          data: {
+            snapshots: [],
+          },
+        });
+      }
+
+      return Promise.resolve({ data: null });
+    }),
+
+    post: vi.fn().mockResolvedValue({
+      data: { success: true },
+    }),
+
+    put: vi.fn().mockResolvedValue({
+      data: { success: true },
+    }),
+
+    patch: vi.fn().mockResolvedValue({
+      data: { success: true },
+    }),
+  },
+}));
+
 
 // --------- Helper ---------
 
 const renderApp = (initialRoute = "/login") =>
   render(
     <AuthProvider>
-      <MemoryRouter initialEntries={[initialRoute]}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/payslip" element={<PayslipSetup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </MemoryRouter>
+      <GamificationProvider>
+        <MemoryRouter initialEntries={[initialRoute]}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/payslip" element={<PayslipSetup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Routes>
+        </MemoryRouter>
+      </GamificationProvider>
     </AuthProvider>
   );
 
@@ -113,13 +167,21 @@ describe("Frontend journey: login → payslip → dashboard", () => {
         });
       }
 
+
+
       // GIVEN: dashboard snapshot mode loads snapshot history
       // THEN: return an empty snapshot list so it does not break rendering
       if (url.includes("/api/snapshots")) {
         return Promise.resolve({ data: [] });
       }
 
-      return Promise.resolve({ data: null });
+        return Promise.resolve({
+          data: {
+            grossSalary: 0,
+            taxCode: "",
+            categories: [],
+          },
+        });
     });
 
     // GIVEN: the Login component is rendered
@@ -146,16 +208,30 @@ describe("Frontend journey: login → payslip → dashboard", () => {
     // WHEN: the user fills in their payslip salary and submits the form
     fireEvent.change(grossSalaryInput, { target: { value: "60000" } });
 
-    const savePayslipButton = screen.getByRole("button", {
-      name: /Save Payslip/i,
+    const inputs = screen.getAllByRole("textbox");
+
+    fireEvent.change(inputs[inputs.length - 1], {
+      target: { value: "Food" },
     });
-    fireEvent.click(savePayslipButton);
+
+    const numberInputs = screen.getAllByRole("spinbutton");
+
+    fireEvent.change(numberInputs[numberInputs.length - 1], {
+      target: { value: "1000" },
+    });
+
+    // Save Payslip --> Update Payslip
+    const savePayslipButton = screen.getByRole("button", {
+      name: /Update Payslip/i,
+    });
+
+    await userEvent.click(savePayslipButton);
+    // DEBUGGING
+    console.log("CLICKED SUBMIT");
 
     // THEN: the router should redirect to /dashboard
     // AND the dashboard should render the expected UI based on mocked dashboard data
-    await waitFor(() => {
-      expect(screen.getByText(/Show breakdown/i)).toBeInTheDocument();
-    });
+    await screen.findByText(/See breakdown/i);
 
     // THEN: the dashboard should display the correct take-home section
     const takeHomeElement = await screen.findByText(/Take-home/i);
