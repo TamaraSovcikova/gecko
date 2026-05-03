@@ -112,10 +112,14 @@ const Login = () => {
 
         {error && <div className="alert alert-danger">{error}</div>}
 
+        {/* Something form something*/}
         <form onSubmit={handleEmailLogin}>
           <div className="mb-3">
-            <label className="form-label" style={{ color: "#3a4d42", fontWeight: 600 }}>Email</label>
+            <label className="form-label" htmlFor="email">
+              Email
+            </label>
             <input
+              id="email"
               type="email"
               className="form-control"
               value={email}
@@ -125,8 +129,11 @@ const Login = () => {
             />
           </div>
           <div className="mb-3">
-            <label className="form-label" style={{ color: "#3a4d42", fontWeight: 600 }}>Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
             <input
+              id="password"
               type="password"
               className="form-control"
               value={password}
@@ -144,6 +151,7 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+        {/* Something form something*/}
 
         <div className="text-center my-3 text-muted">or</div>
 

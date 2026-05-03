@@ -2,7 +2,7 @@
 // @vitejs/plugin-react enables Fast Refresh during development.
 // server.port pins the dev server to 5173 so the backend CORS config always matches.
 
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -15,5 +15,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/tests/setup.ts",
   },
 });
