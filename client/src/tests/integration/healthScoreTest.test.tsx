@@ -13,6 +13,12 @@ Render the Login component. Mock a successful login.
 Assert the router redirects to /payslip-setup. Fill out the mocked form.
 Assert the router redirects to /dashboard and displays the correct health score
 based on the setup context.
+
+EDIT:
+THIS TEST IS TURNING INTO REAL TIME TEST
+DESCRIPTION IS WRONG
+BUT TESTING IS FOR REAL TIME
+SLOTS 3 -> 4 -> 5, NOT 1 -> 2 -> 3
 */
 vi.stubEnv("VITE_DISABLE_FORECAST", "true");
 
