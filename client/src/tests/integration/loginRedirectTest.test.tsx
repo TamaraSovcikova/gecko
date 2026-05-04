@@ -1,3 +1,20 @@
+// client/src/tests/integration/healthScoreTest.test.tsx
+
+/*
+FRONTEND Testing for slots 1 --> 2 --> 3
+
+What it Tests:
+Can a user register, input their finances and view them on the Dashboard? 
+
+
+Frontend Journey:
+Render the Login component. Mock a successful login. 
+
+Assert the router redirects to /payslip-setup. Fill out the mocked form.
+Assert the router redirects to /dashboard and displays the correct health score
+based on the setup context.
+*/
+
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
