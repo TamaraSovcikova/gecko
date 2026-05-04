@@ -84,6 +84,7 @@ vi.mock("../../dev/dashboardDebug", () => ({
 // ---------------- HELPER RENDER ----------------
 
 const renderApp = () =>
+  console.log("SOCKET HANDLERS:", Object.keys(socketHandlers));
   render(
     <AuthProvider>
       <GamificationProvider>
