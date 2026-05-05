@@ -1,9 +1,9 @@
 // client/src/tests/authContextTest.test.tsx
-
+import "@testing-library/jest-dom";
 import React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
 // -------------------- Mocks --------------------
 
@@ -32,7 +32,7 @@ vi.mock("firebase/auth", () => {
 });
 
 // firebase/config mock
-vi.mock("../firebase/config", () => {
+vi.mock("../src/firebase/config", () => {
   const mockCurrentUser: any = {
     uid: "test-uid",
     getIdToken: vi.fn(),
@@ -52,7 +52,7 @@ const getMockOnIdTokenChanged = async () => {
 };
 
 const getMockCurrentUser = async () => {
-  const mod = await import("../firebase/config");
+  const mod = await import("../src/firebase/config");
   return (mod as any).auth.currentUser as any;
 };
 
