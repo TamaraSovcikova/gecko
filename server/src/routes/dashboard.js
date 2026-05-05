@@ -118,7 +118,7 @@ const generateAdzunaTips = (grossSalary, averageSalary, totalBudget, healthScore
 // GET api/v1/dashboard
 //this should be protected - reuires valid firebase token
 //remove authmiddleware
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         //originally implemented for expnses model so may not have actually been my respnsbility...
         const now = new Date(); //current date to filter expense objects
