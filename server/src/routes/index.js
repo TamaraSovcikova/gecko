@@ -14,9 +14,18 @@ router.get('/', (req, res) => res.send('<h1>Login</h1>'));
 
 // Auth routes — register/login handling (token verified inside these routes)
 router.use('/api/v1/auth', require('./auth'));
+router.use('/api/v1/chat', require('./chat'));
 
 // Newsletter unsubscribe route (public, from email link)
 router.get('/api/v1/user/newsletter/unsubscribe', unsubscribeFromNewsletter);
+
+router.use('/api/v1/quiz', require('./quiz'));
+router.use('/quiz', require('./quiz'));
+
+// Unprotected routes for forecasting
+router.use("/expenses", require("./expense"));
+router.use("/dashboard", require("./dashboard"));
+router.use("/forecast", require("./forecast"));
 
 // ---- Protected routes (token required) ----
 // All routes below this line require a valid Firebase token.

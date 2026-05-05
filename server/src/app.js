@@ -1,28 +1,18 @@
-// app.js - Configures and exports the Express application.
-// Opted to keep it separate from server.js so it can be imported cleanly in tests.
-//
-// Middleware stack:
-//   helmet  - sets secure HTTP headers
-//   cors    - allows the React frontend (CLIENT_URL) to call this API
-//   json    - parses incoming request bodies as JSON
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const authMiddleware = require("./middleware/auth");
 
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const router = require("./routes/index");
+const expenseRoutes = require("./routes/expense");
+const quizRoutes = require("./routes/quiz");
+const forecastRoutes = require("./routes/forecast");
 
-const router = require('./routes/index');
-const dashboardRouter = require('./routes/dashboard');
-const expenseRoutes = require('./routes/expense');
+const snapshotRoutes = require("./routes/snapshot");
 
 const app = express();
 
-app.use(
-  helmet({
-    // Firebase popup auth can be noisy or blocked with strict COOP in some flows.
-    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-  })
-);
-
+// Security + middleware
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -32,10 +22,22 @@ app.use(
 
 app.use(express.json());
 
-app.use("/api/v1/dashboard", dashboardRouter);
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  })
+);
 
-app.use('/api/v1/expenses', expenseRoutes);
+// Routes
+app.use("/api/v1/quiz", quizRoutes);
+app.use("/api/v1/expenses", expenseRoutes);
+app.use("/api/v1/forecast", authMiddleware, forecastRoutes);
+app.use("/api/snapshots", snapshotRoutes);
+app.use("/", router);
 
-app.use('/', router);
+// Optional cron job (safer control)
+if (process.env.ENABLE_CRON === "true") {
+  require("./jobs/monthlySnapshotJob");
+}
 
 module.exports = app;

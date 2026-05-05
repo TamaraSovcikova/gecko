@@ -54,7 +54,7 @@ const NavDropdown = () => {
     try {
       setLogoutError("");
       await signOut(auth);
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Unable to log out", error);
       setLogoutError("Unable to log out right now.");
