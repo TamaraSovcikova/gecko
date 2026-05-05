@@ -7,6 +7,11 @@ const router = require("./routes/index");
 const expenseRoutes = require("./routes/expense");
 const quizRoutes = require("./routes/quiz");
 const forecastRoutes = require("./routes/forecast");
+require("./config/firebase"); // initializes Firebase once
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
 
 const snapshotRoutes = require("./routes/snapshot");
 
