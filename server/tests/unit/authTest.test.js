@@ -27,13 +27,13 @@ const mockFindById = jest.fn();
 const mockCreate = jest.fn();
 const mockUpdateOne = jest.fn();
 
-jest.mock("../models/User", () => ({
+jest.mock("../../src/models/User", () => ({
   findById: (...args) => mockFindById(...args),
   create: (...args) => mockCreate(...args),
   updateOne: (...args) => mockUpdateOne(...args),
 }));
 
-const authMiddleware = require("../middleware/auth");
+const authMiddleware = require("../../src/middleware/auth");
 
 describe("authMiddleware middleware", () => {
   let req, res, next;
