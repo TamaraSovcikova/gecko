@@ -9,14 +9,26 @@ type ProfileResponse = {
 
 const sanitizePages = (pages: string[]): OnboardingPageKey[] => {
   const allowed = new Set(ONBOARDING_PAGES);
-  return Array.from(new Set(pages.filter((page): page is OnboardingPageKey => allowed.has(page as OnboardingPageKey))));
+  return Array.from(
+    new Set(
+      pages.filter((page): page is OnboardingPageKey =>
+        allowed.has(page as OnboardingPageKey),
+      ),
+    ),
+  );
 };
 
-export const saveOnboardingCompletion = async (token: string, page: OnboardingPageKey): Promise<OnboardingPageKey[]> => {
+export const saveOnboardingCompletion = async (
+  token: string,
+  page: OnboardingPageKey,
+): Promise<OnboardingPageKey[]> => {
   return saveOnboardingCompletions(token, [page]);
 };
 
-export const saveOnboardingCompletions = async (token: string, pages: OnboardingPageKey[]): Promise<OnboardingPageKey[]> => {
+export const saveOnboardingCompletions = async (
+  token: string,
+  pages: OnboardingPageKey[],
+): Promise<OnboardingPageKey[]> => {
   const response = await axios.patch<ProfileResponse>(
     `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
     {
@@ -31,10 +43,14 @@ export const saveOnboardingCompletions = async (token: string, pages: Onboarding
     },
   );
 
-  return sanitizePages(response.data?.financialOnboarding?.completedPages || pages);
+  return sanitizePages(
+    response.data?.financialOnboarding?.completedPages || pages,
+  );
 };
 
-export const resetServerOnboarding = async (token: string): Promise<OnboardingPageKey[]> => {
+export const resetServerOnboarding = async (
+  token: string,
+): Promise<OnboardingPageKey[]> => {
   const response = await axios.patch<ProfileResponse>(
     `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
     {
@@ -49,5 +65,7 @@ export const resetServerOnboarding = async (token: string): Promise<OnboardingPa
     },
   );
 
-  return sanitizePages(response.data?.financialOnboarding?.completedPages || []);
+  return sanitizePages(
+    response.data?.financialOnboarding?.completedPages || [],
+  );
 };

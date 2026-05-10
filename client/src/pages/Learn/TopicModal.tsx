@@ -80,7 +80,7 @@ function renderDetail(text: string) {
                 lineHeight: 1.65,
               }}
             >
-              {b.replace(/^[•\-]\s*/, "")}
+              {b.replace(/^[•-]\s*/, "")}
             </li>
           ))}
         </ul>,
@@ -172,9 +172,9 @@ export default function TopicModal({
         background: "rgba(0,0,0,0.35)",
         zIndex: 1050,
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
-        padding: "1rem",
+        padding: "3rem 1rem 1rem",
         backdropFilter: "blur(2px)",
       }}
     >
@@ -186,7 +186,7 @@ export default function TopicModal({
           borderRadius: 20,
           width: "100%",
           maxWidth: 640,
-          maxHeight: "88vh",
+          maxHeight: "70vh",
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 20px 60px rgba(0,0,0,0.18)",

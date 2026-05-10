@@ -6,12 +6,13 @@ type Props = {
   setSnapshotIndex: (i: number | null) => void;
 };
 
+// snapshots, --> snapshots = [],
+// for testing purposes - not sure if I broke anything
 const SnapshotNavigator = ({
-  snapshots,
+  snapshots = [],
   snapshotIndex,
   setSnapshotIndex,
 }: Props) => {
-  const currentIndex = snapshotIndex ?? -1;
   const hasSnapshots = snapshots.length > 0;
 
   const goOlder = () => {
@@ -39,7 +40,7 @@ const SnapshotNavigator = ({
       style={{
         marginTop: "60px",
         paddingTop: "20px",
-        borderTop: "1px solid #ddd",
+        borderTop: "1px solid #c9bde8",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",

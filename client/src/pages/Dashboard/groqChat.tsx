@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { BsChatDots, BsSend } from "react-icons/bs";
 import { BiX } from "react-icons/bi";
 import ReactMarkdown from "react-markdown";
+import { COLORS } from "../../constants/theme";
 
 type Message = {
   role: "user" | "bot";
@@ -58,18 +59,19 @@ const GroqChat = () => {
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed",
-          bottom: 20,
-          right: 20,
+          bottom: 14,
+          right: 12,
           width: 60,
           height: 60,
           borderRadius: "50%",
-          background: "green",
-          color: "white",
+          background: COLORS.purple500,
+          color: COLORS.textInverse,
           border: "none",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 1300,
         }}
       >
         {/*imported react icons, it looks awesome so hope thats allowed...*/}
@@ -80,23 +82,25 @@ const GroqChat = () => {
         <div
           style={{
             position: "fixed",
-            bottom: 90,
-            right: 20,
-            width: 320,
-            height: 420,
-            background: "lightgrey",
+            bottom: 84,
+            right: 12,
+            width: "min(320px, calc(100vw - 24px))",
+            height: "min(420px, calc(100vh - 128px))",
+            maxHeight: "calc(100vh - 128px)",
+            background: COLORS.purple100,
             borderRadius: 12,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            zIndex: 1300,
           }}
         >
           {/*Title currently called Grok API assisstant for easy understanding but could be given a nname or something?*/}
           <div
             style={{
               padding: 10,
-              background: "red",
-              color: "white",
+              background: COLORS.purple600,
+              color: COLORS.textInverse,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -108,7 +112,7 @@ const GroqChat = () => {
               style={{
                 background: "transparent",
                 border: "none",
-                color: "white",
+                color: COLORS.textInverse,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -140,8 +144,12 @@ const GroqChat = () => {
                     padding: "10px",
                     borderRadius: 16,
                     maxWidth: "80%",
-                    background: msg.role === "user" ? "red" : "white",
-                    color: msg.role === "user" ? "white" : "black",
+                    background:
+                      msg.role === "user" ? COLORS.purple500 : COLORS.purple50,
+                    color:
+                      msg.role === "user"
+                        ? COLORS.textInverse
+                        : COLORS.textPrimary,
                   }}
                 >
                   <Markdown>{msg.content}</Markdown>
@@ -149,7 +157,7 @@ const GroqChat = () => {
               </div>
             ))}
             {isTyping && (
-              <div style={{ fontSize: 15, color: "gray" }}>Typing...</div>
+              <div style={{ fontSize: 15, color: COLORS.textMuted }}>Typing...</div>
             )}
           </div>
 
@@ -163,8 +171,8 @@ const GroqChat = () => {
                 flex: 1,
                 padding: 10,
                 borderRadius: 20,
-                border: "none",
-                background: "white",
+                border: `1px solid ${COLORS.purple300}`,
+                background: COLORS.purple50,
               }}
               onKeyDown={(event) => event.key === "Enter" && sendMessage()}
             />
@@ -175,8 +183,8 @@ const GroqChat = () => {
                 width: 40,
                 height: 40,
                 borderRadius: "50%",
-                background: "red",
-                color: "white",
+                background: COLORS.purple600,
+                color: COLORS.textInverse,
                 border: "none",
                 cursor: "pointer",
                 display: "flex",

@@ -21,8 +21,9 @@ import { useStreakWarning } from "../../hooks/useStreakWarning";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
 import Modal from "../../components/Modal";
 import { attachDashboardDebug } from "../../dev/dashboardDebug";
+import { COLORS } from "../../constants/theme";
 
-const COLOURS = ["red", "green", "turquoise", "blue"]; //could probably do with a colour re-work (actual hex). this makes things very ugly
+const COLOURS = [...COLORS.chart];
 
 /* Full Real-time Update Flow
 1. Frontend loads
@@ -73,6 +74,10 @@ type DashboardData = {
   averageSalary?: number;
   adzunaTips?: AdzunaTip[];
   healthBreakdown?: HealthBreakdown;
+  // gamification: TODO tasks
+  // xpEarned: number;
+  // quizzesCompleted: number;
+  // createdAt: string;
   expenses?: {
     _id: string;
     category: string;
@@ -197,7 +202,7 @@ const Dashboard = () => {
     const fetchSnapshots = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/snapshots/${currentUser.uid}`,
+          `${import.meta.env.VITE_API_URL}/api/v1/snapshots/${currentUser.uid}`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
@@ -223,6 +228,10 @@ const Dashboard = () => {
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
+
+  // use state for 7 expenses per table page
+  const [expensePage, setExpensePage] = useState(1);
+  const EXPENSES_PER_PAGE = 7;
 
   const displayedData: DashboardData | null = selectedSnapshot
     ? {
@@ -281,7 +290,12 @@ const Dashboard = () => {
     try {
       const res = await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        editForm,
+        {
+          category: editForm.category,
+          amount: editForm.amount,
+          date: editForm.date,
+          note: editForm.note,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -337,6 +351,18 @@ const Dashboard = () => {
     }
   };
 
+  // cancel expense edit
+  const cancelEditing = () => {
+    setEditingExpenseId(null);
+    setPendingDeleteId(null);
+    setEditForm({
+      category: "",
+      amount: 0,
+      date: "",
+      note: "",
+    });
+  };
+
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {
     if (!currentUser || snapshots.length === 0) return;
@@ -368,26 +394,26 @@ const Dashboard = () => {
   const getTipColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "#fff3cd"; // light yellow
+        return "#fef9e7"; // light yellow
       case "medium":
-        return "#d1ecf1"; // light blue
+        return "#e8e0fa"; // light blue
       case "low":
-        return "#d4edda"; // light green
+        return COLORS.purple200;
       default:
-        return "#e2e3e5"; // light gray
+        return COLORS.purple100;
     }
   };
 
   const getTipBorderColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "#ffc107"; // yellow
+        return COLORS.gold;
       case "medium":
-        return "#17a2b8"; // blue
+        return COLORS.purple500;
       case "low":
-        return "#28a745"; // green
+        return COLORS.purple600;
       default:
-        return "#6c757d"; // gray
+        return COLORS.textMuted;
     }
   };
 
@@ -407,7 +433,7 @@ const Dashboard = () => {
         style={{
           maxWidth: "1000px",
           margin: "30px auto",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
         }}
       >
         {showStreakWarning && (
@@ -415,11 +441,11 @@ const Dashboard = () => {
             style={{
               padding: "10px",
               marginBottom: "10px",
-              background: "#fff3cd",
-              border: "1px solid #ffeeba",
+              background: "#fef9e7",
+              border: "1px solid #f0d280",
               borderRadius: "6px",
               fontSize: "13px",
-              color: "#856404",
+              color: "#7a5100",
             }}
           >
             ⚠️ Complete a quiz this week to keep your streak alive
@@ -468,9 +494,9 @@ const Dashboard = () => {
                   style={{
                     padding: "8px 12px",
                     borderRadius: "999px",
-                    border: "1px solid #bfd1c0",
-                    backgroundColor: "#eef5eb",
-                    color: "#37553e",
+                    border: "1px solid #c9bde8",
+                    backgroundColor: "#ede8f8",
+                    color: "#5c3fa3",
                     fontWeight: 600,
                   }}
                 >
@@ -510,6 +536,24 @@ const Dashboard = () => {
               }}
             >
               <h4 style={{ margin: 0 }}>Actual Spending</h4>
+              {/*disable if snapshot mode*/}
+              {!isSnapshotMode && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/expenses")}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    border: "1px solid #bfd1c0",
+                    backgroundColor: "#eef5eb",
+                    color: "#37553e",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Expenses
+                </button>
+              )}
+              {/*disable if snapshot mode*/}
             </div>
             <PieChart width={300} height={220}>
               <Pie
@@ -534,7 +578,7 @@ const Dashboard = () => {
             <div
               style={{
                 flex: 1,
-                borderLeft: "1px solid #ccc",
+                borderLeft: "1px solid #c9bde8",
                 paddingLeft: "20px",
               }}
               data-onboarding="dashboard-embedded-expenses"
@@ -564,10 +608,10 @@ const Dashboard = () => {
                 fontWeight: "bold",
                 color:
                   displayedData.healthScore < 40
-                    ? "red"
+                    ? COLORS.error
                     : displayedData.healthScore < 70
-                      ? "orange"
-                      : "green",
+                      ? COLORS.gold
+                      : COLORS.purple500,
               }}
             >
               {displayedData.healthScore}
@@ -583,7 +627,7 @@ const Dashboard = () => {
                   marginTop: "8px",
                   border: "none",
                   background: "none",
-                  color: "#2f6a4b",
+                  color: "#8b6fd4",
                   textDecoration: "underline",
                   cursor: "pointer",
                   padding: 0,
@@ -628,7 +672,7 @@ const Dashboard = () => {
               <p style={{ fontSize: "20px" }}>
                 £{displayedData.averageSalary.toLocaleString()}
               </p>
-              <p style={{ fontSize: "12px", color: "#666" }}>
+              <p style={{ fontSize: "12px", color: "#7a6e99" }}>
                 Average for your role
               </p>
             </div>
@@ -676,12 +720,12 @@ const Dashboard = () => {
           <div
             style={{
               marginTop: "50px",
-              borderTop: "2px solid #ddd",
+              borderTop: "2px solid #c9bde8",
               paddingTop: "30px",
             }}
             data-onboarding="dashboard-adzuna-tips"
           >
-            <h3 style={{ marginBottom: "20px", color: "#333" }}>
+            <h3 style={{ marginBottom: "20px", color: "#1a1040" }}>
               Financial Tips Based on Market Data
             </h3>
             <div
@@ -708,7 +752,7 @@ const Dashboard = () => {
                   <h5
                     style={{
                       margin: "0 0 8px 0",
-                      color: "#333",
+                      color: "#1a1040",
                       fontSize: "16px",
                       fontWeight: "600",
                     }}
@@ -718,7 +762,7 @@ const Dashboard = () => {
                   <p
                     style={{
                       margin: "0",
-                      color: "#555",
+                      color: "#4a3f6b",
                       fontSize: "14px",
                       lineHeight: "1.5",
                     }}

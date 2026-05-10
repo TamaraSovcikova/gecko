@@ -69,7 +69,6 @@ async function generateMonthlySnapshots() {
    const {
      healthScore,
      takeHome,
-     totalBudget,
      actualSpending,
      budgetAllocation,
      grossSalary,

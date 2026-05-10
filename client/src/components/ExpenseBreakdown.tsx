@@ -56,7 +56,7 @@ const ExpenseBreakdown = ({
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid #ccc" }}>
+          <tr style={{ borderBottom: "1px solid #c9bde8" }}>
             <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
             <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
             <th style={{ textAlign: "left", padding: "8px" }}>Date</th>
@@ -71,7 +71,7 @@ const ExpenseBreakdown = ({
             const isEditing = editingExpenseId === exp._id;
 
             return (
-              <tr key={exp._id} style={{ borderBottom: "1px solid #eee" }}>
+              <tr key={exp._id} style={{ borderBottom: "1px solid #ede8f8" }}>
                 {/* CATEGORY */}
                 <td style={{ padding: "8px" }}>
                   {isEditing ? (

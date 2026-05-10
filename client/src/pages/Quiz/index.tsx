@@ -31,7 +31,9 @@ const contentWrapperStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  backgroundColor: "#fafaf8",
+  background:
+    "radial-gradient(circle at 12% 12%, #e8e0fa 0%, rgba(232, 224, 250, 0) 34%), radial-gradient(circle at 88% 86%, #f5f0fe 0%, rgba(245, 240, 254, 0) 38%), #f4f1fb",
+  padding: "24px",
 };
 
 /* ------------------ CARD ------------------ */
@@ -40,8 +42,10 @@ const cardStyle: React.CSSProperties = {
   maxWidth: "640px",
   width: "100%",
   padding: "40px",
-  border: "1px solid #d6d2c9",
-  background: "#fff",
+  border: "1px solid #c9bde8",
+  borderRadius: "16px",
+  background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+  boxShadow: "0 8px 24px rgba(92, 63, 163, 0.12)",
 };
 
 /* ------------------ TEXT ------------------ */
@@ -50,12 +54,12 @@ const questionTextStyle: React.CSSProperties = {
   fontSize: "20px",
   fontWeight: 600,
   marginBottom: "24px",
-  color: "#1a1a1a",
+  color: "#1a1040",
 };
 
 const subTextStyle: React.CSSProperties = {
   marginBottom: "12px",
-  color: "#718096",
+  color: "#7a6e99",
   fontSize: "14px",
   fontWeight: 500,
 };
@@ -66,10 +70,12 @@ const baseButton: React.CSSProperties = {
   width: "100%",
   padding: "16px 20px",
   margin: "10px 0",
-  border: "1px solid #d6d2c9",
+  border: "1px solid #c9bde8",
   cursor: "pointer",
   fontSize: "16px",
-  background: "#fff",
+  background: "#faf9fd",
+  color: "#1a1040",
+  borderRadius: "10px",
   textAlign: "left",
 };
 
@@ -77,7 +83,7 @@ const primaryButton: React.CSSProperties = {
   marginTop: "24px",
   padding: "14px 28px",
   border: "none",
-  background: "#2d3748",
+  background: "#5c3fa3",
   color: "white",
   fontSize: "16px",
   fontWeight: 600,
@@ -109,7 +115,7 @@ export default function QuizPage() {
     didFetch.current = true;
 
     const url = topic
-      ? `${API_URL}/api/v1/quiz?topic=${topic}`
+      ? `${API_URL}/api/v1/quiz?topic=${encodeURIComponent(topic)}`
       : `${API_URL}/api/v1/quiz`;
 
     fetch(url, {
@@ -127,12 +133,12 @@ export default function QuizPage() {
   function getAnswerStyle(i: number, a: Answer): React.CSSProperties {
     if (!showResult) {
       return selected === i
-        ? { ...baseButton, background: "#e2e8f0", borderColor: "#2d3748" }
+        ? { ...baseButton, background: "#ede8f8", borderColor: "#8b6fd4" }
         : baseButton;
     }
 
     if (a.correct)
-      return { ...baseButton, background: "#c6f6d5", borderColor: "#48bb78" };
+      return { ...baseButton, background: "#e8e0fa", borderColor: "#8b6fd4" };
 
     if (selected === i)
       return { ...baseButton, background: "#fed7d7", borderColor: "#f56565" };

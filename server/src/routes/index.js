@@ -1,36 +1,17 @@
-// routes/index.js - Root router for the Zoar API
+// routes/index.js - Public routes (health checks, login page, etc.)
 //
-// How to add a new feature:
-//   1. Create src/routes/featureName.js with its own express.Router()
-//   2. Add router.use('/api/v1/feature', require('./featureName')) below
+// NOTE: All API feature routes are now mounted in app.js under /api/v1/*
+// This file is reserved for public routes that don't require API versioning.
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
 const { unsubscribeFromNewsletter } = require('../controllers/userController');
 
 // ---- Public routes (no token required) ----
-router.get('/', (req, res) => res.send('<h1>Login</h1>'));
+router.get('/', (req, res) => res.send('<h1>Zoar API - use /api/v1/* endpoints from frontend</h1>'));
 
-// Auth routes — register/login handling (token verified inside these routes)
-router.use('/api/v1/auth', require('./auth'));
-router.use('/api/v1/chat', require('./chat'));
-
-// Newsletter unsubscribe route (public, from email link)
+// Newsletter unsubscribe (public route from email links)
+// Frontend calls: /api/v1/user/newsletter/unsubscribe
+// Caddy proxies /api/* unchanged, so backend receives /api/v1/user/newsletter/unsubscribe
 router.get('/api/v1/user/newsletter/unsubscribe', unsubscribeFromNewsletter);
-
-router.use('/api/v1/quiz', require('./quiz'));
-router.use('/quiz', require('./quiz'));
-
-// Unprotected routes for forecasting
-router.use("/expenses", require("./expense"));
-router.use("/dashboard", require("./dashboard"));
-router.use("/forecast", require("./forecast"));
-
-// ---- Protected routes (token required) ----
-// All routes below this line require a valid Firebase token.
-router.use('/api/v1/payslip', authMiddleware, require('./payslip'));
-router.use('/api/v1/dashboard', authMiddleware, require('./dashboard'));
-router.use('/api/v1/user', authMiddleware, require('./user'));
-
 module.exports = router;

@@ -236,9 +236,9 @@ const TooltipGuide = ({
           left: "16px",
           bottom: "20px",
           zIndex: 1200,
-          border: "1px solid #2d6a4f",
+          border: "1px solid #5c3fa3",
           borderRadius: "999px",
-          background: "#2d6a4f",
+          background: "#5c3fa3",
           color: "#fff",
           padding: "10px 14px",
           fontWeight: 700,
@@ -319,7 +319,7 @@ const TooltipGuide = ({
             width: anchorRect.width + 8,
             height: anchorRect.height + 8,
             borderRadius: "8px",
-            border: "2px solid #2d6a4f",
+            border: "2px solid #5c3fa3",
             boxShadow: "0 0 0 4px rgba(45, 106, 79, 0.15)",
             pointerEvents: "none",
           }}
@@ -335,7 +335,7 @@ const TooltipGuide = ({
           left: tooltipPosition.left,
           width: `min(${TOOLTIP_WIDTH}px, calc(100vw - 32px))`,
           backgroundColor: "#fff",
-          border: "1px solid #d9dfd6",
+          border: "1px solid #c9bde8",
           borderRadius: "12px",
           boxShadow: "0 14px 28px rgba(0, 0, 0, 0.16)",
           padding: "14px",
@@ -348,18 +348,18 @@ const TooltipGuide = ({
             fontSize: "11px",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
-            color: "#6f7a70",
+            color: "#7a6e99",
           }}
         >
           Tooltip #{activeStep.number} of {steps.length}
         </p>
-        <h3 style={{ margin: "4px 0 6px", fontSize: "16px", color: "#244735" }}>
+        <h3 style={{ margin: "4px 0 6px", fontSize: "16px", color: "#5c3fa3" }}>
           {activeStep.title}
         </h3>
         <p
           style={{
             margin: 0,
-            color: "#444",
+            color: "#4a3f6b",
             fontSize: "14px",
             lineHeight: 1.45,
           }}
@@ -377,9 +377,9 @@ const TooltipGuide = ({
             right: "16px",
             bottom: "20px",
             zIndex: 1200,
-            border: "1px solid #2d6a4f",
+            border: "1px solid #5c3fa3",
             borderRadius: "999px",
-            background: "#2d6a4f",
+            background: "#5c3fa3",
             color: "#fff",
             padding: "10px 14px",
             fontWeight: 700,
@@ -398,7 +398,7 @@ const TooltipGuide = ({
             width: panelMode === "minimized" ? "132px" : `${panelSize.width}px`,
             height:
               panelMode === "minimized" ? "auto" : `${panelSize.height}px`,
-            border: "1px solid #d9dfd6",
+            border: "1px solid #c9bde8",
             borderRadius: "12px",
             backgroundColor: "#fff",
             boxShadow: "0 16px 30px rgba(0, 0, 0, 0.16)",
@@ -423,7 +423,7 @@ const TooltipGuide = ({
           >
             <strong
               style={{
-                color: "#244735",
+                color: "#5c3fa3",
                 fontSize: panelMode === "minimized" ? "12px" : "14px",
               }}
             >
@@ -436,7 +436,7 @@ const TooltipGuide = ({
                   setPanelMode(panelMode === "minimized" ? "open" : "minimized")
                 }
                 style={{
-                  border: "1px solid #ccd4cc",
+                  border: "1px solid #c9bde8",
                   borderRadius: "8px",
                   background: "#fff",
                   padding: isMinimized ? "2px 6px" : "4px 8px",
@@ -450,7 +450,7 @@ const TooltipGuide = ({
                 type="button"
                 onClick={onClose}
                 style={{
-                  border: "1px solid #ccd4cc",
+                  border: "1px solid #c9bde8",
                   borderRadius: "8px",
                   background: "#fff",
                   padding: isMinimized ? "2px 6px" : "4px 8px",
@@ -469,7 +469,7 @@ const TooltipGuide = ({
                 <h4
                   style={{
                     margin: "0 0 8px",
-                    color: "#244735",
+                    color: "#5c3fa3",
                     fontSize: "16px",
                   }}
                 >
@@ -478,7 +478,7 @@ const TooltipGuide = ({
                 <p
                   style={{
                     margin: 0,
-                    color: "#444",
+                    color: "#4a3f6b",
                     fontSize: "14px",
                     lineHeight: 1.45,
                   }}
@@ -502,10 +502,10 @@ const TooltipGuide = ({
               onClick={goPrevious}
               disabled={isFirstStep}
               style={{
-                border: "1px solid #cfd7ce",
+                border: "1px solid #c9bde8",
                 borderRadius: "8px",
                 background: "#fff",
-                color: isFirstStep ? "#a8b0a8" : "#4f5a52",
+                color: isFirstStep ? "#c9bde8" : "#4a3f6b",
                 padding: isMinimized ? "5px 8px" : "8px 10px",
                 fontSize: isMinimized ? "12px" : "14px",
                 fontWeight: 700,
@@ -518,9 +518,9 @@ const TooltipGuide = ({
               type="button"
               onClick={goNext}
               style={{
-                border: "1px solid #2d6a4f",
+                border: "1px solid #5c3fa3",
                 borderRadius: "8px",
-                background: "#2d6a4f",
+                background: "#5c3fa3",
                 color: "#fff",
                 padding: isMinimized ? "5px 8px" : "8px 10px",
                 fontSize: isMinimized ? "12px" : "14px",
@@ -538,10 +538,10 @@ const TooltipGuide = ({
                 type="button"
                 onClick={goToFirstStep}
                 style={{
-                  border: "1px solid #cfd7ce",
+                  border: "1px solid #c9bde8",
                   borderRadius: "8px",
                   background: "#fff",
-                  color: "#4f5a52",
+                  color: "#4a3f6b",
                   padding: "7px 10px",
                   fontWeight: 600,
                   cursor: "pointer",
@@ -553,10 +553,10 @@ const TooltipGuide = ({
                 type="button"
                 onClick={onClose}
                 style={{
-                  border: "1px solid #cfd7ce",
+                  border: "1px solid #c9bde8",
                   borderRadius: "8px",
                   background: "#fff",
-                  color: "#4f5a52",
+                  color: "#4a3f6b",
                   padding: "7px 10px",
                   fontWeight: 600,
                   cursor: "pointer",
@@ -568,9 +568,9 @@ const TooltipGuide = ({
                 type="button"
                 onClick={onComplete}
                 style={{
-                  border: "1px solid #2d6a4f",
+                  border: "1px solid #5c3fa3",
                   borderRadius: "8px",
-                  background: "#2d6a4f",
+                  background: "#5c3fa3",
                   color: "#fff",
                   padding: "7px 10px",
                   fontWeight: 600,
@@ -594,7 +594,7 @@ const TooltipGuide = ({
                 height: "16px",
                 cursor: "nwse-resize",
                 background:
-                  "linear-gradient(135deg, transparent 0 45%, #9aa79f 45% 55%, transparent 55% 100%)",
+                  "linear-gradient(135deg, transparent 0 45%, #b8a4e8 45% 55%, transparent 55% 100%)",
               }}
             />
           )}

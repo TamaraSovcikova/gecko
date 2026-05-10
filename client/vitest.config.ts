@@ -5,7 +5,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -17,9 +16,9 @@ export default defineConfig({
       },
     },
   },
-
- test: {
-   environment: "jsdom",   // fixes document/window errors
-   globals: true,           // allows describe/it/expect without imports
- },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/tests/setup.ts",
+  },
 });

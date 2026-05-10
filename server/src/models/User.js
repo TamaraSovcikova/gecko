@@ -96,7 +96,7 @@ const UserSchema = new mongoose.Schema(
     // Drives post-login redirect:
     //   false → send to /payslip-setup (onboarding not done)
     //   true  → send to /dashboard
-    // Flipped to true on successful POST /api/v1/payslip
+    // Flipped to true on successful POST /v1/payslip
     hasCompletedOnboarding: {
       type: Boolean,
       default: false,
