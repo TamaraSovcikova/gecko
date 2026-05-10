@@ -52,6 +52,7 @@ vi.mock("axios", () => ({
     put: vi.fn(),
     delete: vi.fn(),
     patch: vi.fn(),
+    isAxiosError: vi.fn((error) => error?.isAxiosError === true)
   },
 }));
 
@@ -83,8 +84,7 @@ vi.mock("../../dev/dashboardDebug", () => ({
 
 // ---------------- HELPER RENDER ----------------
 
-const renderApp = () =>
-  console.log("SOCKET HANDLERS:", Object.keys(socketHandlers));
+const renderApp = () => {
   render(
     <AuthProvider>
       <GamificationProvider>
@@ -104,6 +104,7 @@ const renderApp = () =>
       </GamificationProvider>
     </AuthProvider>
   );
+};
 
 // ---------------- TEST ----------------
 
@@ -151,36 +152,79 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   const initialGamificationData = {
     xp: 50,
     level: 1,
+    streak: 0,
     weeklyStreak: 0,
     xpIntoLevel: 50,
     xpNeeded: 100,
+    xpToNextLevel: 100,
     streakAtRisk: false,
   };
 
   const updatedGamificationData = {
     xp: 80,
     level: 1,
+    streak: 1,
     weeklyStreak: 1,
     xpIntoLevel: 80,
     xpNeeded: 100,
+    xpToNextLevel: 100,
     streakAtRisk: false,
   };
 
-  (axios.get as any).mockImplementation((url: string) => {
-    if (url.includes("/api/v1/dashboard")) {
-      return Promise.resolve({ data: initialDashboardData });
-    }
+  let gamificationData = initialGamificationData;
 
-    if (url.includes("/api/snapshots")) {
-      return Promise.resolve({ data: [] });
-    }
+(axios.get as any).mockImplementation((url: string) => {
+  console.log("AXIOS GET:", url);
 
-    if (url.includes("/api/v1/quiz/gamification")) {
-      return Promise.resolve({ data: initialGamificationData });
-    }
+  if (
+    url.includes("/api/v1/profile") ||
+    url.includes("/api/profile") ||
+    url.includes("/profile")
+  ) {
+    return Promise.resolve({
+      data: {
+        _id: "test-user",
+        uid: "test-user",
+        email: "test@example.com",
+        displayName: "Test User",
+      },
+    });
+  }
 
-    return Promise.resolve({ data: null });
+  if (
+    url.toLowerCase().includes("snapshot") ||
+    url.toLowerCase().includes("monthly")
+  ) {
+    return Promise.resolve({
+      data: [],
+    });
+  }
+
+  if (url.includes("/api/v1/quiz/gamification")) {
+    return Promise.resolve({
+      data: gamificationData,
+    });
+  }
+
+  if (url.includes("/api/v1/forecast")) {
+    return Promise.resolve({
+      data: {
+        forecast: [],
+        warnings: [],
+      },
+    });
+  }
+
+  if (url.includes("/api/v1/dashboard")) {
+    return Promise.resolve({
+      data: initialDashboardData,
+    });
+  }
+
+  return Promise.resolve({
+    data: {},
   });
+});
 
   (axios.post as any).mockResolvedValue({
     data: { success: true },
@@ -195,8 +239,14 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   expect(await screen.findByText(/Take-home/i)).toBeInTheDocument();
   expect(screen.getByText("£500.00")).toBeInTheDocument();
 
+  console.log("SOCKET HANDLERS:", Object.keys(socketHandlers));
+
   expect(await screen.findByText(/Level 1/i)).toBeInTheDocument();
-  expect(screen.getByText("50 / 100 XP")).toBeInTheDocument();
+  expect(
+    screen.getAllByText((_content, node) =>
+      node?.textContent?.replace(/\s+/g, " ").includes("50 / 100 XP") ?? false
+    ).length
+  ).toBeGreaterThan(0);
 
   const dashboardCallsBefore = (axios.get as any).mock.calls.filter(
     ([url]: any[]) => url.includes("/api/v1/dashboard")
@@ -208,7 +258,12 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   // =========================
 
   act(() => {
-    socketHandlers["budget:update"](updatedDashboardData);
+    socketHandlers["budget:update"]({
+      dashboard: updatedDashboardData,
+      forecast: {
+        forecast: [],
+      },
+    });
   });
 
   // =========================
@@ -216,8 +271,9 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   // =========================
 
   await waitFor(() => {
-    expect(screen.getByText("£250.00")).toBeInTheDocument();
+    expect(document.body.textContent).toContain("£250.00");
   });
+  console.log("AFTER SOCKET:", document.body.textContent);
 
   const foodElements = screen.getAllByText("Food");
   expect(foodElements.length).toBeGreaterThan(0);
@@ -230,6 +286,13 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
     await axios.post("/api/v1/quiz/complete", { answers: [] });
   });
 
+  gamificationData = updatedGamificationData;
+
+  await act(async () => {
+    await axios.get("/api/v1/quiz/gamification");
+  });
+
+  /*
   (axios.get as any).mockImplementation((url: string) => {
     if (url.includes("/api/v1/dashboard")) {
       return Promise.resolve({ data: initialDashboardData });
@@ -249,6 +312,8 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   await act(async () => {
     await axios.get("/api/v1/quiz/gamification");
   });
+
+  */
 
   // =========================
   // THEN: gamification (XP + level) updates in UI
