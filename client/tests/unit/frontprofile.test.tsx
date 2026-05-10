@@ -5,6 +5,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
 import Profile from "../../src/pages/Profile";
+import { GamificationProvider } from "../../src/context/GamificationContext";
 import React from "react";
 
 vi.mock("axios");
@@ -48,7 +49,9 @@ describe("Frontend: Profile deletion cofirmation", () => {beforeEach(() => {vi.c
         // WHEN: The user clicks the Delete Profile button
         render(
             <MemoryRouter>
-                <Profile />
+                <GamificationProvider>
+                    <Profile />
+                </GamificationProvider>
             </MemoryRouter>
         );
 

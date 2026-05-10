@@ -8,6 +8,7 @@ const Payslip = require("../models/MonthlyBudget"); //import MonthlyBudget (this
 const User = require("../models/User"); //import User model to get job title and location
 const { getAverageSalary } = require("../services/adzunaCalculator"); //import Adzuna service
 const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
+const authMiddleware = require("../middleware/auth");
 
 // Helper function to generate tips based on budget and health data
 const generateBudgetTips = (totalBudget, healthScore, budgetAllocation, totalExpenses) => {

@@ -8,11 +8,12 @@ jest.mock('../../src/models/User', () => ({findById: jest.fn().mockResolvedValue
 jest.mock('../../src/services/adzunaCalculator', () => ({getAverageSalary: jest.fn().mockResolvedValue(null)}));
 jest.mock('../../src/services/healthScoreService', () => ({computeHealthScoreBreakdown: jest.fn(() => ({ healthScore: 100 }))}));
 
-
+//const authMiddleware = require("../../src/middleware/auth");
 const Expense = require('../../src/models/Expense');
 const MonthlyBudget = require('../../src/models/MonthlyBudget');
 const dashboardRouter = require('../../src/routes/dashboard');
 const app = express();
+
 
 app.use(express.json());
 app.use('/api/v1/dashboard', dashboardRouter);
