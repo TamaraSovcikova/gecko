@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Expense = {
   _id: string;
@@ -43,6 +43,12 @@ const ExpenseBreakdown = ({
 
   if (!expenses) return null;
 
+  useEffect(() => {
+    setExpensePage(1);
+    setEditingExpenseId(null);
+    setPendingDeleteId(null);
+  }, [expenses]);
+
   const totalPages = Math.ceil(expenses.length / EXPENSES_PER_PAGE);
 
   const pagedExpenses = expenses.slice(
@@ -52,161 +58,170 @@ const ExpenseBreakdown = ({
 
   return (
     <div style={{ marginTop: "30px" }}>
-      <h4>Expense Breakdown</h4>
+      <h4 style={{ marginBottom: "10px" }}>Expense Breakdown</h4>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid #c9bde8" }}>
-            <th style={{ textAlign: "left", padding: "8px" }}>Category</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Value</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Date</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Notes</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Edit</th>
-            <th style={{ textAlign: "left", padding: "8px" }}>Delete</th>
-          </tr>
-        </thead>
+      <div className="gecko-table-wrap">
+        <table className="gecko-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Value</th>
+              <th>Date</th>
+              <th>Notes</th>
+              <th>Edit</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          {pagedExpenses.map((exp) => {
-            const isEditing = editingExpenseId === exp._id;
+          <tbody>
+            {pagedExpenses.map((exp) => {
+              const isEditing = editingExpenseId === exp._id;
 
-            return (
-              <tr key={exp._id} style={{ borderBottom: "1px solid #ede8f8" }}>
-                {/* CATEGORY */}
-                <td style={{ padding: "8px" }}>
-                  {isEditing ? (
-                    <select
-                      value={editForm.category}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          category: e.target.value,
-                        }))
-                      }
-                    >
-                      {budgetAllocation.map((cat) => (
-                        <option key={cat.name} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    exp.category
-                  )}
-                </td>
+              return (
+                <tr key={exp._id}>
+                  {/* CATEGORY */}
+                  <td>
+                    {isEditing ? (
+                      <select
+                        className="gecko-input"
+                        value={editForm.category}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            category: e.target.value,
+                          }))
+                        }
+                      >
+                        {budgetAllocation.map((cat) => (
+                          <option key={cat.name} value={cat.name}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      exp.category
+                    )}
+                  </td>
 
-                {/* VALUE */}
-                <td style={{ padding: "8px" }}>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={editForm.amount}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          amount: Number(e.target.value),
-                        }))
-                      }
-                    />
-                  ) : (
-                    `£${exp.amount.toFixed(2)}`
-                  )}
-                </td>
+                  {/* VALUE */}
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="gecko-input"
+                        type="number"
+                        value={editForm.amount}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            amount: Number(e.target.value),
+                          }))
+                        }
+                      />
+                    ) : (
+                      `£${exp.amount.toFixed(2)}`
+                    )}
+                  </td>
 
-                {/* DATE */}
-                <td style={{ padding: "8px" }}>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      value={editForm.date}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          date: e.target.value,
-                        }))
-                      }
-                    />
-                  ) : (
-                    new Date(exp.date).toLocaleDateString("en-GB")
-                  )}
-                </td>
+                  {/* DATE */}
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="gecko-input"
+                        type="date"
+                        value={editForm.date}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            date: e.target.value,
+                          }))
+                        }
+                      />
+                    ) : (
+                      new Date(exp.date).toLocaleDateString("en-GB")
+                    )}
+                  </td>
 
-                {/* NOTE */}
-                <td style={{ padding: "8px" }}>
-                  {isEditing ? (
-                    <input
-                      value={editForm.note}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          note: e.target.value,
-                        }))
-                      }
-                    />
-                  ) : (
-                    exp.note || "-"
-                  )}
-                </td>
+                  {/* NOTE */}
+                  <td>
+                    {isEditing ? (
+                      <input
+                        className="gecko-input"
+                        value={editForm.note}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            note: e.target.value,
+                          }))
+                        }
+                      />
+                    ) : (
+                      exp.note || "-"
+                    )}
+                  </td>
 
-                {/* EDIT */}
-                <td style={{ padding: "8px" }}>
-                  {isEditing ? (
-                    <>
+                  {/* EDIT */}
+                  <td>
+                    {isEditing ? (
+                      <>
+                        <button
+                          className="gecko-pill-btn"
+                          onClick={() => {
+                            onUpdate(exp._id, editForm);
+                            setEditingExpenseId(null);
+                          }}
+                        >
+                          Save
+                        </button>
+
+                        <button className="gecko-pill-btn" onClick={() => setEditingExpenseId(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
                       <button
+                        className="gecko-pill-btn"
                         onClick={() => {
-                          onUpdate(exp._id, editForm);
-                          setEditingExpenseId(null);
+                          setEditingExpenseId(exp._id);
+                          setEditForm({
+                            category: exp.category,
+                            amount: exp.amount,
+                            date: exp.date,
+                            note: exp.note || "",
+                          });
                         }}
                       >
-                        Save
+                        Edit
                       </button>
+                    )}
+                  </td>
 
-                      <button onClick={() => setEditingExpenseId(null)}>
-                        Cancel
+                  {/* DELETE */}
+                  <td>
+                    {pendingDeleteId === exp._id ? (
+                      <>
+                        <button className="gecko-pill-btn" onClick={() => onDelete(exp._id)}>Confirm</button>
+                        <button className="gecko-pill-btn" onClick={() => setPendingDeleteId(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button className="gecko-pill-btn" onClick={() => setPendingDeleteId(exp._id)}>
+                        Delete
                       </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingExpenseId(exp._id);
-                        setEditForm({
-                          category: exp.category,
-                          amount: exp.amount,
-                          date: exp.date,
-                          note: exp.note || "",
-                        });
-                      }}
-                    >
-                      Edit
-                    </button>
-                  )}
-                </td>
-
-                {/* DELETE */}
-                <td style={{ padding: "8px" }}>
-                  {pendingDeleteId === exp._id ? (
-                    <>
-                      <button onClick={() => onDelete(exp._id)}>Confirm</button>
-                      <button onClick={() => setPendingDeleteId(null)}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => setPendingDeleteId(exp._id)}>
-                      Delete
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {/* pagination */}
       {totalPages > 1 && (
-        <div style={{ marginTop: "12px", textAlign: "center" }}>
+        <div style={{ marginTop: "12px", textAlign: "center", display: "flex", justifyContent: "center", gap: "8px", alignItems: "center" }}>
           <button
+            className="gecko-pill-btn"
             onClick={() => setExpensePage((p) => Math.max(p - 1, 1))}
             disabled={expensePage === 1}
           >
@@ -218,6 +233,7 @@ const ExpenseBreakdown = ({
           </span>
 
           <button
+            className="gecko-pill-btn"
             onClick={() => setExpensePage((p) => Math.min(p + 1, totalPages))}
             disabled={expensePage === totalPages}
           >

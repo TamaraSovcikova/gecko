@@ -13,20 +13,20 @@ import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 const strengthLabel = (password: string) => {
   if (!password) return { text: "Enter a new password", color: "#7a6e99" };
   const hasLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*]/.test(password);
 
-  if (hasLength && hasNumber) {
-    return { text: "Strong enough", color: "#5bb8c4" };
+  const checks = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+
+  if (checks >= 4) {
+    return { text: "Strong", color: "#5bb8c4" };
   }
-
-  if (password.length >= 6) {
-    return {
-      text: "Almost there: use 8+ characters and a number",
-      color: "#c2872c",
-    };
+  if (checks >= 3) {
+    return { text: "Good", color: "#c2872c" };
   }
-
-  return { text: "Too weak", color: "#e05c5c" };
+  return { text: "Weak: use 8+ chars, uppercase, lowercase, number, and special character (!@#$%^&*)", color: "#e05c5c" };
 };
 
 const ChangePasswordPage = () => {
@@ -37,7 +37,13 @@ const ChangePasswordPage = () => {
   const [state, setState] = useState({ saving: false, message: "", error: "" });
 
   const passwordStrongEnough = useMemo(() => {
-    return newPassword.length >= 8 && /\d/.test(newPassword);
+    const hasLength = newPassword.length >= 8;
+    const hasUpper = /[A-Z]/.test(newPassword);
+    const hasLower = /[a-z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*]/.test(newPassword);
+    const checks = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+    return checks >= 4;
   }, [newPassword]);
   const passwordsMatch =
     newPassword === confirmPassword && confirmPassword.length > 0;
@@ -117,23 +123,13 @@ const ChangePasswordPage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#faf9fd",
-        padding: "24px",
-      }}
-    >
+    <div className="app-page">
       <TopNav />
       <div
+        className="app-content app-surface"
         style={{
-          maxWidth: "860px",
-          margin: "24px auto 0",
-          backgroundColor: "#fff",
-          border: "1px solid #c9bde8",
-          borderRadius: "14px",
           padding: "24px",
-          boxShadow: "0 12px 24px rgba(92, 63, 163, 0.08)",
+          maxWidth: "980px",
         }}
         data-onboarding="change-password-heading"
       >
@@ -165,7 +161,7 @@ const ChangePasswordPage = () => {
               padding: "16px",
               borderRadius: "12px",
               border: "1px solid #c9bde8",
-              backgroundColor: "#fef9e7",
+              background: "#f4f1fb",
               color: "#4a3f6b",
             }}
           >
@@ -193,11 +189,10 @@ const ChangePasswordPage = () => {
             type="password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
+            className="gecko-input"
             style={{
               width: "100%",
               padding: "12px 14px",
-              borderRadius: "10px",
-              border: "1px solid #c9bde8",
               marginBottom: "16px",
             }}
             disabled={isGoogleOnlyAccount}
@@ -220,11 +215,10 @@ const ChangePasswordPage = () => {
             type="password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
+            className="gecko-input"
             style={{
               width: "100%",
               padding: "12px 14px",
-              borderRadius: "10px",
-              border: "1px solid #c9bde8",
             }}
             disabled={isGoogleOnlyAccount}
           />
@@ -255,11 +249,10 @@ const ChangePasswordPage = () => {
             type="password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
+            className="gecko-input"
             style={{
               width: "100%",
               padding: "12px 14px",
-              borderRadius: "10px",
-              border: "1px solid #c9bde8",
             }}
             disabled={isGoogleOnlyAccount}
           />
@@ -283,6 +276,7 @@ const ChangePasswordPage = () => {
 
           <button
             type="submit"
+            className="gecko-pill-btn"
             disabled={
               isGoogleOnlyAccount ||
               !currentPassword ||
@@ -293,11 +287,7 @@ const ChangePasswordPage = () => {
             style={{
               marginTop: "18px",
               padding: "12px 16px",
-              borderRadius: "10px",
-              border: "1px solid #c9bde8",
               backgroundColor: "#ede8f8",
-              color: "#5c3fa3",
-              fontWeight: 600,
             }}
           >
             {state.saving ? "Saving..." : "Update password"}

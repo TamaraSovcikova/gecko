@@ -78,6 +78,8 @@ exports.createPayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
     const categories = sanitizeCategories(Array.isArray(req.body.categories) ? req.body.categories : []);
+    const jobTitle = String(req.body.jobTitle || "").trim();
+    const location = String(req.body.location || "").trim();
     const userId = req.user?.uid;
 
     if (!userId) {
@@ -96,11 +98,15 @@ exports.createPayslip = async (req, res) => {
       taxPaid: result.taxPaid,
       niPaid: result.niPaid,
       takeHomePay: result.takeHomePay,
+      jobTitle,
+      location,
       categories,
     });
 
     await User.findByIdAndUpdate(userId, {
       "payslipData.grossSalary": grossSalary,
+      "payslipData.jobTitle": jobTitle,
+      "payslipData.location": location,
       hasCompletedOnboarding: true,
     });
 
@@ -122,12 +128,39 @@ exports.getPayslip = async (req, res) => {
     try {
         const userId = req.user.uid;
     const budget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+    const user = await User.findById(userId).select("payslipData.jobTitle payslipData.location");
   
         if (!budget) {
             return res.status(404).json({ message: "No payslip found" });
         }
-  
-        res.json(budget);
+
+        const profileJobTitle = String(user?.payslipData?.jobTitle || "").trim();
+        const profileLocation = String(user?.payslipData?.location || "").trim();
+        const budgetJobTitle = String(budget.jobTitle || "").trim();
+        const budgetLocation = String(budget.location || "").trim();
+
+        const resolvedJobTitle = budgetJobTitle || profileJobTitle;
+        const resolvedLocation = budgetLocation || profileLocation;
+
+        if (
+          resolvedJobTitle !== budgetJobTitle ||
+          resolvedLocation !== budgetLocation
+        ) {
+          await MonthlyBudget.findByIdAndUpdate(
+            budget._id,
+            {
+              jobTitle: resolvedJobTitle,
+              location: resolvedLocation,
+            },
+            { new: false }
+          );
+        }
+
+        res.json({
+          ...budget.toObject(),
+          jobTitle: resolvedJobTitle,
+          location: resolvedLocation,
+        });
   
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -139,6 +172,8 @@ exports.updatePayslip = async (req, res) => {
   try {
     const grossSalary = Number(req.body.grossSalary);
     const categories = sanitizeCategories(Array.isArray(req.body.categories) ? req.body.categories : []);
+    const incomingJobTitle = String(req.body.jobTitle || "").trim();
+    const incomingLocation = String(req.body.location || "").trim();
     const userId = req.user?.uid;
 
     if (!userId) {
@@ -152,12 +187,21 @@ exports.updatePayslip = async (req, res) => {
     const result = calculatePayslip(grossSalary);
 
     const existingBudget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+    const user = await User.findById(userId).select("payslipData.jobTitle payslipData.location");
 
     if (!existingBudget) {
       return res.status(404).json({ error: "Payslip not found" });
     }
 
     await reconcileCurrentMonthExpenses(userId, existingBudget.categories || [], categories);
+
+    const existingJobTitle = String(existingBudget.jobTitle || "").trim();
+    const existingLocation = String(existingBudget.location || "").trim();
+    const profileJobTitle = String(user?.payslipData?.jobTitle || "").trim();
+    const profileLocation = String(user?.payslipData?.location || "").trim();
+
+    const jobTitle = incomingJobTitle || existingJobTitle || profileJobTitle;
+    const location = incomingLocation || existingLocation || profileLocation;
 
     const budget = await MonthlyBudget.findByIdAndUpdate(
       existingBudget._id,
@@ -166,6 +210,8 @@ exports.updatePayslip = async (req, res) => {
         taxPaid: result.taxPaid,
         niPaid: result.niPaid,
         takeHomePay: result.takeHomePay,
+        jobTitle,
+        location,
         categories,
       },
       { new: true }
@@ -173,6 +219,8 @@ exports.updatePayslip = async (req, res) => {
 
     await User.findByIdAndUpdate(userId, {
       "payslipData.grossSalary": grossSalary,
+      "payslipData.jobTitle": jobTitle,
+      "payslipData.location": location,
     });
 
     const dashboardData = await computeDashboard(userId);

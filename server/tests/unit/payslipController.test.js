@@ -111,6 +111,8 @@ describe("payslipController.createPayslip", () => {
       taxPaid: 4000,
       niPaid: 2000,
       takeHomePay: 30000,
+      jobTitle: "",
+      location: "",
       categories: [
         { name: "Rent", budget: 900 },
         { name: "Food", budget: 300 },
@@ -118,6 +120,8 @@ describe("payslipController.createPayslip", () => {
     });
     expect(User.findByIdAndUpdate).toHaveBeenCalledWith("user-456", {
       "payslipData.grossSalary": 36000,
+      "payslipData.jobTitle": "",
+      "payslipData.location": "",
       hasCompletedOnboarding: true,
     });
     expect(computeDashboard).toHaveBeenCalledWith("user-456");

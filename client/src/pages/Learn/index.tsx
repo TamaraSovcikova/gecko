@@ -144,16 +144,20 @@ export default function Learn() {
       : [{ category: activeCategory, topics: filteredTopics }];
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto", minHeight: "100vh", backgroundColor: "#faf9fd" }}>
+    <div className="app-page">
       <TopNav />
+
+      <div className="app-content">
 
       {/* HERO */}
       <div
         style={{
-          background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
-          borderRadius: 10,
+          background: "#f4f1fb",
+          borderRadius: 14,
           padding: "1.75rem",
           marginBottom: "1.5rem",
+          border: "1px solid #d9cff0",
+          boxShadow: "0 4px 18px rgba(92, 63, 163, 0.08)",
         }}
       >
         <h1 style={{ fontSize: 18, fontWeight: 600 }}>
@@ -212,6 +216,7 @@ export default function Learn() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

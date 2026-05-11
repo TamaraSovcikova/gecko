@@ -39,7 +39,14 @@ export default function MainLayout() {
         <BadgePopup badge={popupBadge} onClose={() => setPopupBadge(null)} />
       )}
       <XPBar />
-      <div style={{ paddingBottom: `${XP_BAR_CLEARANCE}px` }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          minHeight: "100vh",
+          paddingBottom: `${XP_BAR_CLEARANCE}px`,
+        }}
+      >
         <Outlet />
       </div>
     </>

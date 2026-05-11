@@ -115,7 +115,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
       >
         <div>
           <h4>Budget Allocation</h4>
-          <PieChart width={320} height={240}>
+          <PieChart width={340} height={250} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
             <Pie
               data={snapshot.categories.map((c) => ({
                 name: c.name,
@@ -123,7 +123,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
               }))}
               dataKey="value"
               nameKey="name"
-              outerRadius={80}
+              outerRadius={88}
               cx="50%"
               cy="50%"
             >
@@ -132,13 +132,13 @@ export default function MonthlySnapshot({ snapshot }: Props) {
               ))}
             </Pie>
             <Tooltip />
-            <Legend />
+            <Legend verticalAlign="bottom" height={28} />
           </PieChart>
         </div>
 
         <div>
           <h4>Actual Spending</h4>
-          <PieChart width={320} height={240}>
+          <PieChart width={340} height={250} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
             <Pie
               data={snapshot.categories.map((c) => ({
                 name: c.name,
@@ -146,7 +146,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
               }))}
               dataKey="value"
               nameKey="name"
-              outerRadius={80}
+              outerRadius={88}
               cx="50%"
               cy="50%"
             >
@@ -155,7 +155,7 @@ export default function MonthlySnapshot({ snapshot }: Props) {
               ))}
             </Pie>
             <Tooltip />
-            <Legend />
+            <Legend verticalAlign="bottom" height={28} />
           </PieChart>
         </div>
       </div>

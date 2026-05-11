@@ -5,17 +5,26 @@
 //   - Stores the current user and their ID token so any component can access them
 //   - Exposes a loading state so we don't flash the wrong page before Firebase
 //     has confirmed whether the user is logged in or not
+//   - Implements 1-hour session timeout for security
 
 import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
-import { onIdTokenChanged } from "firebase/auth";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { onIdTokenChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase/config";
+
+const SESSION_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
 
 type AuthProfile = {
   displayName?: string;
   email?: string;
+  avatarChoice?: "initial" | "photo1" | "photo2" | "photo3" | "photo5";
   onboardingCompletedPages?: string[];
   newsletterOptIn?: boolean;
+  payslipData?: {
+    jobTitle?: string;
+    location?: string;
+    grossSalary?: number;
+  };
 };
 
 interface AuthContextType {
@@ -44,6 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refreshProfile = async (overrideToken?: string | null) => {
     const activeToken = overrideToken ?? token;
@@ -66,9 +76,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile({
         displayName: response.data?.displayName,
         email: response.data?.email,
+        avatarChoice: response.data?.avatarChoice,
         onboardingCompletedPages:
           response.data?.financialOnboarding?.completedPages || [],
         newsletterOptIn: Boolean(response.data?.newsletterOptIn),
+        payslipData: {
+          jobTitle: response.data?.payslipData?.jobTitle,
+          location: response.data?.payslipData?.location,
+          grossSalary: response.data?.payslipData?.grossSalary,
+        },
       });
     } catch (error) {
       if (
@@ -91,9 +107,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setProfile({
             displayName: retryResponse.data?.displayName,
             email: retryResponse.data?.email,
+            avatarChoice: retryResponse.data?.avatarChoice,
             onboardingCompletedPages:
               retryResponse.data?.financialOnboarding?.completedPages || [],
             newsletterOptIn: Boolean(retryResponse.data?.newsletterOptIn),
+            payslipData: {
+              jobTitle: retryResponse.data?.payslipData?.jobTitle,
+              location: retryResponse.data?.payslipData?.location,
+              grossSalary: retryResponse.data?.payslipData?.grossSalary,
+            },
           });
           return;
         } catch (retryError) {
@@ -110,6 +132,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Reset session timeout on user activity
+  const resetSessionTimeout = () => {
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+    }
+
+    if (currentUser) {
+      timeoutIdRef.current = setTimeout(() => {
+        signOut(auth);
+        setCurrentUser(null);
+        setToken(null);
+        setProfile(null);
+      }, SESSION_TIMEOUT_MS);
+    }
+  };
+
   useEffect(() => {
     // onIdTokenChanged also covers token refreshes after sensitive auth updates.
     const unsubscribe = onIdTokenChanged(auth, async (user: any) => {
@@ -119,17 +157,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const idToken = await user.getIdToken(false);
         setToken(idToken);
         await refreshProfile(idToken);
+        resetSessionTimeout();
       } else {
         setToken(null);
         setProfile(null);
+        if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
       }
 
       setLoading(false);
     });
 
-    // Cleanup: stop listening when the component unmounts
-    return () => unsubscribe();
-  }, []);
+    // Set up activity listeners to reset timeout
+    const activityListener = () => {
+      if (currentUser) {
+        resetSessionTimeout();
+      }
+    };
+
+    window.addEventListener("click", activityListener);
+    window.addEventListener("keydown", activityListener);
+    window.addEventListener("mousemove", activityListener);
+
+    // Cleanup: stop listening and clear timeout when the component unmounts
+    return () => {
+      unsubscribe();
+      window.removeEventListener("click", activityListener);
+      window.removeEventListener("keydown", activityListener);
+      window.removeEventListener("mousemove", activityListener);
+      if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
+    };
+  }, [currentUser]);
 
   return (
     <AuthContext.Provider

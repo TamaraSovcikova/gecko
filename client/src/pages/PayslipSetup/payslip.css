@@ -1,0 +1,176 @@
+.payslip-input::placeholder {
+  color: #9a90b8;
+}
+
+/* Route-level guardrail against legacy Bootstrap blue/yellow bleed. */
+.payslip-page .btn-primary,
+.payslip-page .btn-info,
+.payslip-page .btn-warning,
+.payslip-page .btn-success,
+.payslip-page .btn-outline-primary,
+.payslip-page .btn-outline-info,
+.payslip-page .btn-outline-warning,
+.payslip-page .btn-outline-success {
+  background: #5c3fa3 !important;
+  border-color: #4e358f !important;
+  color: #fff !important;
+}
+
+.payslip-page .text-primary,
+.payslip-page .text-info,
+.payslip-page .text-warning {
+  color: #4e358f !important;
+}
+
+.payslip-page .alert-warning,
+.payslip-page .bg-warning,
+.payslip-page .table-warning {
+  background-color: #f6f1ff !important;
+  color: #1a1040 !important;
+  border-color: #d7caef !important;
+}
+
+.payslip-page .alert-primary,
+.payslip-page .alert-info {
+  background-color: #f4f1fb !important;
+  color: #1a1040 !important;
+  border-color: #d7caef !important;
+}
+
+.payslip-page .app-note,
+.payslip-page .app-note.warn,
+.payslip-note {
+  border: 1px solid #c9bde8 !important;
+  background: #f4f1fb !important;
+  color: #4a3f6b !important;
+  box-shadow: 0 6px 18px rgba(92, 63, 163, 0.12) !important;
+}
+
+.payslip-page .app-note h4,
+.payslip-page .app-note p,
+.payslip-note h4,
+.payslip-note p {
+  color: #1a1040 !important;
+}
+
+.payslip-submit-btn,
+.payslip-page button[type="submit"] {
+  background: #5c3fa3 !important;
+  border: 1px solid #4e358f !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  padding: 10px 18px !important;
+  box-shadow: 0 12px 24px rgba(92, 63, 163, 0.28) !important;
+}
+
+.payslip-submit-btn:hover,
+.payslip-page button[type="submit"]:hover {
+  background: #6a4ab5 !important;
+  color: #fff !important;
+}
+
+.payslip-add-category-btn {
+  border-color: #c9bde8 !important;
+  color: #5c3fa3 !important;
+  background: #ede8f8 !important;
+}
+
+.payslip-remove-category-btn {
+  border-color: #ddb5b5 !important;
+  color: #8e4852 !important;
+  background: #f9ecef !important;
+}
+
+/* Fallback styling for legacy first-login JSX variant that still uses Bootstrap containers. */
+.container.py-4.py-md-5 [data-onboarding="payslip-profile-tip"] {
+  margin-bottom: 20px !important;
+  padding: 16px !important;
+  border: 1px solid #c9bde8 !important;
+  border-radius: 10px !important;
+  background: #f4f1fb !important;
+  color: #4a3f6b !important;
+  box-shadow: 0 6px 18px rgba(92, 63, 163, 0.12) !important;
+}
+
+.container.py-4.py-md-5 [data-onboarding="payslip-profile-tip"] h4,
+.container.py-4.py-md-5 [data-onboarding="payslip-profile-tip"] p {
+  color: #1a1040 !important;
+}
+
+.container.py-4.py-md-5 button.btn.btn-primary[type="submit"] {
+  background: #5c3fa3 !important;
+  border: 1px solid #4e358f !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  padding: 10px 18px !important;
+  box-shadow: 0 12px 24px rgba(92, 63, 163, 0.28) !important;
+}
+
+.container.py-4.py-md-5 button.btn.btn-primary[type="submit"]:hover {
+  background: #6a4ab5 !important;
+  color: #fff !important;
+}
+
+.container.py-4.py-md-5 .alert.alert-warning {
+  border: 1px solid #d7caef !important;
+  background: #f6f1ff !important;
+  color: #1a1040 !important;
+}
+.payslip-surface {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.payslip-body {
+  padding: 18px 4px;
+}
+
+.payslip-eyebrow {
+  margin: 0 0 8px;
+  color: #7a6e99;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.payslip-title {
+  margin: 0 0 8px;
+  color: #1a1040;
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.payslip-subtitle {
+  margin: 0 0 16px;
+  color: #7a6e99;
+}
+
+.payslip-label {
+  color: #4a3f6b;
+  font-weight: 600;
+}
+
+.payslip-input {
+  border-color: #c9bde8;
+  background-color: #faf9fd;
+}
+
+.gecko-pill-btn.payslip-primary-btn {
+  background: #5c3fa3;
+  color: #fff;
+  border-color: #4e358f;
+  font-weight: 700;
+  padding: 10px 18px;
+  box-shadow: 0 10px 22px rgba(92, 63, 163, 0.28);
+}
+
+.gecko-pill-btn.payslip-primary-btn:hover {
+  background: #6a4ab5;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(92, 63, 163, 0.34);
+}

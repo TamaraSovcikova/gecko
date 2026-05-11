@@ -122,8 +122,28 @@ router.get('/', authMiddleware, async (req, res) => {
     try {
         //originally implemented for expnses model so may not have actually been my respnsbility...
         const now = new Date(); //current date to filter expense objects
-        const month = now.getMonth() + 1; //index values start at 0, so add 1 for logical reference. eg. January = 0, January = 1
-        const year = now.getFullYear(); //self explanatory
+        const hasMonth = req.query.month !== undefined;
+        const hasYear = req.query.year !== undefined;
+
+        if (hasMonth !== hasYear) {
+          return res.status(400).json({ error: "month and year must be provided together" });
+        }
+
+        let month = now.getMonth() + 1; //index values start at 0, so add 1 for logical reference. eg. January = 0, January = 1
+        let year = now.getFullYear(); //self explanatory
+
+        if (hasMonth && hasYear) {
+          month = Number(req.query.month);
+          year = Number(req.query.year);
+
+          if (!Number.isInteger(month) || month < 1 || month > 12) {
+            return res.status(400).json({ error: "month must be an integer between 1 and 12" });
+          }
+
+          if (!Number.isInteger(year) || year < 1970) {
+            return res.status(400).json({ error: "year must be a valid integer" });
+          }
+        }
 
         const user_id = req.user.uid;     
         const payslip = await Payslip.findOne({ userId: user_id }).sort({ createdAt: -1 }); 
