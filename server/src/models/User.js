@@ -37,6 +37,12 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
 
+    avatarChoice: {
+      type: String,
+      enum: ["initial", "photo1", "photo2", "photo3", "photo5"],
+      default: "initial",
+    },
+
     // Payslip data - nested so we can add taxCode, payFrequency etc. later
     // without changing the top-level schema
     payslipData: {

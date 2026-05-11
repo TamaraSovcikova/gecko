@@ -60,14 +60,14 @@ export const SHADOWS = {
 // Gradients
 // ---------------------------------------------------------------------------
 export const GRADIENTS = {
-  page:         "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232,224,250,0) 36%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245,240,254,0) 40%), #f4f1fb",
-  card:         "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
-  cardSubtle:   "linear-gradient(145deg, #ffffff 0%, #faf9fd 100%)",
-  buttonPrimary:"linear-gradient(135deg, #8b6fd4 0%, #5c3fa3 100%)",
-  hero:         "linear-gradient(145deg, #ffffff 0%, #f8f5ff 55%, #ede8f8 100%)",
-  about:        "linear-gradient(145deg, #f8f5ff 0%, #ede8f8 64%, #e4ddf5 100%)",
-  contact:      "linear-gradient(145deg, #f8f5ff 0%, #f0ebfe 100%)",
-  titleShimmer: "linear-gradient(110deg, #8b6fd4 10%, #f0b429 48%, #8b6fd4 86%)",
+  page:         "#f4f1fb",
+  card:         "#f4f1fb",
+  cardSubtle:   "#faf9fd",
+  buttonPrimary:"#5c3fa3",
+  hero:         "#f8f5ff",
+  about:        "#ede8f8",
+  contact:      "#f0ebfe",
+  titleShimmer: "#5c3fa3",
 } as const;
 
 // ---------------------------------------------------------------------------

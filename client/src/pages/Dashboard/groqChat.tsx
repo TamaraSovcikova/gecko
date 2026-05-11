@@ -57,10 +57,12 @@ const GroqChat = () => {
       {/*This is chat button*/}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Open Groq chat assistant"
+        title="Ask Zoar AI"
         style={{
           position: "fixed",
-          bottom: 14,
-          right: 12,
+          bottom: 18,
+          right: 16,
           width: 60,
           height: 60,
           borderRadius: "50%",
@@ -71,7 +73,8 @@ const GroqChat = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 1300,
+          boxShadow: "0 8px 20px rgba(92, 63, 163, 0.35)",
+          zIndex: 2600,
         }}
       >
         {/*imported react icons, it looks awesome so hope thats allowed...*/}
@@ -82,8 +85,8 @@ const GroqChat = () => {
         <div
           style={{
             position: "fixed",
-            bottom: 84,
-            right: 12,
+            bottom: 92,
+            right: 16,
             width: "min(320px, calc(100vw - 24px))",
             height: "min(420px, calc(100vh - 128px))",
             maxHeight: "calc(100vh - 128px)",
@@ -92,10 +95,11 @@ const GroqChat = () => {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            zIndex: 1300,
+            boxShadow: "0 12px 28px rgba(26, 16, 64, 0.25)",
+            zIndex: 2600,
           }}
         >
-          {/*Title currently called Grok API assisstant for easy understanding but could be given a nname or something?*/}
+          {/*Title updated to match Groq branding*/}
           <div
             style={{
               padding: 10,
@@ -106,7 +110,7 @@ const GroqChat = () => {
               alignItems: "center",
             }}
           >
-            <strong>Grok API Assistant</strong>
+            <strong>Groq API Assistant</strong>
             <button
               onClick={() => setIsOpen(false)}
               style={{

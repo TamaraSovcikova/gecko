@@ -9,10 +9,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 // Called after Firebase creates a new user.
 // Tells the backend to create a User document in MongoDB.
 // Returns firstLogin: true if this is a brand new user.
-export const registerUser = async (token: string) => {
+export const registerUser = async (token: string, displayName?: string) => {
   const response = await axios.post(
     `${API_URL}/api/v1/auth/register`,
-    {},
+    displayName ? { displayName } : {},
     { headers: { Authorization: `Bearer ${token}` } },
   );
   return response.data;

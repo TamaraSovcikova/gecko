@@ -64,7 +64,7 @@ export default function BadgePopup({
             padding: "10px 16px",
             borderRadius: "8px",
             border: "none",
-            background: "#8b6fd4",
+            background: "#5c3fa3",
             color: "white",
             fontWeight: 700,
             cursor: "pointer",

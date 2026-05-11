@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import NavDropdown from "./NavDropdown";
 import { COLORS, SHADOWS } from "../constants/theme";
 
-const NAV_HEIGHT = 116;
+const NAV_HEIGHT = 92;
 
 const NAV_LINKS = [
   { to: "/dashboard", label: "Dashboard" },
@@ -24,8 +24,9 @@ const TopNav = () => {
           text-decoration: none;
           font-weight: 600;
           font-size: 15px;
-          padding: 4px 2px;
-          transition: color 0.2s ease;
+          padding: 8px 12px;
+          border-radius: 999px;
+          transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
           letter-spacing: 0.1px;
           white-space: nowrap;
         }
@@ -37,7 +38,7 @@ const TopNav = () => {
           width: 100%;
           height: 2px;
           border-radius: 99px;
-          background: linear-gradient(90deg, ${COLORS.purple500}, ${COLORS.gold});
+          background: linear-gradient(90deg, ${COLORS.purple500} 0%, ${COLORS.gold} 100%);
           transform: scaleX(0);
           transform-origin: left;
           transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
@@ -48,9 +49,25 @@ const TopNav = () => {
         }
         .topnav-link:hover {
           color: ${COLORS.purple600} !important;
+          background: rgba(139, 111, 212, 0.14);
+          transform: translateY(-1px);
         }
         .topnav-link.active {
           color: ${COLORS.purple600} !important;
+          background: rgba(232, 221, 253, 0.95);
+          box-shadow: 0 8px 16px rgba(92, 63, 163, 0.18);
+        }
+
+        .topnav-brand-title {
+          transition: transform 0.2s ease;
+          background-image: linear-gradient(92deg, ${COLORS.purple600} 0%, ${COLORS.purple500} 48%, ${COLORS.gold} 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .topnav-brand-title:hover {
+          transform: translateY(-1px);
         }
 
         @media (max-width: 900px) {
@@ -59,12 +76,12 @@ const TopNav = () => {
             gap: 10px !important;
           }
           .topnav-brand-logo {
-            width: 66px !important;
-            height: 66px !important;
+            width: 56px !important;
+            height: 56px !important;
           }
           .topnav-brand-title {
-            font-size: 16px !important;
-            margin-left: -8px !important;
+            font-size: 15px !important;
+            margin-left: -6px !important;
             letter-spacing: 0.8px !important;
           }
           .topnav-links {
@@ -97,18 +114,18 @@ const TopNav = () => {
         className="topnav-root"
         style={{
           width: "100%",
-          backgroundColor: "rgba(250, 249, 253, 0.88)",
+          backgroundColor: "rgba(250, 247, 255, 0.97)",
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
           borderBottom: `1px solid ${COLORS.purple300}`,
-          padding: "10px 24px",
+          padding: "8px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+          fontFamily: "'Manrope', 'Segoe UI', Arial, sans-serif",
           gap: "20px",
           boxSizing: "border-box",
-          boxShadow: SHADOWS.nav,
+          boxShadow: `${SHADOWS.nav}, 0 14px 24px rgba(37, 24, 76, 0.14)`,
           position: "fixed",
           top: 0,
           left: 0,
@@ -122,7 +139,7 @@ const TopNav = () => {
             src="/gecko-transparent.png?v=2"
             alt="G.E.C.K.O logo"
             className="topnav-brand-logo"
-            style={{ width: "96px", height: "96px", objectFit: "contain", background: "transparent", display: "block" }}
+            style={{ width: "78px", height: "78px", objectFit: "contain", background: "transparent", display: "block" }}
           />
           <Link
             to="/dashboard"
@@ -131,13 +148,13 @@ const TopNav = () => {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              marginLeft: "-14px",
+              marginLeft: "-10px",
               textDecoration: "none",
-              fontSize: "19px",
-              fontWeight: 800,
+              fontSize: "18px",
+              fontWeight: 700,
               lineHeight: 1,
-              color: COLORS.purple600,
-              letterSpacing: "1.2px",
+              color: "transparent",
+              letterSpacing: "1.4px",
             }}
           >
             G.E.C.K.O
@@ -147,7 +164,18 @@ const TopNav = () => {
         {/* Primary nav links */}
         <nav
           className="topnav-links"
-          style={{ display: "flex", alignItems: "center", gap: "28px", flex: 1, justifyContent: "center" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flex: 1,
+            justifyContent: "center",
+            border: `1px solid ${COLORS.purple300}`,
+            borderRadius: "999px",
+            background: "#ffffff",
+            padding: "6px 8px",
+            maxWidth: "420px",
+          }}
           data-onboarding="nav-primary-links"
         >
           {NAV_LINKS.map(({ to, label }) => {

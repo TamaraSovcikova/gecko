@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const sectionPanelStyle: React.CSSProperties = {
   minHeight: "100vh",
-  border: "1px solid #d6d2c9",
+  border: "1px solid #cdbbe9",
   borderRadius: "0",
   padding: "68px clamp(20px, 5vw, 72px)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), 0 16px 32px rgba(37, 24, 76, 0.08)",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -93,17 +93,18 @@ const Home = () => {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232,224,250,0) 36%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245,240,254,0) 40%), #f4f1fb",
+        minHeight: "100dvh",
+        background: "#f1e9ff",
         padding: 0,
-        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+        fontFamily: "'Sora', 'Manrope', 'Segoe UI', Arial, sans-serif",
         color: "#1a1040",
         scrollBehavior: "smooth",
         overflowX: "hidden",
       }}
     >
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap');
+
         .home-fade {
           opacity: 0;
           transform: translateY(22px);
@@ -149,6 +150,11 @@ const Home = () => {
           animation: float 12s ease-in-out infinite reverse;
         }
 
+        .scroll-dot {
+          opacity: 0.46 !important;
+          filter: saturate(0.88);
+        }
+
         .nav-link {
           position: relative;
           text-decoration: none;
@@ -186,7 +192,10 @@ const Home = () => {
           text-decoration: none;
           font-size: 22px;
           font-weight: 800;
-          color: #5c3fa3;
+          background: linear-gradient(92deg, #5c3fa3 0%, #8b6fd4 50%, #f0b429 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
           letter-spacing: 1px;
           white-space: nowrap;
           border-bottom: 2px solid transparent;
@@ -228,19 +237,19 @@ const Home = () => {
         }
 
         .hero-title-animate {
-          background: linear-gradient(110deg, #8b6fd4 10%, #f0b429 48%, #8b6fd4 86%);
-          background-size: 260% auto;
-          color: transparent;
+          background: linear-gradient(94deg, #5c3fa3 0%, #8b6fd4 55%, #f0b429 100%);
           -webkit-background-clip: text;
           background-clip: text;
-          animation: geckoShimmer 4.6s linear infinite;
+          color: transparent;
+          animation: geckoPulse 4.6s linear infinite;
           transform-origin: left bottom;
           transform: scale(0.9) translate(0, 0);
           display: inline-block;
+          text-shadow: 0 2px 0 rgba(255, 255, 255, 0.9), 0 14px 26px rgba(92, 63, 163, 0.18);
         }
 
         .hero-title-animate.hero-play {
-          animation: geckoShimmer 6.8s linear infinite, geckoStretchToTopRight 1.8s cubic-bezier(0.2, 0.86, 0.18, 1) forwards;
+          animation: geckoPulse 6.8s ease-in-out infinite, geckoStretchToTopRight 1.8s cubic-bezier(0.2, 0.86, 0.18, 1) forwards;
         }
 
         .contact-grid {
@@ -262,28 +271,95 @@ const Home = () => {
           align-items: center;
         }
 
-        .about-video-box {
+        .about-highlight-panel {
           border: 1px solid #c9bde8;
-          border-radius: 18px;
-          background: linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%);
-          box-shadow: 0 8px 24px rgba(92, 63, 163, 0.10);
-          padding: 18px;
+          border-radius: 22px;
+          background: #f8f3ff;
+          box-shadow: 0 16px 34px rgba(92, 63, 163, 0.16);
+          padding: 20px;
           display: grid;
-          gap: 10px;
+          gap: 14px;
         }
 
-        .about-video-frame {
-          width: 100%;
-          aspect-ratio: 16 / 9;
-          border-radius: 12px;
-          border: 1px dashed #c9bde8;
-          background: linear-gradient(145deg, #ede8f8 0%, #f0ebfe 100%);
+        .hero-kicker {
+          margin: 0 0 10px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 12px;
+          border-radius: 999px;
+          border: 1px solid #cbbcf1;
+          background: #efe6ff;
+          color: #4e358f;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .about-highlight-row {
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 12px 14px;
+          border: 1px solid #d8cff1;
+          border-radius: 14px;
+          background: #fff;
+        }
+
+        .about-highlight-metric {
           color: #5c3fa3;
+          font-weight: 800;
+          font-size: 1.25rem;
+          letter-spacing: 0.02em;
+        }
+
+        .hero-stat-strip {
+          margin-top: 18px;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          max-width: 780px;
+        }
+
+        .hero-stat-card {
+          border: 1px solid #d9cff0;
+          border-radius: 14px;
+          background: #f8f3ff;
+          padding: 10px 12px;
+          box-shadow: 0 10px 20px rgba(92, 63, 163, 0.16);
+        }
+
+        .hero-stat-value {
+          margin: 0;
+          color: #5c3fa3;
+          font-size: 1.15rem;
+          font-weight: 800;
+        }
+
+        .hero-stat-label {
+          margin: 2px 0 0;
+          color: #7a6e99;
+          font-size: 0.8rem;
           font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .about-signal-card {
+          width: 100%;
+          border-radius: 14px;
+          border: 1px solid #d8cff1;
+          background: #efe6ff;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          color: #5c3fa3;
+          font-weight: 600;
           letter-spacing: 0.3px;
+          padding: 14px;
         }
 
         .subtitle-glow {
@@ -380,6 +456,10 @@ const Home = () => {
             grid-template-columns: 1fr;
           }
 
+          .hero-stat-strip {
+            grid-template-columns: 1fr;
+          }
+
           .contact-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
@@ -454,7 +534,7 @@ const Home = () => {
           style={{
             textDecoration: "none",
             border: "1px solid #8b6fd4",
-            background: "linear-gradient(135deg, #8b6fd4 0%, #5c3fa3 100%)",
+            background: "#5c3fa3",
             color: "#ffffff",
             fontWeight: 700,
             borderRadius: "999px",
@@ -468,15 +548,14 @@ const Home = () => {
         </Link>
       </header>
 
-      <main style={{ width: "100%", display: "grid", gap: "0" }}>
+      <main style={{ width: "100%", display: "grid", gap: "0", minHeight: "100dvh", background: "inherit" }}>
         <section
           className="reveal-section hero-section"
           style={{
             ...sectionPanelStyle,
             position: "relative",
             overflow: "hidden",
-            background:
-              "linear-gradient(145deg, #ffffff 0%, #f8f5ff 55%, #ede8f8 100%)",
+            background: "#f8f5ff",
           }}
         >
           <div
@@ -488,7 +567,7 @@ const Home = () => {
               width: "220px",
               height: "220px",
               borderRadius: "40% 60% 64% 36% / 42% 35% 65% 58%",
-              background: "linear-gradient(135deg, #e0d6f7 0%, #c9bde8 100%)",
+              background: "#d7cbf0",
               opacity: 0.85,
               filter: "blur(0.2px)",
             }}
@@ -536,7 +615,7 @@ const Home = () => {
               width: "230px",
               height: "230px",
               borderRadius: "58% 42% 35% 65% / 56% 41% 59% 44%",
-              background: "linear-gradient(135deg, #d8d0f5 0%, #b8aee8 100%)",
+              background: "#cdc2ee",
               opacity: 0.74,
             }}
           />
@@ -553,19 +632,29 @@ const Home = () => {
               gap: "28px",
             }}
           >
-            <div className="home-fade hero-copy" style={{ maxWidth: "900px", paddingLeft: "clamp(10px, 2.2vw, 34px)" }}>
+            <div className="home-fade hero-copy" style={{
+              maxWidth: "900px",
+              paddingLeft: "clamp(10px, 2.2vw, 34px)",
+              background: "rgba(255, 255, 255, 0.84)",
+              border: "1px solid #d8c9f2",
+              borderRadius: "20px",
+              paddingTop: "20px",
+              paddingBottom: "20px",
+              boxShadow: "0 14px 32px rgba(37, 24, 76, 0.12)",
+            }}>
               <h1
                 className="hero-title hero-title-animate"
                 style={{
                   margin: "0 0 12px",
-                  fontSize: "68px",
-                  fontWeight: 300,
+                  fontSize: "74px",
+                  fontWeight: 700,
                   letterSpacing: "1px",
                   lineHeight: 1.05,
                 }}
               >
                 G.E.C.K.O
               </h1>
+              <p className="hero-kicker">Built for first-job confidence</p>
               <p className="delay-1 home-fade subtitle-glow"
                 style={{ margin: "0 0 20px", color: "#5c3fa3",
                   fontWeight: 700, fontSize: "20px", letterSpacing: "0.3px" }}>
@@ -578,22 +667,37 @@ const Home = () => {
                   lineHeight: 1.75,
                   maxWidth: "860px",
                   color: "#4a3f6b",
-                  fontSize: "18px",
+                  fontSize: "19px",
                 }}
               >
                 A finance platform built to support young adults through their first job journey, from payslip understanding to budgeting confidence.
               </p>
               <div className="delay-3 home-fade" style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <a href="#about" className="hero-cta" style={{ backgroundColor: "#5c3fa3", color: "#ffffff" }}>
+                <a href="#about" className="hero-cta" style={{ backgroundColor: "#5c3fa3", color: "#ffffff", border: "1px solid #4e358f" }}>
                   Explore About
                 </a>
                 <a
                   href="#contact"
                   className="hero-cta"
-                  style={{ backgroundColor: "#ede8f8", color: "#5c3fa3", border: "1px solid #c9bde8" }}
+                  style={{ backgroundColor: "#efe6ff", color: "#5c3fa3", border: "1px solid #c6b6ec" }}
                 >
                   Contact Team
                 </a>
+              </div>
+
+              <div className="delay-3 home-fade hero-stat-strip" aria-label="Platform highlights">
+                <div className="hero-stat-card">
+                  <p className="hero-stat-value">Instant</p>
+                  <p className="hero-stat-label">Expense logging</p>
+                </div>
+                <div className="hero-stat-card">
+                  <p className="hero-stat-value">Clear</p>
+                  <p className="hero-stat-label">Payslip breakdowns</p>
+                </div>
+                <div className="hero-stat-card">
+                  <p className="hero-stat-value">Smart</p>
+                  <p className="hero-stat-label">Market-driven tips</p>
+                </div>
               </div>
             </div>
 
@@ -637,8 +741,7 @@ const Home = () => {
             ...sectionPanelStyle,
             position: "relative",
             overflow: "hidden",
-            background:
-              "linear-gradient(145deg, #f8f5ff 0%, #ede8f8 64%, #e4ddf5 100%)",
+            background: "#ede8f8",
           }}
         >
           <div
@@ -712,12 +815,24 @@ const Home = () => {
               </p>
             </div>
 
-            <aside className="about-video-box" aria-label="Demo video placeholder">
-              <h3 style={{ margin: 0, color: "#5c3fa3", fontSize: "22px" }}>Demo Video</h3>
-              <div className="about-video-frame">Video Placeholder</div>
-              <p style={{ margin: 0, color: "#4a3f6b", fontSize: "14px" }}>
-                Replace this box with your final demo recording.
-              </p>
+            <aside className="about-highlight-panel" aria-label="Gecko impact highlights">
+              <h3 style={{ margin: 0, color: "#5c3fa3", fontSize: "22px" }}>Why Gecko Stands Out</h3>
+              <div className="about-highlight-row">
+                <span style={{ color: "#4a3f6b", fontWeight: 700 }}>Learn by doing</span>
+                <span className="about-highlight-metric">Interactive</span>
+              </div>
+              <div className="about-highlight-row">
+                <span style={{ color: "#4a3f6b", fontWeight: 700 }}>Build confidence early</span>
+                <span className="about-highlight-metric">First Job Ready</span>
+              </div>
+              <div className="about-signal-card">
+                <p style={{ margin: 0, color: "#5c3fa3", fontWeight: 800, fontSize: "15px" }}>
+                  Powered by practical guidance
+                </p>
+                <p style={{ margin: "8px 0 0", color: "#4a3f6b", fontSize: "14px", lineHeight: 1.6 }}>
+                  Gecko combines budgeting tools, payslip clarity, and real market context so young adults can make confident money decisions from day one.
+                </p>
+              </div>
             </aside>
           </div>
         </section>
@@ -727,11 +842,10 @@ const Home = () => {
           className="reveal-section reveal-zoom"
           style={{
             ...sectionPanelStyle,
-            minHeight: "112vh",
+            minHeight: "100dvh",
             position: "relative",
             overflow: "hidden",
-            background:
-              "linear-gradient(145deg, #f8f5ff 0%, #f0ebfe 100%)",
+            background: "#f0ebfe",
             borderTop: "1px solid #c9bde8",
             borderBottom: "1px solid #c9bde8",
           }}
@@ -745,7 +859,7 @@ const Home = () => {
               width: "210px",
               height: "210px",
               borderRadius: "40% 60% 64% 36% / 42% 35% 65% 58%",
-              background: "linear-gradient(135deg, #e0d6f7 0%, #c9bde8 100%)",
+              background: "#d7cbf0",
               opacity: 0.7,
               filter: "blur(0.2px)",
             }}
@@ -759,7 +873,7 @@ const Home = () => {
               width: "210px",
               height: "210px",
               borderRadius: "58% 42% 35% 65% / 56% 41% 59% 44%",
-              background: "linear-gradient(135deg, #d8d0f5 0%, #b8aee8 100%)",
+              background: "#cdc2ee",
               opacity: 0.62,
             }}
           />
@@ -802,7 +916,7 @@ const Home = () => {
             <div
               className="contact-box-animate"
               style={{
-                background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+                background: "#f4f1fb",
                 border: "1px solid #c9bde8",
                 borderRadius: "18px",
                 marginTop: "32px",

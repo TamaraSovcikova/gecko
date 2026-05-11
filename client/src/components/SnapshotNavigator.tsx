@@ -36,22 +36,27 @@ const SnapshotNavigator = ({
   return (
     <div
       style={{
-        marginTop: "60px",
-        paddingTop: "20px",
+        marginTop: "38px",
+        paddingTop: "16px",
         borderTop: "1px solid #c9bde8",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        gap: "12px",
+        gap: "10px",
+        flexWrap: "wrap",
       }}
     >
+      <span style={{ fontSize: "12px", color: "#7a6e99", fontWeight: 700 }}>
+        View month
+      </span>
       {/* Left arrow */}
-      <button onClick={goOlder} disabled={!hasSnapshots}>
+      <button className="gecko-pill-btn" onClick={goOlder} disabled={!hasSnapshots}>
         ◀
       </button>
 
       {/* Dropdown (central control) */}
       <select
+        className="gecko-input"
         value={snapshotIndex ?? ""}
         onChange={(e) => {
           const val = e.target.value;
@@ -61,10 +66,6 @@ const SnapshotNavigator = ({
           } else {
             setSnapshotIndex(Number(val));
           }
-        }}
-        style={{
-          padding: "6px 10px",
-          borderRadius: "6px",
         }}
       >
         <option value="">Live (Current Month)</option>
@@ -77,7 +78,7 @@ const SnapshotNavigator = ({
       </select>
 
       {/* Right arrow */}
-      <button onClick={goNewer} disabled={snapshotIndex === null}>
+      <button className="gecko-pill-btn" onClick={goNewer} disabled={snapshotIndex === null}>
         ▶
       </button>
     </div>

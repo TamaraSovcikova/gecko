@@ -64,7 +64,8 @@ const computeHealthScoreBreakdown = ({
   budgetAllocation,
   actualSpending,
 }) => {
-  const monthlyIncome = Math.max(0, Number(takeHome || 0));
+  const annualIncome = Math.max(0, Number(takeHome || 0));
+  const monthlyIncome = annualIncome > 0 ? annualIncome / 12 : 0;
   const budget = Math.max(0, Number(totalBudget || 0));
   const expenses = Math.max(0, Number(totalExpenses || 0));
   const plannedCategories = Array.isArray(budgetAllocation) ? budgetAllocation : [];
@@ -81,7 +82,11 @@ const computeHealthScoreBreakdown = ({
   }
 
   const spendingRatio = monthlyIncome > 0 ? expenses / monthlyIncome : null;
-  const spendingScore = spendingRatio === null ? 50 : clamp((1 - spendingRatio) * 100);
+  const spendingScore = spendingRatio === null
+    ? 50
+    : spendingRatio <= 1
+      ? 100
+      : clamp(100 - (spendingRatio - 1) * 100);
 
   const plannedMap = new Map(
     plannedCategories.map((item) => [String(item.name || "").toLowerCase(), Number(item.value || 0)])

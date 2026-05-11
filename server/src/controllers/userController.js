@@ -15,6 +15,8 @@ const {
   sendMonthlyNewsletterToUser,
 } = require("../services/newsletterService");
 
+const ALLOWED_AVATAR_CHOICES = new Set(["initial", "photo1", "photo2", "photo3", "photo5"]);
+
 const buildAuditEntries = ({ displayNameChanged, auditEvent }) => {
   const entries = [];
 
@@ -63,10 +65,43 @@ const exportUserData = async (req, res) => {
     const userId = req.user.uid;
 
     // Fetch all user data
-    const user = await User.findById(userId);
-    const expenses = await Expense.find({ userId }).sort({ date: 1 });
-    const budgets = await MonthlyBudget.find({ userId }).sort({ createdAt: 1 });
-    const snapshots = await MonthlySnapshot.find({ userId }).sort({ year: 1, month: 1 });
+    const [
+      user,
+      expenses,
+      budgets,
+      snapshots,
+      newsletterSnapshots,
+      firebaseUser,
+    ] = await Promise.all([
+      User.findById(userId),
+      Expense.find({ userId }).sort({ date: 1 }),
+      MonthlyBudget.find({ userId }).sort({ createdAt: 1 }),
+      MonthlySnapshot.find({ userId }).sort({ year: 1, month: 1 }),
+      NewsletterSnapshot.find({ userId }).sort({ year: 1, month: 1, sentAt: 1 }),
+      admin
+        .auth()
+        .getUser(userId)
+        .then((record) => ({
+          uid: record.uid,
+          email: record.email || null,
+          emailVerified: record.emailVerified,
+          displayName: record.displayName || null,
+          photoURL: record.photoURL || null,
+          phoneNumber: record.phoneNumber || null,
+          disabled: record.disabled,
+          providerData: (record.providerData || []).map((provider) => ({
+            uid: provider.uid,
+            providerId: provider.providerId,
+            email: provider.email || null,
+            displayName: provider.displayName || null,
+            phoneNumber: provider.phoneNumber || null,
+            photoURL: provider.photoURL || null,
+          })),
+          metadata: record.metadata || null,
+          customClaims: record.customClaims || null,
+        }))
+        .catch(() => null),
+    ]);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -171,6 +206,25 @@ const exportUserData = async (req, res) => {
       doc.moveDown();
     }
 
+    // ── Newsletter Snapshots ──────────────────────────────────────────────────
+    if (newsletterSnapshots.length > 0) {
+      doc.fontSize(14).font("Helvetica-Bold").text("Newsletter Snapshots");
+      doc.fontSize(10).font("Helvetica");
+
+      newsletterSnapshots.forEach((snapshot) => {
+        const monthName = new Date(snapshot.year, snapshot.month - 1).toLocaleString("default", { month: "long" });
+        doc.text(`\n${monthName} ${snapshot.year}:`);
+        doc.text(`  Sent At: ${new Date(snapshot.sentAt).toLocaleDateString()}`);
+        doc.text(`  Income: £${(snapshot.metrics?.income || 0).toFixed(2)}`);
+        doc.text(`  Expenses: £${(snapshot.metrics?.expenses || 0).toFixed(2)}`);
+        doc.text(`  Savings: £${(snapshot.metrics?.savings || 0).toFixed(2)}`);
+        doc.text(`  Budget Left: £${(snapshot.metrics?.budgetLeft || 0).toFixed(2)}`);
+        doc.text(`  Quiz XP Activity: ${snapshot.metrics?.quizXpActivity || 0}`);
+      });
+
+      doc.moveDown();
+    }
+
     // ── Expenses ──────────────────────────────────────────────────────────────
     if (expenses.length > 0) {
       doc.fontSize(14).font("Helvetica-Bold").text("All Expenses");
@@ -199,6 +253,36 @@ const exportUserData = async (req, res) => {
       doc.moveDown();
     }
 
+    // ── Auth Record ───────────────────────────────────────────────────────────
+    if (firebaseUser) {
+      doc.fontSize(14).font("Helvetica-Bold").text("Authentication Record");
+      doc.fontSize(10).font("Helvetica");
+      doc.text(`UID: ${firebaseUser.uid}`);
+      doc.text(`Auth Email: ${firebaseUser.email || "N/A"}`);
+      doc.text(`Email Verified: ${firebaseUser.emailVerified ? "Yes" : "No"}`);
+      doc.text(`Auth Disabled: ${firebaseUser.disabled ? "Yes" : "No"}`);
+      doc.text(`Providers: ${(firebaseUser.providerData || []).map((provider) => provider.providerId).join(", ") || "N/A"}`);
+      doc.moveDown();
+    }
+
+    // ── Complete Machine-readable Export ──────────────────────────────────────
+    const fullExport = {
+      generatedAt: new Date().toISOString(),
+      user: user.toObject({ virtuals: true }),
+      authRecord: firebaseUser,
+      expenses: expenses.map((expense) => expense.toObject()),
+      monthlyBudgets: budgets.map((budget) => budget.toObject()),
+      monthlySnapshots: snapshots.map((snapshot) => snapshot.toObject()),
+      newsletterSnapshots: newsletterSnapshots.map((snapshot) => snapshot.toObject()),
+    };
+
+    doc.addPage();
+    doc.fontSize(14).font("Helvetica-Bold").text("Complete Data Export (JSON)");
+    doc.moveDown(0.5);
+    doc.fontSize(8).font("Courier").text(JSON.stringify(fullExport, null, 2), {
+      align: "left",
+    });
+
     // Footer
     doc.fontSize(9).font("Helvetica").text("This is your personal data export from Zoar.", { align: "center" });
 
@@ -216,7 +300,13 @@ const deleteUserProfile = async (req, res) => {
     const userId = req.user.uid;
 
     // Delete database data first
-    await Promise.all([
+    const [
+      deletedExpenses,
+      deletedBudgets,
+      deletedSnapshots,
+      deletedNewsletterSnapshots,
+      deletedUser,
+    ] = await Promise.all([
       Expense.deleteMany({ userId }),
       MonthlyBudget.deleteMany({ userId }),
       MonthlySnapshot.deleteMany({ userId }),
@@ -232,7 +322,17 @@ const deleteUserProfile = async (req, res) => {
       return res.status(500).json({ error: "Failed to delete authentication account" });
     }
 
-    res.json({ message: "Profile deleted successfully" });
+    res.json({
+      message: "Profile deleted successfully",
+      deleted: {
+        expenses: deletedExpenses.deletedCount || 0,
+        monthlyBudgets: deletedBudgets.deletedCount || 0,
+        monthlySnapshots: deletedSnapshots.deletedCount || 0,
+        newsletterSnapshots: deletedNewsletterSnapshots.deletedCount || 0,
+        userRecord: deletedUser ? 1 : 0,
+        firebaseAuthUser: 1,
+      },
+    });
   } catch (err) {
     console.error("Error deleting profile:", err);
     res.status(500).json({ error: "Server error" });
@@ -245,7 +345,14 @@ const updateUserProfile = async (req, res) => {
   try {
     const authenticatedUserId = req.user.uid;
     const requestedUserId = req.params.userId || authenticatedUserId;
-    const { payslipData, displayName, auditEvent, onboarding, newsletterOptIn } = req.body;
+    const {
+      payslipData,
+      displayName,
+      auditEvent,
+      onboarding,
+      newsletterOptIn,
+      avatarChoice,
+    } = req.body;
 
     if (requestedUserId !== authenticatedUserId) {
       return res.status(403).json({ error: "You can only update your own profile" });
@@ -312,6 +419,18 @@ const updateUserProfile = async (req, res) => {
         updateDoc.newsletterUnsubscribeTokenHash = hashToken(plainToken);
         updateDoc.newsletterUnsubscribeTokenCreatedAt = new Date();
       }
+    }
+
+    if (typeof avatarChoice === "string") {
+      const normalizedAvatarChoice = avatarChoice.trim().toLowerCase();
+
+      if (!ALLOWED_AVATAR_CHOICES.has(normalizedAvatarChoice)) {
+        return res.status(400).json({
+          error: "Invalid avatar choice. Use one of: initial, photo1, photo2, photo3, photo5",
+        });
+      }
+
+      updateDoc.avatarChoice = normalizedAvatarChoice;
     }
 
     const displayNameChanged = typeof displayName === "string" && trimmedDisplayName !== user.displayName;

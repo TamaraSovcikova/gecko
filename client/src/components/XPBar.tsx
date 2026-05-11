@@ -41,12 +41,12 @@ export default function XPBar() {
         paddingBottom: 10,
         paddingLeft: 16,
         paddingRight: 16,
-        background: "rgba(250, 249, 253, 0.82)",
+        background: "rgba(244, 241, 251, 0.92)",
         backdropFilter: "blur(18px)",
         WebkitBackdropFilter: "blur(18px)",
         border: `1px solid ${COLORS.purple300}`,
         borderRadius: "18px",
-        boxShadow: "0 8px 32px rgba(92, 63, 163, 0.18), 0 2px 8px rgba(92, 63, 163, 0.10)",
+        boxShadow: "0 14px 34px rgba(92, 63, 163, 0.24), 0 4px 12px rgba(92, 63, 163, 0.14)",
         zIndex: 9999,
         overflow: "visible",
         fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
@@ -64,7 +64,7 @@ export default function XPBar() {
             height: CIRCLE_SIZE,
             borderRadius: "50%",
             border: `2.5px solid ${highestBadge.color}`,
-            background: `radial-gradient(circle at 35% 35%, #fff 0%, ${COLORS.purple100} 100%)`,
+            background: COLORS.purple100,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -119,19 +119,37 @@ export default function XPBar() {
           background: COLORS.purple200,
           borderRadius: "999px",
           overflow: "hidden",
+          position: "relative",
         }}
       >
         <div
           style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(255, 255, 255, 0.18)",
+            transform: "translateX(-100%)",
+            animation: "xpSheen 2.6s linear infinite",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
             width: `${progress}%`,
             height: "100%",
-            background: `linear-gradient(90deg, ${COLORS.purple500} 0%, ${COLORS.purple400} 100%)`,
+            background: COLORS.purple500,
             borderRadius: "999px",
             transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
             boxShadow: `0 0 8px ${COLORS.purple500}66`,
           }}
         />
       </div>
+
+      <style>{`
+        @keyframes xpSheen {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(150%); }
+        }
+      `}</style>
 
       {/* FOOTER: streak or prompt */}
       <div
