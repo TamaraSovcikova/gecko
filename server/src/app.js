@@ -33,6 +33,8 @@ app.use(express.json());
 
 require("./jobs/monthlySnapshotJob");
 
+app.use("/", router);
+
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/dashboard", authMiddleware, dashboardRouter);
 app.use("/api/v1/expenses", authMiddleware, expenseRoutes);
@@ -42,7 +44,5 @@ app.use("/api/v1/payslip", authMiddleware, payslipRouter);
 app.use("/api/v1/user", authMiddleware, userRouter);
 app.use("/api/v1/forecast", authMiddleware, forecastRoutes);
 app.use("/api/v1/chat", authMiddleware, chatRoutes);
-
-app.use("/", router);
 
 module.exports = app;

@@ -236,7 +236,7 @@ const TooltipGuide = ({
           left: "16px",
           bottom: "20px",
           zIndex: 1200,
-          border: "1px solid #5c3fa3",
+          border: "1px solid #4e358f",
           borderRadius: "999px",
           background: "#5c3fa3",
           color: "#fff",
@@ -377,7 +377,7 @@ const TooltipGuide = ({
             right: "16px",
             bottom: "20px",
             zIndex: 1200,
-            border: "1px solid #5c3fa3",
+            border: "1px solid #4e358f",
             borderRadius: "999px",
             background: "#5c3fa3",
             color: "#fff",
@@ -518,7 +518,7 @@ const TooltipGuide = ({
               type="button"
               onClick={goNext}
               style={{
-                border: "1px solid #5c3fa3",
+                border: "1px solid #4e358f",
                 borderRadius: "8px",
                 background: "#5c3fa3",
                 color: "#fff",
@@ -568,7 +568,7 @@ const TooltipGuide = ({
                 type="button"
                 onClick={onComplete}
                 style={{
-                  border: "1px solid #5c3fa3",
+                  border: "1px solid #4e358f",
                   borderRadius: "8px",
                   background: "#5c3fa3",
                   color: "#fff",
@@ -593,8 +593,7 @@ const TooltipGuide = ({
                 width: "16px",
                 height: "16px",
                 cursor: "nwse-resize",
-                background:
-                  "linear-gradient(135deg, transparent 0 45%, #b8a4e8 45% 55%, transparent 55% 100%)",
+                background: "#c9bde8",
               }}
             />
           )}

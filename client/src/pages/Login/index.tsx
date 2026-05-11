@@ -8,7 +8,7 @@
 //   - If firstLogin is true  → redirect to /payslip
 //   - If firstLogin is false → redirect to /dashboard
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   fetchSignInMethodsForEmail,
@@ -18,14 +18,24 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
+import Modal from "../../components/Modal";
+import { DataPolicyContent, TermsContent } from "../../components/LegalContent";
 
 const Login = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add("auth-page-bg");
+    return () => {
+      document.body.classList.remove("auth-page-bg");
+    };
+  }, []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeLegalModal, setActiveLegalModal] = useState<"data-policy" | "terms" | null>(null);
 
   // Shared post-login logic - called after either sign-in method succeeds.
   // Gets the ID token, registers the user with the backend,
@@ -98,77 +108,102 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="container d-flex justify-content-center align-items-center min-vh-100"
-      style={{
-        maxWidth: "100%",
-        background:
-          "radial-gradient(circle at 14% 10%, #e8e0fa 0%, rgba(232, 224, 250, 0) 32%), radial-gradient(circle at 90% 88%, #f5f0fe 0%, rgba(245, 240, 254, 0) 36%), #f4f1fb",
-      }}
-    >
-      <div
-        className="card p-4 shadow"
-        style={{
-          width: "100%",
-          maxWidth: "440px",
-          borderRadius: "18px",
-          border: "1px solid #c9bde8",
-          background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
-          boxShadow: "0 20px 30px rgba(92, 63, 163, 0.12)",
-        }}
-      >
-        <h2 className="text-center mb-4" style={{ color: "#5c3fa3", fontWeight: 700, letterSpacing: "0.6px" }}>Login</h2>
+    <div className="auth-shell">
+      <div className="auth-card auth-card-premium">
+        <p className="auth-kicker">Welcome Back</p>
+        <div className="auth-brand-header">
+          <img className="auth-logo" src="/gecko-transparent.png?v=3" alt="Gecko logo" />
+        </div>
+        <h2 className="auth-title auth-title-premium">Login</h2>
+        <p className="auth-subtitle">Pick up where you left off and keep building your money confidence.</p>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {error && <div className="app-note app-status-error auth-error-note">{error}</div>}
 
-        <form onSubmit={handleEmailLogin}>
-          <div className="mb-3">
-            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Email</label>
+        <form onSubmit={handleEmailLogin} className="auth-form">
+          <div className="auth-field">
+            <label className="auth-label">Email</label>
             <input
               type="email"
-              className="form-control"
+              className="auth-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label" style={{ color: "#4a3f6b", fontWeight: 600 }}>Password</label>
+          <div className="auth-field">
+            <label className="auth-label">Password</label>
             <input
               type="password"
-              className="form-control"
+              className="auth-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ borderColor: "#c9bde8", backgroundColor: "#faf9fd" }}
               required
             />
           </div>
           <button
             type="submit"
-            className="btn w-100"
-            style={{ backgroundColor: "#5c3fa3", color: "#ffffff", border: "1px solid #4e358f", fontWeight: 700 }}
+            className="gecko-pill-btn auth-primary-btn"
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <div className="text-center my-3 text-muted">or</div>
+        <div className="auth-divider">or</div>
 
         <button
-          className="btn w-100"
-          style={{ border: "1px solid #c9bde8", color: "#5c3fa3", backgroundColor: "#ede8f8", fontWeight: 600 }}
+          className="gecko-pill-btn auth-secondary-btn"
           onClick={handleGoogleLogin}
           disabled={loading}
         >
           Sign in with Google
         </button>
 
-        <p className="text-center mt-3 mb-0">
+        <p className="auth-switch" style={{ marginTop: "10px", fontSize: "0.9rem" }}>
+          By continuing, you consent to data processing needed to provide this service,
+          including secure authentication and API-powered features, in line with our{" "}
+          <button
+            type="button"
+            onClick={() => setActiveLegalModal("data-policy")}
+            style={{ border: "none", background: "none", padding: 0, color: "#5c3fa3", fontWeight: 700, cursor: "pointer" }}
+          >
+            Data Policy
+          </button>{" "}
+          and{" "}
+          <button
+            type="button"
+            onClick={() => setActiveLegalModal("terms")}
+            style={{ border: "none", background: "none", padding: 0, color: "#5c3fa3", fontWeight: 700, cursor: "pointer" }}
+          >
+            Terms &amp; Conditions
+          </button>
+          .
+        </p>
+
+        <p className="auth-switch">
           Don't have an account? <Link to="/register">Register</Link>
         </p>
       </div>
+
+      {activeLegalModal === "data-policy" && (
+        <Modal onClose={() => setActiveLegalModal(null)}>
+          <div className="app-prose">
+            <p className="app-section-eyebrow">Last updated: 11 May 2026</p>
+            <h2 style={{ marginTop: 0 }}>Data Policy</h2>
+            <DataPolicyContent compact />
+          </div>
+        </Modal>
+      )}
+
+      {activeLegalModal === "terms" && (
+        <Modal onClose={() => setActiveLegalModal(null)}>
+          <div className="app-prose">
+            <p className="app-section-eyebrow">Last updated: 11 May 2026</p>
+            <h2 style={{ marginTop: 0 }}>Terms & Conditions</h2>
+            <TermsContent compact />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -36,6 +36,10 @@ function round2(value) {
   return Number(Number(value || 0).toFixed(2));
 }
 
+function normalizeCategoryName(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 /**
  * Utility: month difference helper
  */
@@ -76,11 +80,13 @@ async function ensureForecastMonthState(userDoc) {
  */
 function buildCategoryBudgetMap(monthlyBudgetDoc) {
   const categoryBudgetMap = {};
+  const categoryLabelMap = {};
 
   const categories = monthlyBudgetDoc?.categories || [];
 
   for (const category of categories) {
-    const name = category.name || category.category || category.label;
+    const rawName = category.name || category.category || category.label;
+    const name = normalizeCategoryName(rawName);
     const budget =
       category.budgetedAmount ??
       category.budget ??
@@ -90,10 +96,14 @@ function buildCategoryBudgetMap(monthlyBudgetDoc) {
     if (!name) continue;
 
     categoryBudgetMap[name] = toMoneyNumber(budget);
+
+    if (!categoryLabelMap[name]) {
+      categoryLabelMap[name] = String(rawName || "").trim() || name;
+    }
   }
 
   console.log("[forecast] categoryBudgetMap =", categoryBudgetMap);
-  return categoryBudgetMap;
+  return { categoryBudgetMap, categoryLabelMap };
 }
 
 /**
@@ -106,14 +116,18 @@ function buildCategoryBudgetMap(monthlyBudgetDoc) {
  *   ]
  * }
  */
-function buildHistoricalCategorySeries(expenses) {
+function buildHistoricalCategorySeries(expenses, categoryLabelMap = {}) {
   const byCategoryAndMonth = {};
 
   for (const expense of expenses) {
     const expenseDate = new Date(expense.date);
-    const category = expense.category;
+    const category = normalizeCategoryName(expense.category);
 
     if (!category || Number(expense.amount) <= 0) continue;
+
+    if (!categoryLabelMap[category]) {
+      categoryLabelMap[category] = String(expense.category || "").trim() || category;
+    }
 
     const monthKey = getMonthKey(expenseDate);
     const monthIndex = getMonthIndex(expenseDate);
@@ -202,7 +216,7 @@ function runCategoryRegression(series) {
 /**
  * Gets current month spend per category
  */
-function buildCurrentMonthSpendMap(expenses, now = new Date()) {
+function buildCurrentMonthSpendMap(expenses, now = new Date(), categoryLabelMap = {}) {
   const currentMonthKey = getMonthKey(now);
   const spendMap = {};
 
@@ -212,8 +226,12 @@ function buildCurrentMonthSpendMap(expenses, now = new Date()) {
 
     if (expenseMonthKey !== currentMonthKey) continue;
 
-    const category = expense.category;
+    const category = normalizeCategoryName(expense.category);
     if (!category) continue;
+
+    if (!categoryLabelMap[category]) {
+      categoryLabelMap[category] = String(expense.category || "").trim() || category;
+    }
 
     spendMap[category] = round2((spendMap[category] || 0) + Number(expense.amount));
   }
@@ -261,12 +279,14 @@ function applyGrossSalaryUpperBound(categoryForecasts, grossSalary) {
 function buildWarnings({
   categoryForecasts,
   categoryBudgetMap,
+  categoryLabelMap,
   dismissedWarningIds,
   currentMonthKey,
 }) {
   const warnings = [];
 
   for (const [category, item] of Object.entries(categoryForecasts)) {
+    const displayCategory = categoryLabelMap[category] || item.category || category;
     const budget = categoryBudgetMap[category] || 0;
 
     if (!budget || budget <= 0) continue;
@@ -286,11 +306,11 @@ function buildWarnings({
       warnings.push({
         id: warningId,
         type: "overspend",
-        category,
+        category: displayCategory,
         budget: round2(budget),
         projectedSpend: round2(finalForecast),
         overspendAmount,
-        message: `You're on track to overspend on ${category} by £${overspendAmount.toFixed(
+        message: `You're on track to overspend on ${displayCategory} by £${overspendAmount.toFixed(
           2
         )} this month based on your recent activity.`,
       });
@@ -336,9 +356,9 @@ async function computeForecastForUser(userId) {
 
   console.log("[forecast] Total expenses found =", allExpenses.length);
 
-  const categoryBudgetMap = buildCategoryBudgetMap(monthlyBudget);
-  const historicalSeries = buildHistoricalCategorySeries(allExpenses);
-  const currentMonthSpendMap = buildCurrentMonthSpendMap(allExpenses, now);
+  const { categoryBudgetMap, categoryLabelMap } = buildCategoryBudgetMap(monthlyBudget);
+  const historicalSeries = buildHistoricalCategorySeries(allExpenses, categoryLabelMap);
+  const currentMonthSpendMap = buildCurrentMonthSpendMap(allExpenses, now, categoryLabelMap);
 
   // Only count months BEFORE the current month as history
   const historicalMonthKeys = new Set();
@@ -403,7 +423,7 @@ async function computeForecastForUser(userId) {
     if (finalForecast < 0) finalForecast = 0;
 
     categoryForecasts[category] = {
-      category,
+      category: categoryLabelMap[category] || category,
       currentSpend: round2(currentSpend),
       currentTrendMean: round2(currentTrendMean),
       regressionPrediction: round2(regressionOutput.regressionPrediction),
@@ -423,6 +443,7 @@ async function computeForecastForUser(userId) {
   const warnings = buildWarnings({
     categoryForecasts: clampedForecasts,
     categoryBudgetMap,
+    categoryLabelMap,
     dismissedWarningIds: user.forecastWarningState?.dismissedWarningIds || [],
     currentMonthKey,
   });

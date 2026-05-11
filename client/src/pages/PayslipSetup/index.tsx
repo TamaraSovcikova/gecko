@@ -454,8 +454,8 @@ const PayslipSetup = () => {
                   style={{
                     marginBottom: "20px",
                     padding: "16px",
-                    backgroundColor: "#fef9e7",
-                    border: "2px solid #fcc200",
+                    backgroundColor: "#f4f1fb",
+                    border: "1px solid #c9bde8",
                     borderRadius: "8px",
                   }}
                 >
@@ -473,7 +473,7 @@ const PayslipSetup = () => {
                           margin: "0 0 8px 0",
                           fontSize: "14px",
                           fontWeight: "600",
-                          color: "#333",
+                          color: "#1a1040",
                         }}
                       >
                         Add Job Title & Location for Tips
@@ -482,7 +482,7 @@ const PayslipSetup = () => {
                         style={{
                           margin: "0",
                           fontSize: "13px",
-                          color: "#666",
+                          color: "#4a3f6b",
                           lineHeight: "1.5",
                         }}
                       >
@@ -567,7 +567,7 @@ const PayslipSetup = () => {
                             <div
                               style={{
                                 fontSize: "14px",
-                                color: "#333",
+                                color: "#1a1040",
                                 fontWeight: "500",
                               }}
                             >
@@ -668,7 +668,7 @@ const PayslipSetup = () => {
                             <div
                               style={{
                                 fontSize: "14px",
-                                color: "#333",
+                                color: "#1a1040",
                                 fontWeight: "500",
                               }}
                             >
@@ -704,7 +704,7 @@ const PayslipSetup = () => {
                 </div>
 
                 {errors.length > 0 && (
-                  <div className="alert alert-warning" role="alert">
+                  <div className="app-note payslip-note" role="alert">
                     <ul className="mb-0">
                       {errors.map((error, index) => (
                         <li key={`error-${index}`}>{error}</li>
@@ -714,13 +714,13 @@ const PayslipSetup = () => {
                 )}
 
                 {apiError && (
-                  <div className="alert alert-danger">{apiError}</div>
+                  <div className="app-note payslip-note app-status-error">{apiError}</div>
                 )}
 
                 <div className="d-flex gap-2">
                   <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="gecko-pill-btn payslip-primary-btn payslip-submit-btn"
                     disabled={loading}
                   >
                     {loading
@@ -728,8 +728,8 @@ const PayslipSetup = () => {
                         ? "Updating..."
                         : "Saving..."
                       : isEditing
-                        ? "Update Payslip"
-                        : "Save Payslip"}
+                        ? "Update Payslip Details"
+                        : "Save Payslip Details"}
                   </button>
                 </div>
               </form>
@@ -755,3 +755,4 @@ const PayslipSetup = () => {
 };
 
 export default PayslipSetup;
+

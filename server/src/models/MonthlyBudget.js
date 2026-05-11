@@ -25,6 +25,18 @@ const MonthlyBudgetSchema = new mongoose.Schema(
     taxPaid: Number,
     niPaid: Number,
     takeHomePay: Number,
+
+    jobTitle: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    location: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     
     // Dependency for Slot 4
     categories: [CategorySchema]

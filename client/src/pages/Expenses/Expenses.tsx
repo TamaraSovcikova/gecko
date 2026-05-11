@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { ForecastPayload } from "../../types/forecast";
+import TopNav from "../../components/TopNav";
 
 type DashboardData = {
   healthScore: number;
@@ -57,6 +58,8 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
   const [availableCategories, setAvailableCategories] = useState<string[]>(
     categories?.map((item) => item.name) || [],
   );
+
+  const isStandalonePage = !categories;
 
   useEffect(() => {
     if (!categories) return;
@@ -177,17 +180,17 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
     }
   };
 
-  return (
+  const formPanel = (
     <div
       className="p-3"
       style={{
         border: "1px solid #c9bde8",
         borderRadius: "14px",
-        background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+        background: "#f4f1fb",
         boxShadow: "0 4px 20px rgba(92, 63, 163, 0.08)",
       }}
     >
-      <h5 className="mb-3" style={{ color: "#5c3fa3", fontWeight: 700 }}>
+      <h5 className="mb-3" style={{ color: "#5c3fa3", fontWeight: 600 }}>
         Log Expense
       </h5>
 
@@ -274,23 +277,24 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
           />
         </div>
 
-        {scanSuccess && <div className="alert alert-info py-1">{scanSuccess}</div>}
-        {scanError && <div className="alert alert-warning py-1">{scanError}</div>}
+        {scanSuccess && <div className="app-note app-status-success" style={{ marginBottom: "8px", padding: "8px 10px" }}>{scanSuccess}</div>}
+        {scanError && <div className="app-note app-status-error" style={{ marginBottom: "8px", padding: "8px 10px" }}>{scanError}</div>}
 
         {formSuccess && (
-          <div className="alert alert-success py-1">{formSuccess}</div>
+          <div className="app-note app-status-success" style={{ marginBottom: "8px", padding: "8px 10px" }}>{formSuccess}</div>
         )}
         {formError && (
-          <div className="alert alert-danger py-1">{formError}</div>
+          <div className="app-note app-status-error" style={{ marginBottom: "8px", padding: "8px 10px" }}>{formError}</div>
         )}
 
         <button
-          className="btn w-100 mt-2"
+          className="gecko-pill-btn w-100 mt-2"
           style={{
-            backgroundColor: "#5c3fa3",
+            background: "#5c3fa3",
             border: "1px solid #4e358f",
             color: "#ffffff",
             fontWeight: 600,
+            boxShadow: "0 10px 22px rgba(92, 63, 163, 0.22)",
           }}
         >
           Save expense
@@ -298,6 +302,23 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
       </form>
     </div>
   );
+
+  if (isStandalonePage) {
+    return (
+      <div className="app-page">
+        <TopNav />
+        <div className="app-content" style={{ maxWidth: "980px" }}>
+          <div className="app-surface">
+            <p className="app-section-eyebrow">Expenses</p>
+            <h1 className="app-page-title" style={{ marginBottom: "12px" }}>Track Spending</h1>
+            {formPanel}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return formPanel;
 };
 
 export default Expenses;

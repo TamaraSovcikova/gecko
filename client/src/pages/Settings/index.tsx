@@ -433,19 +433,13 @@ const SettingsPage = () => {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px" }}>Loading account settings...</div>;
+    return <div className="app-page">Loading account settings...</div>;
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#faf9fd",
-        padding: "24px",
-      }}
-    >
+    <div className="app-page">
       <TopNav />
-      <div style={{ maxWidth: "980px", margin: "24px auto 0" }}>
+      <div className="app-content">
         <div
           style={{ marginBottom: "24px" }}
           data-onboarding="settings-heading"
@@ -498,7 +492,7 @@ const SettingsPage = () => {
           </div>
         )}
 
-        <div style={{ display: "grid", gap: "20px" }}>
+        <div className="app-card-grid two-col">
           <form onSubmit={handleUsernameSave} style={cardStyle}>
             <h2
               style={{
@@ -530,17 +524,14 @@ const SettingsPage = () => {
             )}
             <button
               type="submit"
+              className="gecko-pill-btn"
               disabled={
                 !usernameChanged || usernameState.saving || !username.trim()
               }
               style={{
                 marginTop: "16px",
                 padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#ede8f8",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {usernameState.saving ? "Saving..." : "Save username"}
@@ -604,16 +595,13 @@ const SettingsPage = () => {
             </p>
             <button
               type="button"
+              className="gecko-pill-btn"
               onClick={handleEmailSync}
               disabled={emailSyncState.syncing || isGoogleOnlyAccount}
               style={{
                 marginTop: "10px",
                 padding: "10px 12px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#fff",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {emailSyncState.syncing ? "Syncing..." : "Refresh verified email"}
@@ -640,6 +628,7 @@ const SettingsPage = () => {
             )}
             <button
               type="submit"
+              className="gecko-pill-btn"
               disabled={
                 isGoogleOnlyAccount ||
                 !emailChanged ||
@@ -650,11 +639,7 @@ const SettingsPage = () => {
               style={{
                 marginTop: "16px",
                 padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#ede8f8",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {emailState.saving ? "Saving..." : "Save email"}
@@ -717,16 +702,13 @@ const SettingsPage = () => {
             )}
             <button
               type="submit"
+              className="gecko-pill-btn"
               disabled={newsletterState.saving}
               data-onboarding="settings-newsletter-save"
               style={{
                 marginTop: "16px",
                 padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#ede8f8",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {newsletterState.saving
@@ -736,17 +718,14 @@ const SettingsPage = () => {
 
             <button
               type="button"
+              className="gecko-pill-btn"
               onClick={handleSendNewsletterTest}
               disabled={newsletterTestState.sending || newsletterState.saving}
               data-onboarding="settings-newsletter-test-send"
               style={{
                 marginTop: "14px",
                 padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#ede8f8",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {newsletterTestState.sending
@@ -791,16 +770,13 @@ const SettingsPage = () => {
             )}
             <button
               type="button"
+              className="gecko-pill-btn"
               disabled={onboardingState.saving}
               onClick={handleReplayOnboarding}
               style={{
                 marginTop: "16px",
                 padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid #c9bde8",
                 backgroundColor: "#ede8f8",
-                color: "#5c3fa3",
-                fontWeight: 600,
               }}
             >
               {onboardingState.saving ? "Resetting..." : "Replay onboarding"}

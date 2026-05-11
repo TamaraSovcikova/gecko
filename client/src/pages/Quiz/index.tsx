@@ -24,6 +24,7 @@ const layoutStyle: React.CSSProperties = {
   minHeight: "100vh",
   display: "flex",
   flexDirection: "column",
+  padding: 0,
 };
 
 const contentWrapperStyle: React.CSSProperties = {
@@ -31,20 +32,19 @@ const contentWrapperStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  background:
-    "radial-gradient(circle at 12% 12%, #e8e0fa 0%, rgba(232, 224, 250, 0) 34%), radial-gradient(circle at 88% 86%, #f5f0fe 0%, rgba(245, 240, 254, 0) 38%), #f4f1fb",
-  padding: "24px",
+  background: "transparent",
+  padding: "16px",
 };
 
 /* ------------------ CARD ------------------ */
 
 const cardStyle: React.CSSProperties = {
-  maxWidth: "640px",
+  maxWidth: "780px",
   width: "100%",
-  padding: "40px",
+  padding: "clamp(20px, 4vw, 40px)",
   border: "1px solid #c9bde8",
   borderRadius: "16px",
-  background: "linear-gradient(145deg, #faf9fd 0%, #f4f1fb 62%, #ede8f8 100%)",
+  background: "#f4f1fb",
   boxShadow: "0 8px 24px rgba(92, 63, 163, 0.12)",
 };
 
@@ -82,7 +82,8 @@ const baseButton: React.CSSProperties = {
 const primaryButton: React.CSSProperties = {
   marginTop: "24px",
   padding: "14px 28px",
-  border: "none",
+  border: "1px solid #4e358f",
+  borderRadius: "12px",
   background: "#5c3fa3",
   color: "white",
   fontSize: "16px",
@@ -126,7 +127,7 @@ export default function QuizPage() {
       .catch(console.error);
   }, [token, topic]);
 
-  if (questions.length === 0) return <p>Loading...</p>;
+  if (questions.length === 0) return <div className="app-page">Loading...</div>;
 
   const current = questions[currentIndex];
 
@@ -171,7 +172,7 @@ export default function QuizPage() {
   /* ------------------ UI ------------------ */
 
   return (
-    <div style={layoutStyle}>
+    <div className="app-page" style={layoutStyle}>
       <TopNav />
 
       <div style={contentWrapperStyle}>

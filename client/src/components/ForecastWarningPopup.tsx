@@ -20,26 +20,30 @@ const wrapperStyle: React.CSSProperties = {
 };
 
 const cardStyle: React.CSSProperties = {
-  background: "#fef9e7",
-  border: "1px solid #f0d280",
+  background: "#f4f1fb",
+  border: "1px solid #c9bde8",
   borderRadius: "8px",
   padding: "14px",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+  boxShadow: "0 8px 18px rgba(92, 63, 163, 0.18)",
 };
 
 const titleStyle: React.CSSProperties = {
   fontWeight: 700,
+  color: "#1a1040",
   marginBottom: "8px",
 };
 
 const messageStyle: React.CSSProperties = {
   fontSize: "14px",
+  color: "#4a3f6b",
   lineHeight: 1.4,
   marginBottom: "10px",
 };
 
 const buttonStyle: React.CSSProperties = {
-  border: "none",
+  border: "1px solid #c9bde8",
+  background: "#ede8f8",
+  color: "#5c3fa3",
   borderRadius: "6px",
   padding: "8px 12px",
   cursor: "pointer",
@@ -50,8 +54,6 @@ const ForecastWarningPopup: React.FC<ForecastWarningPopupProps> = ({
   warnings,
   onDismiss,
 }) => {
-  console.log("[ForecastWarningPopup] warnings prop =", warnings);
-
   if (!warnings || warnings.length === 0) {
     return null;
   }
