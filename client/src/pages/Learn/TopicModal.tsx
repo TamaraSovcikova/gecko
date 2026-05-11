@@ -4,11 +4,14 @@
 // full plain-English detail text.
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { LearningTopic } from "../../constants/learningContent";
 import PayslipWalkthrough from "./PayslipWalkthrough";
 import BudgetCalculator from "./BudgetCalculator";
 import TaxBandVisualiser from "./TaxBandVisualiser";
 import SavingsGoalTracker from "./SavingsGoalTracker";
+
+const NAV_HEIGHT = 92;
 
 const INTERACTIVE_WIDGETS: Record<string, React.ComponentType> = {
   "payslip-gross-net": PayslipWalkthrough,
@@ -162,7 +165,7 @@ export default function TopicModal({
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     // Backdrop
     <div
       onClick={onClose}
@@ -170,11 +173,11 @@ export default function TopicModal({
         position: "fixed",
         inset: 0,
         background: "rgba(0,0,0,0.35)",
-        zIndex: 1050,
+        zIndex: 10000,
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
-        padding: "3rem 1rem 1rem",
+        padding: `${NAV_HEIGHT + 12}px 1rem 1rem`,
         backdropFilter: "blur(2px)",
       }}
     >
@@ -186,7 +189,7 @@ export default function TopicModal({
           borderRadius: 20,
           width: "100%",
           maxWidth: 640,
-          maxHeight: "70vh",
+          maxHeight: `calc(100vh - ${NAV_HEIGHT + 24}px)`,
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
@@ -260,10 +263,12 @@ export default function TopicModal({
               cursor: "pointer",
               flexShrink: 0,
               color: "#6B7280",
-              fontSize: 14,
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1,
             }}
           >
-            <i className="bi bi-x-lg" />
+            X
           </button>
         </div>
 
@@ -368,6 +373,7 @@ export default function TopicModal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
