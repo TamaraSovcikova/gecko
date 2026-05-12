@@ -477,11 +477,7 @@ const Dashboard = () => {
     ? displayedData.takeHome / 12
     : 0;
 
-  const displayedTotalSpending = displayedData
-    ? (displayedData.actualSpending || []).reduce((sum, item) => sum + Number(item.value || 0), 0)
-    : 0;
-
-  const incomeBudgetLeft = monthlyTakeHome - displayedTotalSpending;
+  const incomeBudgetLeft = displayedData?.budgetLeft ?? 0;
 
   const visibleTips = displayedData?.adzunaTips
     ? showAllTips
