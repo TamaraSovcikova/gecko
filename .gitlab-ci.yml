@@ -31,5 +31,6 @@ build:       # This job runs in the build stage, which runs first.
   image: node:20
   script:
     - cd client
+    - rm -f package-lock.json
     - npm install
     - npm run build
