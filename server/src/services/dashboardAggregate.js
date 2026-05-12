@@ -26,6 +26,8 @@ const User = require("../models/User");
 const { getAverageSalary } = require("../services/adzunaCalculator");
 const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
 
+const MAX_EXPENSE_AMOUNT = 100000;
+
 async function computeDashboard(userId, month = null, year = null) {
   // Default to current month/year if not provided
   const now = new Date();
@@ -42,12 +44,17 @@ async function computeDashboard(userId, month = null, year = null) {
   const totalBudget = budgetAllocation.reduce((sum, cat) => sum + cat.value, 0);
 
   // individual expenses sorted by date
-  const expenses = await Expense.find({ userId, month, year })
+  const expenses = await Expense.find({
+    userId,
+    month,
+    year,
+    amount: { $gt: 0, $lte: MAX_EXPENSE_AMOUNT },
+  })
   .sort({ date: -1, createdAt: -1 });
 
   // Fetch actual expenses for the specified month/year
   const categoryTotals = await Expense.aggregate([
-    { $match: { userId, month, year } },
+    { $match: { userId, month, year, amount: { $gt: 0, $lte: MAX_EXPENSE_AMOUNT } } },
     { $group: { _id: "$category", total: { $sum: "$amount" } } },
   ]);
 

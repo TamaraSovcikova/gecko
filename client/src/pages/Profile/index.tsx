@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+import { signOut } from "../../firebase/authClient";
 import { auth } from "../../firebase/config";
 import axios from "axios";
 import TopNav from "../../components/TopNav";

@@ -17,11 +17,14 @@ type GamificationData = {
   xpIntoLevel: number;
   xpNeeded: number;
   streakAtRisk: boolean;
+  highestSeenBadgeLevel: number;
+  badgeResetToken: string;
 };
 
 type GamificationContextType = {
   data: GamificationData | null;
   refreshGamification: () => Promise<void>;
+  markBadgeSeen: (level: number) => Promise<void>;
 };
 
 const GamificationContext = createContext<GamificationContextType | undefined>(
@@ -51,6 +54,33 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const markBadgeSeen = async (level: number) => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/quiz/badge/seen`,
+        { level },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      setData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          highestSeenBadgeLevel: Number(res.data?.highestSeenBadgeLevel || prev.highestSeenBadgeLevel || 0),
+        };
+      });
+    } catch (err) {
+      console.error("Failed to persist badge seen state:", err);
+    }
+  };
+
   useEffect(() => {
     // Only fetch when token is available and auth is done loading
     if (token) {
@@ -63,6 +93,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
       value={{
         data,
         refreshGamification: fetchGamification,
+        markBadgeSeen,
       }}
     >
       {children}
