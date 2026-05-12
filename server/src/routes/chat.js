@@ -30,8 +30,16 @@ function specificPrompt(data) {
 router.post("/", async (req, res) => {
     try {
         const { message } = req.body;
-        //const user_id = req.user.id;
-        const user_id = "test_user_id";
+        const user_id = req.user?.uid || req.user?.id;
+
+        if (!user_id) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        if (!process.env.GROQ_API_KEY) {
+            return res.status(500).json({ error: "Groq API key not configured" });
+        }
+
         const dashboardData = await retrieveDashboardData(user_id);
         const sanitisedContext = await retrieveSanitisedContext(dashboardData);
         console.log("SANITISED CONTEXT:", sanitisedContext);
@@ -59,6 +67,7 @@ router.post("/", async (req, res) => {
         res.json({ reply });
 
     } catch (error) {
+        console.error("[chat] Groq request failed:", error?.response?.data || error?.message || error);
         res.status(500).json({error: "No Groq luck",});
     }
 });

@@ -38,6 +38,8 @@ const calculateGamification = (user) => {
     xpIntoLevel: xp - xpAtLevelStart,
     xpNeeded: getXpForLevel(level),
     streakAtRisk: user.streakAtRisk ?? false,
+    highestSeenBadgeLevel: user.highestSeenBadgeLevel || 0,
+    badgeResetToken: user.badgeResetToken || "",
   };
 };
 
@@ -184,9 +186,42 @@ const getGamification = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/quiz/badge/seen
+ */
+const markBadgeSeen = async (req, res) => {
+  try {
+    if (!req.user?.uid) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const level = Number(req.body?.level);
+    if (!Number.isFinite(level) || level < 1) {
+      return res.status(400).json({ message: "Invalid badge level" });
+    }
+
+    const user = await User.findById(req.user.uid);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const currentSeen = Number(user.highestSeenBadgeLevel || 0);
+    user.highestSeenBadgeLevel = Math.max(currentSeen, Math.floor(level));
+    await user.save();
+
+    return res.status(200).json({
+      highestSeenBadgeLevel: user.highestSeenBadgeLevel,
+    });
+  } catch (err) {
+    console.error("Badge seen update error:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   fetchQuiz,
   fetchTestQuiz,
   completeQuiz,
   getGamification,
+  markBadgeSeen,
 };

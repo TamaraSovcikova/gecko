@@ -16,6 +16,7 @@ const now = new Date();
 const month = Number(process.env.SEED_MONTH || now.getMonth() + 1);
 const year = Number(process.env.SEED_YEAR || now.getFullYear());
 const HISTORY_MONTHS = 11;
+const BADGE_RESET_TOKEN = process.env.SEED_BADGE_RESET_TOKEN || `seed-${now.toISOString()}`;
 
 const BASE_XP = 100;
 const GROWTH_RATE = 1.2;
@@ -240,6 +241,8 @@ const seedUser = async (entry) => {
       },
       xp: entry.xpTotal,
       level: calculateLevel(entry.xpTotal),
+      highestSeenBadgeLevel: 0,
+      badgeResetToken: BADGE_RESET_TOKEN,
       weeklyStreak: Math.max(1, Math.min(12, Math.round(entry.quizzesCompleted / 2))),
       lastQuizCompletedAt: new Date(),
       completedQuizzesThisMonth: entry.quizzesCompleted,

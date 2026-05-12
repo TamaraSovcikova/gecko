@@ -99,6 +99,21 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
 
+    highestSeenBadgeLevel: {
+      type: Number,
+      default: 0,
+    },
+
+    badgeResetToken: {
+      type: String,
+      default: "",
+    },
+
+    seenSnapshotPopupKeys: {
+      type: [String],
+      default: [],
+    },
+
     // Drives post-login redirect:
     //   false → send to /payslip-setup (onboarding not done)
     //   true  → send to /dashboard

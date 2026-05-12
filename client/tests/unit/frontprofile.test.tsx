@@ -10,7 +10,7 @@ import React from "react";
 
 vi.mock("axios");
 vi.mock("../../src/firebase/config", () => ({auth: {}, app: {}}));
-vi.mock("firebase/auth", () => ({signOut: vi.fn().mockResolvedValue(undefined)}));
+vi.mock("../../src/firebase/authClient", () => ({signOut: vi.fn().mockResolvedValue(undefined)}));
 vi.mock("../../src/context/AuthContext", () => ({
     useAuth: () => ({
         currentUser: { uid: "testuser", email: "test@example.com" },

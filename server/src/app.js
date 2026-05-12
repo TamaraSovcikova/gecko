@@ -14,6 +14,7 @@ const forecastRoutes = require("./routes/forecast");
 require("./config/firebase"); // initializes Firebase once
 
 const snapshotRoutes = require("./routes/snapshot");
+const chatRoutes = require("./routes/chat");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/v1/quiz", authMiddleware, quizRoutes);
 app.use("/api/v1/payslip", authMiddleware, payslipRouter);
 app.use("/api/v1/user", authMiddleware, userRouter);
 app.use("/api/v1/forecast", authMiddleware, forecastRoutes);
+app.use("/api/v1/chat", authMiddleware, chatRoutes);
 
 app.use("/", router);
 

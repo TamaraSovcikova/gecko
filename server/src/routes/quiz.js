@@ -8,6 +8,7 @@ const {
   fetchTestQuiz,
   completeQuiz,
   getGamification,
+  markBadgeSeen,
 } = require("../controllers/quizController");
 
 // Main quiz endpoint (supports ?topic=...)
@@ -21,5 +22,8 @@ router.post("/complete", authMiddleware, completeQuiz);
 
 // Gamification state (XP, level, streak UI)
 router.get("/gamification", authMiddleware, getGamification);
+
+// Persist highest badge level the user has dismissed
+router.post("/badge/seen", authMiddleware, markBadgeSeen);
 
 module.exports = router;

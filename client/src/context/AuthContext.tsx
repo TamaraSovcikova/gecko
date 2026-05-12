@@ -20,6 +20,7 @@ type AuthProfile = {
   avatarChoice?: "initial" | "photo1" | "photo2" | "photo3" | "photo5";
   onboardingCompletedPages?: string[];
   newsletterOptIn?: boolean;
+  seenSnapshotPopupKeys?: string[];
   payslipData?: {
     jobTitle?: string;
     location?: string;
@@ -80,6 +81,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         onboardingCompletedPages:
           response.data?.financialOnboarding?.completedPages || [],
         newsletterOptIn: Boolean(response.data?.newsletterOptIn),
+        seenSnapshotPopupKeys: Array.isArray(response.data?.seenSnapshotPopupKeys)
+          ? response.data.seenSnapshotPopupKeys
+          : [],
         payslipData: {
           jobTitle: response.data?.payslipData?.jobTitle,
           location: response.data?.payslipData?.location,
@@ -111,6 +115,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             onboardingCompletedPages:
               retryResponse.data?.financialOnboarding?.completedPages || [],
             newsletterOptIn: Boolean(retryResponse.data?.newsletterOptIn),
+            seenSnapshotPopupKeys: Array.isArray(retryResponse.data?.seenSnapshotPopupKeys)
+              ? retryResponse.data.seenSnapshotPopupKeys
+              : [],
             payslipData: {
               jobTitle: retryResponse.data?.payslipData?.jobTitle,
               location: retryResponse.data?.payslipData?.location,

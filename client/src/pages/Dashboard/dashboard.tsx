@@ -133,6 +133,7 @@ const Dashboard = () => {
   const [snapshots, setSnapshots] = useState<MonthlySnapshotData[]>([]);
   const [popupSnapshot, setPopupSnapshot] =
     useState<MonthlySnapshotData | null>(null);
+  const [activeSnapshotPopupKey, setActiveSnapshotPopupKey] = useState<string | null>(null);
   // dashboard states
   const navigate = useNavigate();
   const location = useLocation();
@@ -658,15 +659,51 @@ const Dashboard = () => {
 
     if (!latestSnapshot) return;
 
-    const key = `snapshotSeen_${currentUser.uid}_${snapshotMonth}_${snapshotYear}`;
-    const alreadySeen = localStorage.getItem(key);
+    const snapshotCreatedAt = Date.parse(latestSnapshot.createdAt || "");
+    const isFreshReseedSnapshot =
+      Number.isFinite(snapshotCreatedAt) &&
+      now.getTime() - snapshotCreatedAt <= 24 * 60 * 60 * 1000;
+    const isFirstDayOfMonth = now.getDate() === 1;
 
-    if (!alreadySeen) {
-      setPopupSnapshot(latestSnapshot);
-      setShowSnapshotPopup(true);
-      localStorage.setItem(key, "true");
+    // Normal behavior: only show on day 1.
+    // Reseed behavior: allow once if previous-month snapshot was freshly regenerated.
+    if (!isFirstDayOfMonth && !isFreshReseedSnapshot) {
+      return;
     }
-  }, [snapshots, currentUser]);
+
+    const popupSeenKey = `snapshotSeen_${currentUser.uid}_${snapshotMonth}_${snapshotYear}_${Number.isFinite(snapshotCreatedAt) ? snapshotCreatedAt : "na"}`;
+    const alreadySeenLocally = localStorage.getItem(popupSeenKey);
+    const alreadySeenOnServer = Boolean(profile?.seenSnapshotPopupKeys?.includes(popupSeenKey));
+
+    if (alreadySeenLocally || alreadySeenOnServer) {
+      return;
+    }
+
+    setPopupSnapshot(latestSnapshot);
+    setActiveSnapshotPopupKey(popupSeenKey);
+    setShowSnapshotPopup(true);
+  }, [snapshots, currentUser, profile?.seenSnapshotPopupKeys]);
+
+  const handleCloseSnapshotPopup = async () => {
+    const popupSeenKey = activeSnapshotPopupKey;
+
+    if (popupSeenKey && token) {
+      localStorage.setItem(popupSeenKey, "true");
+
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/v1/snapshots/popup-seen`,
+          { popupKey: popupSeenKey },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+      } catch (err) {
+        console.error("[Dashboard] Failed to persist snapshot popup state:", err);
+      }
+    }
+
+    setShowSnapshotPopup(false);
+    setActiveSnapshotPopupKey(null);
+  };
 
   const getTipColor = (priority: string) => {
     switch (priority) {
@@ -1056,7 +1093,7 @@ const Dashboard = () => {
 
       {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
-        <Modal onClose={() => setShowSnapshotPopup(false)}>
+        <Modal onClose={handleCloseSnapshotPopup}>
           <MonthlySnapshot snapshot={popupSnapshot} />
         </Modal>
       )}
