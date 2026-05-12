@@ -345,9 +345,6 @@ const Dashboard = () => {
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
-
-
-
   const refreshSnapshotViewData = useCallback(async () => {
     if (!isSnapshotMode || !selectedSnapshot || loading || !token) {
       setSnapshotViewData(null);
