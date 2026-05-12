@@ -20,8 +20,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-import Login from "../../pages/Login/index";
-import { registerUser } from "../../api/authApi";
+import Login from "../../src/pages/Login/index";
+import { registerUser } from "../../src/api/authApi";
 
 // --- Mock firebase/auth used in Login ---
 vi.mock("firebase/auth", () => {
@@ -39,7 +39,7 @@ vi.mock("firebase/auth", () => {
 });
 
 // --- Mock backend registerUser used in Login.handlePostLogin ---
-vi.mock("../../api/authApi", () => ({
+vi.mock("../../src/api/authApi", () => ({
   registerUser: vi.fn(async () => ({
     firstLogin: true, // force redirect to /payslip
     user: {},

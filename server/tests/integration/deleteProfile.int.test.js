@@ -22,11 +22,11 @@ require("../setupTestDB");
 
 const request = require("supertest");
 
-const User = require("../../models/User");
-const Expense = require("../../models/Expense");
-const MonthlyBudget = require("../../models/MonthlyBudget");
-const MonthlySnapshot = require("../../models/MonthlySnapshot");
-const NewsletterSnapshot = require("../../models/NewsletterSnapshot");
+const User = require("../../src/models/User");
+const Expense = require("../../src/models/Expense");
+const MonthlyBudget = require("../../src/models/MonthlyBudget");
+const MonthlySnapshot = require("../../src/models/MonthlySnapshot");
+const NewsletterSnapshot = require("../../src/models/NewsletterSnapshot");
 
 // -----------------------------
 // Test helper: snapshot seeder
@@ -46,14 +46,14 @@ const createSnapshot = (overrides = {}) => ({
 });
 
 // mock firebase
-jest.mock("../../config/firebase", () => ({
+jest.mock("../../src/config/firebase", () => ({
   auth: () => ({
     deleteUser: jest.fn().mockResolvedValue(true),
   }),
 }));
 
 // mock auth middleware
-jest.mock("../../middleware/auth", () => {
+jest.mock("../../src/middleware/auth", () => {
   return (req, res, next) => {
     req.user = { uid: "gprUser123", email: "gpr@test.com" };
     next();
@@ -61,14 +61,14 @@ jest.mock("../../middleware/auth", () => {
 });
 
 // mock expense forecast
-jest.mock("../../services/forecastService", () => ({
+jest.mock("../../src/services/forecastService", () => ({
   computeForecastForUser: jest.fn().mockResolvedValue({
     warnings: [],
     forecast: [],
   }),
 }));
 
-const app = require("../../app");
+const app = require("../../src/app");
 
 describe("GPR Integration: secure user data wipe", () => {
   beforeEach(async () => {

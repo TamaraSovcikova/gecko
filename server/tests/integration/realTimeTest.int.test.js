@@ -24,12 +24,12 @@ process.env.FIREBASE_CLIENT_EMAIL = "test@test-project.iam.gserviceaccount.com";
 process.env.FIREBASE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----\\n";
 
 const request = require("supertest");
-const User = require("../../models/User");
-const Expense = require("../../models/Expense");
-const MonthlyBudget = require("../../models/MonthlyBudget");
+const User = require("../../src/models/User");
+const Expense = require("../../src/models/Expense");
+const MonthlyBudget = require("../../src/models/MonthlyBudget");
 
 // -------------------- MOCK forecast service (prevents ESM crash) --------------------
-jest.mock("../../services/forecastService", () => ({
+jest.mock("../../src/services/forecastService", () => ({
   computeForecastForUser: jest.fn().mockResolvedValue({
     warnings: [],
     forecast: [],
@@ -37,7 +37,7 @@ jest.mock("../../services/forecastService", () => ({
 }));
 
 // -------------------- mock auth middleware --------------------
-jest.mock("../../middleware/auth", () => {
+jest.mock("../../src/middleware/auth", () => {
   return (req, res, next) => {
     req.user = { uid: "testUser123" };
     next();
@@ -45,14 +45,14 @@ jest.mock("../../middleware/auth", () => {
 });
 
 // -------------------- mock dashboard aggregate service --------------------
-jest.mock("../../services/dashboardAggregate", () => ({
+jest.mock("../../src/services/dashboardAggregate", () => ({
   computeDashboard: jest.fn(),
 }));
 
-const { computeDashboard } = require("../../services/dashboardAggregate");
+const { computeDashboard } = require("../../src/services/dashboardAggregate");
 
 // IMPORTANT: require app AFTER mocks
-const app = require("../../app");
+const app = require("../../src/app");
 
 describe("Realtime journey integration test", () => {
   let ioMock;

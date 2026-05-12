@@ -45,7 +45,7 @@ process.env.FIREBASE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\\nfake\\n-----EN
 
 // -------------------- Forecast service mock (IMPORTANT: prevents ESM crash) --------------------
 
-jest.mock("../../services/forecastService", () => ({
+jest.mock("../../src/services/forecastService", () => ({
   computeForecastForUser: jest.fn().mockResolvedValue({
     warnings: [],
     forecast: [],
@@ -54,13 +54,13 @@ jest.mock("../../services/forecastService", () => ({
 
 // -------------------- Adzuna service mock --------------------
 
-jest.mock("../../services/adzunaCalculator", () => ({
+jest.mock("../../src/services/adzunaCalculator", () => ({
   getAverageSalary: jest.fn().mockResolvedValue(35000),
 }));
 
 // -------------------- App --------------------
 
-const app = require("../../app");
+const app = require("../../src/app");
 
 // -------------------- In-memory DB setup --------------------
 

@@ -20,9 +20,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-import { AuthProvider } from "../../context/AuthContext";
-import Profile from "../../pages/Profile";
-import Login from "../../pages/Login";
+import { AuthProvider } from "../../src/context/AuthContext";
+import Profile from "../../src/pages/Profile";
+import Login from "../../src/pages/Login";
 
 // ---------------- FIREBASE MOCK ----------------
 
@@ -62,19 +62,19 @@ vi.mock("axios", () => ({
 
 // ---------------- NOISY COMPONENT MOCKS ----------------
 
-vi.mock("../../components/TopNav", () => ({
+vi.mock("../../src/components/TopNav", () => ({
   default: () => <div>TopNav</div>,
 }));
 
-vi.mock("../../components/ProfileAvatar", () => ({
+vi.mock("../../src/components/ProfileAvatar", () => ({
   default: () => <div>Avatar</div>,
 }));
 
-vi.mock("../../components/TooltipGuide", () => ({
+vi.mock("../../src/components/TooltipGuide", () => ({
   default: () => null,
 }));
 
-vi.mock("../../hooks/usePageOnboarding", () => ({
+vi.mock("../../src/hooks/usePageOnboarding", () => ({
   usePageOnboarding: () => ({
     isOpen: false,
     activeStepNumber: 0,
@@ -85,7 +85,7 @@ vi.mock("../../hooks/usePageOnboarding", () => ({
   }),
 }));
 
-vi.mock("../../context/GamificationContext", () => ({
+vi.mock("../../src/context/GamificationContext", () => ({
   useGamification: () => ({
     data: null,
   }),

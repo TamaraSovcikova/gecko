@@ -5,16 +5,16 @@ import "@testing-library/jest-dom";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-import { AuthProvider } from "../../context/AuthContext";
-import { GamificationProvider } from "../../context/GamificationContext";
-import Dashboard from "../../pages/Dashboard/dashboard";
-import XPBar from "../../components/XPBar";
+import { AuthProvider } from "../../src/context/AuthContext";
+import { GamificationProvider } from "../../src/context/GamificationContext";
+import Dashboard from "../../src/pages/Dashboard/dashboard";
+import XPBar from "../../src/components/XPBar";
 
 // ---------------- SOCKET MOCK ----------------
 
 let socketHandlers: Record<string, Function> = {};
 
-vi.mock("../../hooks/useSocket", () => ({
+vi.mock("../../src/hooks/useSocket", () => ({
   useSocket: () => ({
     on: vi.fn((event: string, cb: Function) => {
       socketHandlers[event] = cb;
@@ -59,27 +59,27 @@ vi.mock("axios", () => ({
 
 // ---------------- NOISY COMPONENT MOCKS ----------------
 
-vi.mock("../../components/TopNav", () => ({
+vi.mock("../../src/components/TopNav", () => ({
   default: () => <div>TopNav</div>,
 }));
 
-vi.mock("../../pages/Dashboard/groqChat.tsx", () => ({
+vi.mock("../../src/pages/Dashboard/groqChat.tsx", () => ({
   default: () => null,
 }));
 
-vi.mock("../../components/TooltipGuide", () => ({
+vi.mock("../../src/components/TooltipGuide", () => ({
   default: () => null,
 }));
 
-vi.mock("../../components/BreakdownPanel", () => ({
+vi.mock("../../src/components/BreakdownPanel", () => ({
   default: () => null,
 }));
 
-vi.mock("../../components/SnapshotNavigator", () => ({
+vi.mock("../../src/components/SnapshotNavigator", () => ({
   default: () => null,
 }));
 
-vi.mock("../../dev/dashboardDebug", () => ({
+vi.mock("../../src/dev/dashboardDebug", () => ({
   attachDashboardDebug: vi.fn(),
 }));
 
@@ -292,29 +292,6 @@ describe("Slot 3 → 4 → 5: real-time budget update + quiz XP update", () => {
   await act(async () => {
     await axios.get("/api/v1/quiz/gamification");
   });
-
-  /*
-  (axios.get as any).mockImplementation((url: string) => {
-    if (url.includes("/api/v1/dashboard")) {
-      return Promise.resolve({ data: initialDashboardData });
-    }
-
-    if (url.includes("/api/snapshots")) {
-      return Promise.resolve({ data: [] });
-    }
-
-    if (url.includes("/api/v1/quiz/gamification")) {
-      return Promise.resolve({ data: updatedGamificationData });
-    }
-
-    return Promise.resolve({ data: null });
-  });
-
-  await act(async () => {
-    await axios.get("/api/v1/quiz/gamification");
-  });
-
-  */
 
   // =========================
   // THEN: gamification (XP + level) updates in UI
