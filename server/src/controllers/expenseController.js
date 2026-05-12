@@ -193,7 +193,9 @@ exports.createExpense = async (req, res) => {
     console.log('[expenseController] Expense created successfully with ID =', expense._id);
 
     // Recompute dashboard + forecast and emit one combined live update
-    // const { dashboardData, forecastData } = await emitDashboardUpdate(req, userId);
+    const { dashboardData, forecastData } = await emitDashboardUpdate(req, userId);
+
+    /*
     const dashboardData = await computeDashboard(userId);
     let forecastData = null;
     try {
@@ -203,6 +205,7 @@ exports.createExpense = async (req, res) => {
       console.error('[expenseController] Forecast recompute failed:', forecastError);
     }
     // -----TEMPORARY ^ -----
+    */
 
     console.log('[expenseController] Returning expense + dashboard + forecast response');
 
