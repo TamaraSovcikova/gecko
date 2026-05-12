@@ -9,7 +9,7 @@ const NewsletterSnapshot = require("../src/models/NewsletterSnapshot");
 const MONGODB_URI = process.env.MONGODB_URI;
 const seedUserIds = process.env.SEED_USER_ID
   ? [process.env.SEED_USER_ID]
-  : ["mBrFMABNaNcy4kfa9ycBM4IZJQN2", "4fkv879AkYZDtDyIKdCCjYKI0o62", "AEom1o4SkZddabkGAUNuBU4sp2J3"];
+  : ["mBrFMABNaNcy4kfa9ycBM4IZJQN2", "s1rmqjptythVg43BQPPTQ9LPKDC3", "AEom1o4SkZddabkGAUNuBU4sp2J3"];
 const now = new Date();
 const month = Number(process.env.SEED_MONTH || now.getMonth() + 1);
 const year = Number(process.env.SEED_YEAR || now.getFullYear());

@@ -17,6 +17,23 @@ const month = Number(process.env.SEED_MONTH || now.getMonth() + 1);
 const year = Number(process.env.SEED_YEAR || now.getFullYear());
 const HISTORY_MONTHS = 11;
 
+const BASE_XP = 100;
+const GROWTH_RATE = 1.2;
+
+const getXpForLevel = (level) => Math.floor(BASE_XP * Math.pow(GROWTH_RATE, level));
+
+const calculateLevel = (xp) => {
+  let level = 0;
+  let remainingXp = xp;
+
+  while (remainingXp >= getXpForLevel(level)) {
+    remainingXp -= getXpForLevel(level);
+    level++;
+  }
+
+  return level;
+};
+
 const buildSeedMonths = (anchorMonth, anchorYear, count) => {
   const months = [];
 
@@ -69,7 +86,7 @@ const userSeeds = [
     ],
   },
   {
-    id: "4fkv879AkYZDtDyIKdCCjYKI0o62",
+    id: "s1rmqjptythVg43BQPPTQ9LPKDC3",
     email: "seed.user.two@example.com",
     displayName: "User2",
     jobTitle: "Marketing Intern",
@@ -77,9 +94,9 @@ const userSeeds = [
     grossSalary: 2800,
     taxPaid: 360,
     niPaid: 170,
-    xpTotal: 245,
-    xpEarned: 60,
-    quizzesCompleted: 4,
+    xpTotal: 780,
+    xpEarned: 120,
+    quizzesCompleted: 16,
     healthScore: 69,
     trends: [
       "Dining out increased this month.",
@@ -221,7 +238,12 @@ const seedUser = async (entry) => {
         jobTitle: entry.jobTitle,
         location: entry.location,
       },
-      xpTotal: entry.xpTotal,
+      xp: entry.xpTotal,
+      level: calculateLevel(entry.xpTotal),
+      weeklyStreak: Math.max(1, Math.min(12, Math.round(entry.quizzesCompleted / 2))),
+      lastQuizCompletedAt: new Date(),
+      completedQuizzesThisMonth: entry.quizzesCompleted,
+      streakAtRisk: false,
       hasCompletedOnboarding: true,
       financialOnboarding: {
         completedPages: ["/dashboard", "/payslip"],
