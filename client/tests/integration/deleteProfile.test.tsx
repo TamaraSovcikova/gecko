@@ -28,7 +28,7 @@ import Login from "../../src/pages/Login";
 
 let authStateCallback: ((user: any) => void) | null = null;
 
-vi.mock("firebase/auth", () => {
+vi.mock("../../firebase/authClient", () => {
   const mockUser = {
     uid: "test-user",
     email: "test@example.com",

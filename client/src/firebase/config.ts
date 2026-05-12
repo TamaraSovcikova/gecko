@@ -3,8 +3,8 @@
 //   - Authenticate users (sign in, sign up, sign out)
 //   - Obtain ID tokens sent to the Express backend for verification
 
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp } from "../../node_modules/firebase/app/dist/esm/index.esm.js";
+import { getAuth } from "../../node_modules/firebase/auth/dist/esm/index.esm.js";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

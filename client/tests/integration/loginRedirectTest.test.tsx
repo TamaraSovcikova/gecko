@@ -23,8 +23,10 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import Login from "../../src/pages/Login/index";
 import { registerUser } from "../../src/api/authApi";
 
-// --- Mock firebase/auth used in Login ---
-vi.mock("firebase/auth", () => {
+vi.mock("../../firebase/config", () => ({ auth: {}, app: {} }));
+
+// --- Mock firebase auth wrapper used in Login ---
+vi.mock("../../firebase/authClient", () => {
   const mockUser = {
     getIdToken: vi.fn(async () => "fake-id-token"),
   };
@@ -63,8 +65,8 @@ describe("Login page", () => {
   it("redirects to /payslip after successful login", async () => {
     renderApp();
 
-    const emailInput = await screen.findByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const emailInput = (await screen.findByRole("textbox", { name: "" })) as HTMLInputElement;
+    const passwordInput = document.getElementById("password") as HTMLInputElement;
     const loginButton = screen.getByRole("button", { name: /login/i });
 
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });

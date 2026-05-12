@@ -22,7 +22,8 @@ vi.mock("recharts", () => ({
     Pie: ({ children }: any) => <div>{children}</div>,
     Cell: () => <div />,
     Tooltip: () => <div />,
-    Legend: () => <div />
+  Legend: () => <div />, 
+  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
 }));
 
 describe("Frontend (Vitest): Empty dashboard charts", () => {beforeEach(() => {vi.clearAllMocks();});

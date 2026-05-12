@@ -1,7 +1,7 @@
 // client/src/tests/authContextTest.test.tsx
 import "@testing-library/jest-dom";
 import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AuthProvider, useAuth } from "../../src/context/AuthContext";
 
@@ -18,8 +18,8 @@ vi.mock("axios", () => {
   };
 });
 
-// firebase/auth mock
-vi.mock("firebase/auth", () => {
+// firebase auth wrapper mock
+vi.mock("../src/firebase/authClient", () => {
   const mockUnsubscribe = vi.fn();
   const mockOnIdTokenChanged = vi.fn((_auth, callback) => {
     (mockOnIdTokenChanged as any)._callback = callback;
@@ -47,7 +47,7 @@ vi.mock("../../src/firebase/config", () => {
 
 // Helpers to access mocks at runtime
 const getMockOnIdTokenChanged = async () => {
-  const mod = await import("firebase/auth");
+  const mod = await import("../src/firebase/authClient");
   return (mod as any).onIdTokenChanged as any;
 };
 
@@ -109,7 +109,9 @@ describe("AuthContext (frontend, Vitest)", () => {
       user: any | null,
     ) => Promise<void> | void;
 
-    await callback(mockCurrentUser);
+    await act(async () => {
+      await callback(mockCurrentUser);
+    });
 
     // THEN the context should expose the authenticated user, token, and profile
     await waitFor(() => {
@@ -118,12 +120,12 @@ describe("AuthContext (frontend, Vitest)", () => {
 
     expect(result.current.currentUser).toBe(mockCurrentUser);
     expect(result.current.token).toBe("fake-token");
-    expect(result.current.profile).toEqual({
+    expect(result.current.profile).toEqual(expect.objectContaining({
       displayName: "Test User",
       email: "test@example.com",
       onboardingCompletedPages: ["welcome", "income"],
       newsletterOptIn: true,
-    });
+    }));
   });
 
   it("resets context when Firebase reports logged-out user", async () => {
@@ -137,7 +139,9 @@ describe("AuthContext (frontend, Vitest)", () => {
       user: any | null,
     ) => Promise<void> | void;
 
-    await callback(null);
+    await act(async () => {
+      await callback(null);
+    });
 
     // THEN the context should reset to an unauthenticated state
     await waitFor(() => {

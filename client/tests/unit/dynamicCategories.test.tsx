@@ -2,8 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, screen} from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Index from "../../src/pages/PayslipSetup/index";
 import axios from "axios";
@@ -23,13 +22,12 @@ vi.mock("../../src/context/AuthContext", () => ({
 describe("PayslipSetup: Dynamic Categories", () => {
     // Helper function to render the component and return the userEvent instance
     function setup(){
-        const user = userEvent.setup();
         render(
             <MemoryRouter>
                 <Index />
             </MemoryRouter>
         );
-        return { user };
+        return {};
     }
 
     beforeEach(() => {
@@ -49,17 +47,17 @@ describe("PayslipSetup: Dynamic Categories", () => {
     it("preserves existing category values when new rows are added", async () => {
         // GIVEN: Existing catgeory values and a new category row is added
         // Call the setup function to render the component and get the userEvent instance
-        const { user } = setup();
+        setup();
         
         // Find the first category name and amount input
         const categoryNameInput = await screen.findAllByPlaceholderText(/category name/i);
         const categoryAmountInput = await screen.findAllByPlaceholderText(/amount/i);
 
         // WHEN: The user sets the first category name and amount the clicks the "Add Category" button
-        await user.type(categoryNameInput[0], "Rent");
-        await user.type(categoryAmountInput[0], "500");
+        fireEvent.change(categoryNameInput[0], { target: { value: "Rent" } });
+        fireEvent.change(categoryAmountInput[0], { target: { value: "500" } });
         const addButton = screen.getByRole("button", { name: /add category/i });
-        await user.click(addButton);
+        fireEvent.click(addButton);
         const categoryNameInputsAfter = await screen.findAllByPlaceholderText(/category name/i);
         const categoryAmountInputsAfter = await screen.findAllByPlaceholderText(/amount/i);
 
