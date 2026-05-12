@@ -4,7 +4,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
-} from "firebase/auth";
+} from "../../firebase/authClient";
 import TopNav from "../../components/TopNav";
 import { useAuth } from "../../context/AuthContext";
 import TooltipGuide from "../../components/TooltipGuide";

@@ -15,7 +15,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   updateProfile,
-} from "firebase/auth";
+} from "../../firebase/authClient";
 import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
 import Modal from "../../components/Modal";
@@ -116,6 +116,7 @@ const Register = () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
 
       const token = await result.user.getIdToken();

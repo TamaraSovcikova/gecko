@@ -345,7 +345,6 @@ const Dashboard = () => {
 
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
-
   const refreshSnapshotViewData = useCallback(async () => {
     if (!isSnapshotMode || !selectedSnapshot || loading || !token) {
       setSnapshotViewData(null);
@@ -478,11 +477,7 @@ const Dashboard = () => {
     ? displayedData.takeHome / 12
     : 0;
 
-  const displayedTotalSpending = displayedData
-    ? (displayedData.actualSpending || []).reduce((sum, item) => sum + Number(item.value || 0), 0)
-    : 0;
-
-  const incomeBudgetLeft = monthlyTakeHome - displayedTotalSpending;
+  const incomeBudgetLeft = displayedData?.budgetLeft ?? 0;
 
   const visibleTips = displayedData?.adzunaTips
     ? showAllTips
@@ -628,6 +623,8 @@ const Dashboard = () => {
       console.error("[Dashboard] Failed to dismiss forecast warning:", err);
     }
   };
+
+
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {

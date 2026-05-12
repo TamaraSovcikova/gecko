@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+import { signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import ProfileAvatar from "./ProfileAvatar";

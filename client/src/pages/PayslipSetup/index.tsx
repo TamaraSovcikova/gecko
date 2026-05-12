@@ -225,6 +225,13 @@ const PayslipSetup = () => {
   };
 
   const handleSubmit = async (event: FormEvent) => {
+    // DEBUGGING
+    console.log("SUBMIT ENTERED");
+    console.log("TOKEN:", token);
+    console.log("VALIDATION RESULT:", validate());
+    console.log("GROSS SALARY:", grossSalary);
+    console.log("CATEGORIES:", categories);
+    console.log("TOTAL CATEGORY AMOUNT:", totalCategoryAmount);
     event.preventDefault();
     setApiError("");
 

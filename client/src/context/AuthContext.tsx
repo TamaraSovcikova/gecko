@@ -9,7 +9,7 @@
 
 import axios from "axios";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { onIdTokenChanged, signOut } from "firebase/auth";
+import { onIdTokenChanged, signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
 
 const SESSION_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour

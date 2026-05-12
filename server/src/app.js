@@ -11,6 +11,8 @@ const userRouter = require("./routes/user");
 const expenseRoutes = require("./routes/expense");
 const quizRoutes = require("./routes/quiz");
 const forecastRoutes = require("./routes/forecast");
+require("./config/firebase"); // initializes Firebase once
+
 const snapshotRoutes = require("./routes/snapshot");
 const chatRoutes = require("./routes/chat");
 

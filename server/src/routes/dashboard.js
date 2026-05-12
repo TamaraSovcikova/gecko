@@ -8,6 +8,7 @@ const Payslip = require("../models/MonthlyBudget"); //import MonthlyBudget (this
 const User = require("../models/User"); //import User model to get job title and location
 const { getAverageSalary } = require("../services/adzunaCalculator"); //import Adzuna service
 const { computeHealthScoreBreakdown } = require("../services/healthScoreService");
+const authMiddleware = require("../middleware/auth");
 
 // Helper function to generate tips based on budget and health data
 const generateBudgetTips = (totalBudget, healthScore, budgetAllocation, totalExpenses) => {
@@ -117,7 +118,7 @@ const generateAdzunaTips = (grossSalary, averageSalary, totalBudget, healthScore
 // GET api/v1/dashboard
 //this should be protected - reuires valid firebase token
 //remove authmiddleware
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         //originally implemented for expnses model so may not have actually been my respnsbility...
         const now = new Date(); //current date to filter expense objects

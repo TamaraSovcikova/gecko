@@ -15,7 +15,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-} from "firebase/auth";
+} from "../../firebase/authClient";
 import { auth } from "../../firebase/config";
 import { registerUser } from "../../api/authApi";
 import Modal from "../../components/Modal";
@@ -98,6 +98,7 @@ const Login = () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
       await handlePostLogin(result.user);
     } catch (err: any) {
@@ -123,6 +124,7 @@ const Login = () => {
           <div className="auth-field">
             <label className="auth-label">Email</label>
             <input
+              id="email"
               type="email"
               className="auth-input"
               value={email}
@@ -133,6 +135,7 @@ const Login = () => {
           <div className="auth-field">
             <label className="auth-label">Password</label>
             <input
+              id="password"
               type="password"
               className="auth-input"
               value={password}
@@ -140,6 +143,7 @@ const Login = () => {
               required
             />
           </div>
+
           <button
             type="submit"
             className="gecko-pill-btn auth-primary-btn"
