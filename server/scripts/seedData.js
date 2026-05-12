@@ -8,13 +8,29 @@ const NewsletterSnapshot = require("../src/models/NewsletterSnapshot");
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-const seedUserId = process.env.SEED_USER_ID || "seed-user-001";
+const seedUserId = process.env.SEED_USER_ID || "mBrFMABNaNcy4kfa9ycBM4IZJQN2";
 const seedUserEmail = process.env.SEED_USER_EMAIL || "seed.user@example.com";
 const seedUserDisplayName = process.env.SEED_USER_NAME || "Seed User";
 
 const now = new Date();
 const month = Number(process.env.SEED_MONTH || now.getMonth() + 1);
 const year = Number(process.env.SEED_YEAR || now.getFullYear());
+const HISTORY_MONTHS = 11;
+
+const buildSeedMonths = (anchorMonth, anchorYear, count) => {
+  const months = [];
+
+  for (let offset = 0; offset < count; offset += 1) {
+    const date = new Date(anchorYear, anchorMonth - 1 - offset, 1);
+    months.push({
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+      offset,
+    });
+  }
+
+  return months;
+};
 
 const userSeeds = [
   {
@@ -53,9 +69,9 @@ const userSeeds = [
     ],
   },
   {
-    id: "seed-user-002",
+    id: "4fkv879AkYZDtDyIKdCCjYKI0o62",
     email: "seed.user.two@example.com",
-    displayName: "Seed User Two",
+    displayName: "User2",
     jobTitle: "Marketing Intern",
     location: "London",
     grossSalary: 2800,
@@ -88,9 +104,9 @@ const userSeeds = [
     ],
   },
   {
-    id: "seed-user-003",
+    id: "AEom1o4SkZddabkGAUNuBU4sp2J3",
     email: "seed.user.three@example.com",
-    displayName: "Seed User Three",
+    displayName: "User3",
     jobTitle: "Graduate Analyst",
     location: "Manchester",
     grossSalary: 3300,
@@ -138,23 +154,54 @@ const buildCategoryActuals = (categories, expenses) => {
   });
 };
 
-const seedUser = async (entry) => {
-  const takeHomePay = entry.grossSalary - entry.taxPaid - entry.niPaid;
-  const categoryActuals = buildCategoryActuals(entry.categories, entry.expenses);
-  const totalExpenses = Number(entry.expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2));
-  const totalBudget = entry.categories.reduce((sum, category) => sum + category.budget, 0);
-  const savings = Number((takeHomePay - totalExpenses).toFixed(2));
-  const budgetLeft = Number((totalBudget - totalExpenses).toFixed(2));
+const monthOffsetFactor = (offset) => {
+  const maxOffset = Math.max(HISTORY_MONTHS - 1, 1);
+  const fraction = (maxOffset - offset) / maxOffset;
+  return Number((0.88 + fraction * 0.18).toFixed(4));
+};
 
-  const expenseDocs = entry.expenses.map((expense) => ({
-    userId: entry.id,
-    month,
-    year,
-    category: expense.category,
-    amount: expense.amount,
-    date: new Date(year, month - 1, expense.day),
-    note: expense.note,
+const adjustByMonth = (entry, period) => {
+  const factor = monthOffsetFactor(period.offset);
+  const seasonalNudge = ((period.month % 3) - 1) * 0.01;
+  const adjustedFactor = factor + seasonalNudge;
+
+  const adjustMoney = (value) => Number((value * adjustedFactor).toFixed(2));
+
+  const grossSalary = adjustMoney(entry.grossSalary);
+  const taxPaid = adjustMoney(entry.taxPaid);
+  const niPaid = adjustMoney(entry.niPaid);
+  const takeHomePay = Number((grossSalary - taxPaid - niPaid).toFixed(2));
+
+  const categories = entry.categories.map((category) => ({
+    ...category,
+    budget: adjustMoney(category.budget),
   }));
+
+  const expenses = entry.expenses.map((expense) => ({
+    ...expense,
+    amount: adjustMoney(expense.amount),
+  }));
+
+  return {
+    ...entry,
+    grossSalary,
+    taxPaid,
+    niPaid,
+    takeHomePay,
+    categories,
+    expenses,
+    xpEarned: Math.max(10, Math.round(entry.xpEarned - period.offset * 2)),
+    quizzesCompleted: Math.max(1, Math.round(entry.quizzesCompleted - period.offset * 0.2)),
+    healthScore: Math.max(50, Math.round(entry.healthScore - period.offset * 0.8)),
+    xpTotal: Math.max(50, Math.round(entry.xpTotal - period.offset * 6)),
+  };
+};
+
+const seedUser = async (entry) => {
+  const periods = buildSeedMonths(month, year, HISTORY_MONTHS);
+  const expenseDocs = [];
+  const snapshotOps = [];
+  const newsletterOps = [];
 
   await Promise.all([
     Expense.deleteMany({ userId: entry.id }),
@@ -186,75 +233,108 @@ const seedUser = async (entry) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  await MonthlyBudget.create({
+  await MonthlyBudget.findOneAndUpdate(
+    { userId: entry.id },
+    {
     userId: entry.id,
     grossSalary: entry.grossSalary,
     taxPaid: entry.taxPaid,
     niPaid: entry.niPaid,
-    takeHomePay,
+    takeHomePay: entry.grossSalary - entry.taxPaid - entry.niPaid,
     categories: entry.categories,
-  });
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  for (const period of periods) {
+    const monthEntry = adjustByMonth(entry, period);
+    const categoryActuals = buildCategoryActuals(monthEntry.categories, monthEntry.expenses);
+    const totalExpenses = Number(monthEntry.expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2));
+    const totalBudget = monthEntry.categories.reduce((sum, category) => sum + category.budget, 0);
+    const savings = Number((monthEntry.takeHomePay - totalExpenses).toFixed(2));
+    const budgetLeft = Number((totalBudget - totalExpenses).toFixed(2));
+
+    expenseDocs.push(
+      ...monthEntry.expenses.map((expense) => ({
+        userId: entry.id,
+        month: period.month,
+        year: period.year,
+        category: expense.category,
+        amount: expense.amount,
+        date: new Date(period.year, period.month - 1, expense.day),
+        note: expense.note,
+      }))
+    );
+
+    snapshotOps.push(
+      MonthlySnapshot.findOneAndUpdate(
+        { userId: entry.id, month: period.month, year: period.year },
+        {
+          userId: entry.id,
+          month: period.month,
+          year: period.year,
+          healthScore: monthEntry.healthScore,
+          grossSalary: monthEntry.grossSalary,
+          takeHomePay: monthEntry.takeHomePay,
+          totalExpenses,
+          savings,
+          categories: categoryActuals,
+          xpEarned: monthEntry.xpEarned,
+          quizzesCompleted: monthEntry.quizzesCompleted,
+        },
+        { upsert: true, new: true }
+      )
+    );
+
+    newsletterOps.push(
+      NewsletterSnapshot.findOneAndUpdate(
+        { userId: entry.id, month: period.month, year: period.year },
+        {
+          userId: entry.id,
+          month: period.month,
+          year: period.year,
+          metrics: {
+            income: monthEntry.takeHomePay,
+            expenses: totalExpenses,
+            savings,
+            totalBudget,
+            budgetLeft,
+            quizXpActivity: monthEntry.xpEarned,
+            quizXpTotal: monthEntry.xpTotal,
+          },
+          comparisons: {
+            incomePercent: null,
+            expensesPercent: null,
+            savingsPercent: null,
+            quizXpPercent: null,
+          },
+          trends: monthEntry.trends,
+          categoryTotals: categoryActuals.map((item) => ({
+            category: item.name,
+            total: item.actual,
+          })),
+          consistencyChecks: [
+            "Income - expenses matches calculated savings.",
+            "Category totals match month expense aggregation.",
+          ],
+          isFirstMonth: period.offset === HISTORY_MONTHS - 1,
+          endingXpTotal: monthEntry.xpTotal,
+          sentAt: new Date(period.year, period.month - 1, 25),
+        },
+        { upsert: true, new: true }
+      )
+    );
+  }
 
   await Expense.insertMany(expenseDocs);
-
-  await MonthlySnapshot.findOneAndUpdate(
-    { userId: entry.id, month, year },
-    {
-      userId: entry.id,
-      month,
-      year,
-      healthScore: entry.healthScore,
-      grossSalary: entry.grossSalary,
-      takeHomePay,
-      totalExpenses,
-      savings,
-      categories: categoryActuals,
-      xpEarned: entry.xpEarned,
-      quizzesCompleted: entry.quizzesCompleted,
-    },
-    { upsert: true, new: true }
-  );
-
-  await NewsletterSnapshot.findOneAndUpdate(
-    { userId: entry.id, month, year },
-    {
-      userId: entry.id,
-      month,
-      year,
-      metrics: {
-        income: takeHomePay,
-        expenses: totalExpenses,
-        savings,
-        totalBudget,
-        budgetLeft,
-        quizXpActivity: entry.xpEarned,
-        quizXpTotal: entry.xpTotal,
-      },
-      comparisons: {
-        incomePercent: null,
-        expensesPercent: null,
-        savingsPercent: null,
-        quizXpPercent: null,
-      },
-      trends: entry.trends,
-      categoryTotals: categoryActuals.map((item) => ({
-        category: item.name,
-        total: item.actual,
-      })),
-      consistencyChecks: [
-        "Income - expenses matches calculated savings.",
-        "Category totals match month expense aggregation.",
-      ],
-      isFirstMonth: false,
-      endingXpTotal: entry.xpTotal,
-      sentAt: new Date(),
-    },
-    { upsert: true, new: true }
-  );
+  await Promise.all(snapshotOps);
+  await Promise.all(newsletterOps);
 
   return {
     userId: entry.id,
     expensesInserted: expenseDocs.length,
+    snapshotsUpserted: periods.length,
+    newslettersUpserted: periods.length,
   };
 };
 
@@ -271,9 +351,9 @@ const seed = async () => {
     results.push(result);
   }
 
-  console.log(`Seed complete for ${results.length} users (${month}/${year}).`);
+  console.log(`Seed complete for ${results.length} users (${month}/${year}, ${HISTORY_MONTHS} months of history).`);
   results.forEach((result) => {
-    console.log(`- ${result.userId}: ${result.expensesInserted} expenses, 1 monthly budget, 1 monthly snapshot, 1 newsletter snapshot.`);
+    console.log(`- ${result.userId}: ${result.expensesInserted} expenses, 1 monthly budget, ${result.snapshotsUpserted} monthly snapshots, ${result.newslettersUpserted} newsletter snapshots.`);
   });
 };
 

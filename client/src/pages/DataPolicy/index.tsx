@@ -41,17 +41,13 @@ const DataPolicyPage = () => {
 
           {showDeleteHelp && (
             <div style={{ marginTop: "14px", color: "#4a3f6b", lineHeight: 1.6 }}>
-              <p>
-                This link is a draft entry point. The deletion workflow already exists inside the authenticated
-                profile area, while a fuller public-facing confirmation flow is still being refined.
-              </p>
               {currentUser ? (
                 <Link to="/profile" style={{ color: "#5c3fa3", fontWeight: 700 }}>
-                  Go to Profile to manage deletion
+                  Go to Profile to delete your account
                 </Link>
               ) : (
                 <Link to="/login" style={{ color: "#5c3fa3", fontWeight: 700 }}>
-                  Sign in to manage deletion requests
+                  Sign in to delete your account
                 </Link>
               )}
             </div>
