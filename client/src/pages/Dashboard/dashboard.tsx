@@ -346,6 +346,8 @@ const Dashboard = () => {
   const selectedSnapshot =
     snapshotIndex !== null ? snapshots[snapshotIndex] : null;
 
+
+
   const refreshSnapshotViewData = useCallback(async () => {
     if (!isSnapshotMode || !selectedSnapshot || loading || !token) {
       setSnapshotViewData(null);
@@ -629,17 +631,7 @@ const Dashboard = () => {
     }
   };
 
-  // cancel expense edit
-  const cancelEditing = () => {
-    setEditingExpenseId(null);
-    setPendingDeleteId(null);
-    setEditForm({
-      category: "",
-      amount: 0,
-      date: "",
-      note: "",
-    });
-  };
+
 
   // useEffect for pop-up on first log-in of the month
   useEffect(() => {

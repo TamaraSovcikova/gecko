@@ -27,7 +27,7 @@ vi.mock("../../src/hooks/useSocket", () => ({
 
 // ---------------- FIREBASE MOCK ----------------
 
-vi.mock("../../firebase/authClient", () => {
+vi.mock("../../src/firebase/authClient", () => {
   const mockUser = {
     uid: "test-user",
     getIdToken: vi.fn(async () => "fake-id-token"),

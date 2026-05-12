@@ -19,7 +19,7 @@ vi.mock("axios", () => {
 });
 
 // firebase auth wrapper mock
-vi.mock("../src/firebase/authClient", () => {
+vi.mock("../../src/firebase/authClient", () => {
   const mockUnsubscribe = vi.fn();
   const mockOnIdTokenChanged = vi.fn((_auth, callback) => {
     (mockOnIdTokenChanged as any)._callback = callback;
@@ -47,7 +47,7 @@ vi.mock("../../src/firebase/config", () => {
 
 // Helpers to access mocks at runtime
 const getMockOnIdTokenChanged = async () => {
-  const mod = await import("../src/firebase/authClient");
+  const mod = await import("../../src/firebase/authClient");
   return (mod as any).onIdTokenChanged as any;
 };
 

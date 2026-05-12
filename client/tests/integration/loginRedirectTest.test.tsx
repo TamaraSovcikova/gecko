@@ -26,7 +26,7 @@ import { registerUser } from "../../src/api/authApi";
 vi.mock("../../firebase/config", () => ({ auth: {}, app: {} }));
 
 // --- Mock firebase auth wrapper used in Login ---
-vi.mock("../../firebase/authClient", () => {
+vi.mock("../../src/firebase/authClient", () => {
   const mockUser = {
     getIdToken: vi.fn(async () => "fake-id-token"),
   };

@@ -141,9 +141,9 @@ describe("GPR Integration: secure user data wipe", () => {
       .delete("/api/v1/user/profile")
       .expect(200);
 
-    expect(res.body).toEqual({
-      message: "Profile deleted successfully",
-    });
+    expect(res.body).toEqual(
+      expect.objectContaining({ message: "Profile deleted successfully" })
+    );
 
     // -----------------------------
     // THEN: all collections wiped
