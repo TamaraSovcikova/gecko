@@ -1,7 +1,7 @@
 {
-  "name": "zoar-client",
+  "name": "gecko-client",
   "version": "1.0.0",
-  "description": "Zoar frontend",
+  "description": "Gecko frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",

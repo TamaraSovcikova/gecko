@@ -284,7 +284,7 @@ const exportUserData = async (req, res) => {
     });
 
     // Footer
-    doc.fontSize(9).font("Helvetica").text("This is your personal data export from Zoar.", { align: "center" });
+    doc.fontSize(9).font("Helvetica").text("This is your personal data export from Gecko.", { align: "center" });
 
     doc.end();
   } catch (err) {

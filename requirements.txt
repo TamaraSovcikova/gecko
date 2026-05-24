@@ -1,4 +1,4 @@
-# team-zoar dependency pinning
+# gecko dependency pinning
 # Source of truth for install reproducibility remains package-lock.json files in root/, server/, and client/.
 
 [root.dependencies]

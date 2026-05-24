@@ -1,4 +1,4 @@
-// server.js — Entry point for the Zoar backend server.
+// server.js — Entry point for the Gecko backend server.
 // Responsibilities:
 //   1. Load environment variables from .env
 //   2. Connect to MongoDB via db.js

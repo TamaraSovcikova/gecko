@@ -1,7 +1,7 @@
 {
-  "name": "zoar-server",
+  "name": "gecko-server",
   "version": "1.0.0",
-  "description": "Zoar backend",
+  "description": "Gecko backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

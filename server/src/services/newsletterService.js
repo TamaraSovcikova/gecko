@@ -263,7 +263,7 @@ const buildSnapshotHtml = (data) => {
 /*
 const buildMonthlyNewsletterPlaceholder = ({ user, unsubscribeUrl }) => {
   return {
-    subject: `Your Zoar monthly snapshot (placeholder)`,
+    subject: `Your Gecko monthly snapshot (placeholder)`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #2d2d2d;">
         <h2>Hi ${user.displayName || "there"},</h2>
@@ -539,7 +539,7 @@ const buildMonthlyNewsletterHtml = ({ user, unsubscribeUrl, data }) => {
                   <td style="padding: 24px; background-color: #5c3fa3; border-bottom: 1px solid #4e358f;">
                     <p style="margin: 0; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #efe6ff;">G.E.C.K.O</p>
                     <h1 style="margin: 8px 0 0; font-size: 30px; color: #ffffff; font-weight: 700;">Monthly Snapshot: ${data.period.label}</h1>
-                    <p style="margin: 10px 0 0; color: #e8dbff; font-size: 14px;">Your financial progress update from Team Zoar</p>
+                    <p style="margin: 10px 0 0; color: #e8dbff; font-size: 14px;">Your financial progress update from Gecko</p>
                   </td>
                 </tr>
                 <tr>
@@ -616,7 +616,7 @@ const sendMonthlyNewsletterToUser = async ({ user, year, month, isTest = false }
 
   await sendNewsletterEmail({
     to: latestUser.email,
-    subject: `${isTest ? "[Test] " : ""}Your Zoar monthly snapshot - ${data.period.label}`,
+    subject: `${isTest ? "[Test] " : ""}Your Gecko monthly snapshot - ${data.period.label}`,
     html,
   });
 

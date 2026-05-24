@@ -8,7 +8,7 @@ const router = express.Router();
 const { unsubscribeFromNewsletter } = require('../controllers/userController');
 
 // ---- Public routes (no token required) ----
-router.get('/', (req, res) => res.send('<h1>Zoar API - use /api/v1/* endpoints from frontend</h1>'));
+router.get('/', (req, res) => res.send('<h1>Gecko API - use /api/v1/* endpoints from frontend</h1>'));
 
 // Newsletter unsubscribe (public route from email links)
 // Frontend calls: /api/v1/user/newsletter/unsubscribe

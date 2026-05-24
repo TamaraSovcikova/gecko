@@ -58,7 +58,7 @@ const GroqChat = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Open Groq chat assistant"
-        title="Ask Zoar AI"
+        title="Ask Gecko AI"
         style={{
           position: "fixed",
           bottom: 18,
