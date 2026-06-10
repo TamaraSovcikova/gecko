@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const { computeForecastForUser } = require("../services/forecastService");
+const { validate } = require("../middleware/validate");
+const { forecastDismissSchema } = require("../schemas");
 
 function getAuthenticatedUserId(req) {
   return req.user?._id || req.user?.uid || req.userId;
@@ -34,21 +36,10 @@ router.get("/", async (req, res) => {
 //POST /api/v1/forecast/dismiss
 //Body: { warningId: string }
  
-router.post("/dismiss", async (req, res) => {
+router.post("/dismiss", validate({ body: forecastDismissSchema }), async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
     const { warningId } = req.body;
-
-    console.log("[forecastRoutes] POST /forecast/dismiss");
-    console.log("[forecastRoutes] userId =", userId);
-    console.log("[forecastRoutes] warningId =", warningId);
-
-    if (!warningId) {
-      return res.status(400).json({
-        success: false,
-        message: "warningId is required",
-      });
-    }
 
     const user = await User.findById(userId);
 

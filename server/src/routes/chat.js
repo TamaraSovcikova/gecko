@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { retrieveDashboardData } = require("./dashboard");
 const { retrieveSanitisedContext } = require("./sanitisedContext");
+const { validate } = require("../middleware/validate");
+const { chatMessageSchema } = require("../schemas");
 
 const axios = require("axios");
 
@@ -27,7 +29,7 @@ function specificPrompt(data) {
     `;
 }
 
-router.post("/", async (req, res) => {
+router.post("/", validate({ body: chatMessageSchema }), async (req, res) => {
     try {
         const { message } = req.body;
         const user_id = req.user?.uid || req.user?.id;
