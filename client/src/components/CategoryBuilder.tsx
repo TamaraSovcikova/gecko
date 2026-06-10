@@ -1,6 +1,21 @@
 import React from "react";
 
-const CategoryBuilder = ({
+export type CategoryDraft = {
+  name: string;
+  amount: number | string;
+};
+
+type Props = {
+  categories: CategoryDraft[];
+  onAddCategory: () => void;
+  onRemoveCategory: (index: number) => void;
+  onUpdateCategory: (index: number, field: "name" | "amount", value: string) => void;
+  totalCategoryAmount: number;
+  isOverAllocated?: boolean;
+  disabled?: boolean;
+};
+
+const CategoryBuilder: React.FC<Props> = ({
   categories,
   onAddCategory,
   onRemoveCategory,

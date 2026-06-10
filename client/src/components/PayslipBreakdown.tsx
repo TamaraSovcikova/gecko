@@ -1,6 +1,25 @@
 import React from "react";
 
-const PayslipBreakdown = ({ result, onContinue }) => {
+export type PayslipCategory = {
+  name?: string;
+  amount?: number;
+  budget?: number;
+};
+
+export type PayslipResult = {
+  grossSalary?: number;
+  taxPaid?: number;
+  niPaid?: number;
+  takeHomePay?: number;
+  categories?: PayslipCategory[];
+};
+
+type Props = {
+  result: PayslipResult | null;
+  onContinue: () => void;
+};
+
+const PayslipBreakdown: React.FC<Props> = ({ result, onContinue }) => {
   if (!result) {
     return null;
   }
