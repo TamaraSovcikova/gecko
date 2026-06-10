@@ -1,6 +1,6 @@
 # Gecko
 
-Gecko is a full-stack personal finance web app aimed at young adults (roughly 20–25). It turns a payslip and day-to-day spending into a clear monthly picture: a budget dashboard, a financial health score, spend forecasting with overspend warnings, receipt scanning, an AI finance assistant, gamified learning (quizzes, XP, levels, streaks, badges), and an opt-in monthly email newsletter.
+Gecko is a full-stack personal finance web app aimed at young adults (roughly 20-25). It turns a payslip and day-to-day spending into a clear monthly picture: a budget dashboard, a financial health score, spend forecasting with overspend warnings, receipt scanning, an AI finance assistant, gamified learning (quizzes, XP, levels, streaks, badges), and an opt-in monthly email newsletter.
 
 > **GECKO** stands for **G**oals, **E**arnings, **C**apital, **K**nowledge, **O**utcomes. It was originally built as a university group project by *Team Zoar*; a few internal identifiers (e.g. localStorage key prefixes) still carry the `zoar` namespace.
 
@@ -36,13 +36,13 @@ Gecko is a full-stack personal finance web app aimed at young adults (roughly 20
 - Jest + Supertest + `mongodb-memory-server` (tests)
 
 **Third-party services / APIs**
-- **Firebase Authentication** — user sign-in/sign-up and ID tokens
-- **MongoDB Atlas** — primary datastore
-- **Groq API** (`openai/gpt-oss-120b`) — in-app AI finance assistant
-- **Adzuna Jobs API** — average-salary lookups by job title + location
-- **OCR.space API** — receipt scanning / total extraction
-- **QuizAPI.io** — dynamic quiz questions (with built-in custom quizzes as fallback)
-- **SMTP server** (via nodemailer) — monthly newsletter delivery
+- **Firebase Authentication** - user sign-in/sign-up and ID tokens
+- **MongoDB Atlas** - primary datastore
+- **Groq API** (`openai/gpt-oss-120b`) - in-app AI finance assistant
+- **Adzuna Jobs API** - average-salary lookups by job title + location
+- **OCR.space API** - receipt scanning / total extraction
+- **QuizAPI.io** - dynamic quiz questions (with built-in custom quizzes as fallback)
+- **SMTP server** (via nodemailer) - monthly newsletter delivery
 
 ---
 
@@ -96,7 +96,7 @@ gecko/
 - **Real-time.** Socket.io shares the HTTP server port. Creating/updating/deleting expenses emits events so the dashboard updates live.
 - **Scheduled jobs.** On startup the server starts cron jobs for the monthly newsletter and monthly snapshot rollups.
 - **Forecasting.** `forecastService` uses simple linear regression over spending to project month-end totals and raise overspend warnings (which users can dismiss per month).
-- **Health score.** `healthScoreService` produces a 0–100 score weighted across spending-vs-income (40%), budget adherence (35%), and plan alignment (25%).
+- **Health score.** `healthScoreService` produces a 0-100 score weighted across spending-vs-income (40%), budget adherence (35%), and plan alignment (25%).
 
 ### Main API routes
 
@@ -163,7 +163,7 @@ ADZUNA_APP_KEY=<adzuna-app-key>
 # Receipt scanning (OCR.space)
 OCR_SPACE_API_KEY=<ocr-space-key>
 
-# Quizzes (QuizAPI.io) — falls back to built-in quizzes if unset
+# Quizzes (QuizAPI.io) - falls back to built-in quizzes if unset
 QUIZ_API_KEY=<quizapi-key>
 
 # Newsletter email (nodemailer / SMTP)
@@ -306,8 +306,8 @@ Exact versions are pinned across the three packages. The authoritative source of
 
 `.gitlab-ci.yml` defines two stages on a `node:20` image:
 
-1. **lint** — installs deps and runs ESLint for both `server` and `client` (`allow_failure: true`)
-2. **build** — builds the client (runs only if lint passes)
+1. **lint** - installs deps and runs ESLint for both `server` and `client` (`allow_failure: true`)
+2. **build** - builds the client (runs only if lint passes)
 
 There is no deploy stage (the original GitLab environment lacked the runner/SSH permissions for it).
 

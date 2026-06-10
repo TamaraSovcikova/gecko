@@ -1,0 +1,54 @@
+name: CI
+
+# Lint + test for server and client.
+# No npm cache (avoids the 0.5 GB account-wide storage cap on private repos
+# per ~/devhub/recurring_decisions.md "GitHub Actions cost discipline").
+# Playwright stays local-only; not run here.
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  server:
+    name: server (lint + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        working-directory: server
+        run: npm ci
+      - name: Lint
+        working-directory: server
+        run: npm run lint
+        continue-on-error: true
+      - name: Test
+        working-directory: server
+        run: npm test
+
+  client:
+    name: client (lint + test + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        working-directory: client
+        run: npm ci
+      - name: Lint
+        working-directory: client
+        run: npm run lint
+        continue-on-error: true
+      - name: Test
+        working-directory: client
+        run: npm test
+      - name: Build
+        working-directory: client
+        run: npm run build
