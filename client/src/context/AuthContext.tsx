@@ -11,6 +11,7 @@ import axios from "axios";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { onIdTokenChanged, signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
+import { setAuthToken } from "../api/client";
 
 const SESSION_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
 
@@ -55,6 +56,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Mirror the token into the shared axios client so TanStack Query hooks
+  // (and any direct apiClient.get/post call) carry Authorization automatically.
+  useEffect(() => {
+    setAuthToken(token);
+  }, [token]);
 
   const refreshProfile = async (overrideToken?: string | null) => {
     const activeToken = overrideToken ?? token;
