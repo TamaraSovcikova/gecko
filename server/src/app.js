@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const pinoHttp = require("pino-http");
 const authMiddleware = require("./middleware/auth");
+const { authLimiter, chatLimiter, apiLimiter } = require("./middleware/rateLimit");
+const logger = require("./utils/logger");
 
 const router = require("./routes/index");
 const dashboardRouter = require("./routes/dashboard");
@@ -18,6 +21,12 @@ const chatRoutes = require("./routes/chat");
 
 const app = express();
 
+app.use(pinoHttp({ logger, customLogLevel: (_req, res, err) => {
+  if (err || res.statusCode >= 500) return "error";
+  if (res.statusCode >= 400) return "warn";
+  return "info";
+}}));
+
 app.use(
   helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -31,19 +40,24 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+
+// Health check (unauthenticated, no rate limit). Used by uptime monitors and CI.
+app.get("/healthz", (_req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
 
 require("./jobs/monthlySnapshotJob");
 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/dashboard", authMiddleware, dashboardRouter);
-app.use("/api/v1/expenses", authMiddleware, expenseRoutes);
-app.use("/api/v1/snapshots", authMiddleware, snapshotRoutes);
-app.use("/api/v1/quiz", authMiddleware, quizRoutes);
-app.use("/api/v1/payslip", authMiddleware, payslipRouter);
-app.use("/api/v1/user", authMiddleware, userRouter);
-app.use("/api/v1/forecast", authMiddleware, forecastRoutes);
-app.use("/api/v1/chat", authMiddleware, chatRoutes);
+app.use("/api/v1/auth", authLimiter, authRouter);
+app.use("/api/v1/dashboard", authMiddleware, apiLimiter, dashboardRouter);
+app.use("/api/v1/expenses", authMiddleware, apiLimiter, expenseRoutes);
+app.use("/api/v1/snapshots", authMiddleware, apiLimiter, snapshotRoutes);
+app.use("/api/v1/quiz", authMiddleware, apiLimiter, quizRoutes);
+app.use("/api/v1/payslip", authMiddleware, apiLimiter, payslipRouter);
+app.use("/api/v1/user", authMiddleware, apiLimiter, userRouter);
+app.use("/api/v1/forecast", authMiddleware, apiLimiter, forecastRoutes);
+app.use("/api/v1/chat", authMiddleware, chatLimiter, chatRoutes);
 
 app.use("/", router);
 

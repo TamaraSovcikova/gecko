@@ -13,6 +13,7 @@ const { Server } = require('socket.io');
 
 const connectDB = require('./src/config/db');
 const app = require('./src/app');
+const logger = require('./src/utils/logger');
 const { startNewsletterScheduler } = require('./src/jobs/newsletterJob');
 
 // Connect to MongoDB Atlas
@@ -41,6 +42,6 @@ registerSocketHandlers(io);
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info({ port: PORT }, 'Server running');
   startNewsletterScheduler();
 });
