@@ -15,6 +15,7 @@ type Props = {
   totalCategoryAmount: number;
   isOverAllocated?: boolean;
   disabled?: boolean;
+  monthlyTakeHome?: number;
 };
 
 const CategoryBuilder: React.FC<Props> = ({
@@ -25,13 +26,14 @@ const CategoryBuilder: React.FC<Props> = ({
   totalCategoryAmount,
   isOverAllocated = false,
   disabled = false,
+  monthlyTakeHome,
 }) => {
   return (
     <div>
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-sm font-semibold text-gray-900">Budget Categories</p>
-          <p className="text-xs text-gray-500 mt-0.5">Allocate your gross salary across categories.</p>
+          <p className="text-xs text-gray-500 mt-0.5">Monthly budget limit for each category.</p>
         </div>
         <button
           type="button"
@@ -54,16 +56,26 @@ const CategoryBuilder: React.FC<Props> = ({
               onChange={(e) => onUpdateCategory(index, "name", e.target.value)}
               className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all"
             />
-            <input
-              type="number"
-              placeholder="Amount"
-              min="0"
-              step="0.01"
-              value={category.amount}
-              disabled={disabled}
-              onChange={(e) => onUpdateCategory(index, "amount", e.target.value)}
-              className="w-28 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all disabled:bg-gray-50"
-            />
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                placeholder="£/mo"
+                min="0"
+                step="0.01"
+                value={category.amount}
+                disabled={disabled}
+                onChange={(e) => onUpdateCategory(index, "amount", e.target.value)}
+                className="w-24 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all disabled:bg-gray-50"
+              />
+              {monthlyTakeHome &&
+                monthlyTakeHome > 0 &&
+                (() => {
+                  const amt = Number(category.amount);
+                  if (!amt || !Number.isFinite(amt)) return null;
+                  const pct = Math.round((amt / monthlyTakeHome) * 100);
+                  return <span className="text-[11px] text-gray-400 shrink-0 w-8 text-right">{pct}%</span>;
+                })()}
+            </div>
             <button
               type="button"
               onClick={() => onRemoveCategory(index)}

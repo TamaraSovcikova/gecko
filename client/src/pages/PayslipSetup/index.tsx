@@ -8,7 +8,7 @@ import PayslipBreakdown from "../../components/PayslipBreakdown";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import { motion, AnimatePresence } from "framer-motion";
-import { PoundSterling, Briefcase, MapPin, Info, AlertCircle } from "lucide-react";
+import { PoundSterling, Briefcase, MapPin, Info, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 
@@ -44,6 +44,55 @@ const DEFAULT_CATEGORIES: Category[] = [
   { name: "Transport", amount: "" },
   { name: "Savings", amount: "" },
   { name: "Other", amount: "" },
+];
+
+function estimateUKTakeHome(grossAnnual: number) {
+  if (!grossAnnual || grossAnnual <= 0) return null;
+  const pa = 12570;
+  const basicTop = 50270;
+  const higherTop = 125140;
+  const taxable = Math.max(0, grossAnnual - pa);
+  const basic = Math.min(taxable, basicTop - pa) * 0.2;
+  const higher = Math.min(Math.max(0, taxable - (basicTop - pa)), higherTop - basicTop) * 0.4;
+  const additional = Math.max(0, taxable - (higherTop - pa)) * 0.45;
+  const tax = basic + higher + additional;
+  const niPrimary = Math.max(0, Math.min(grossAnnual, basicTop) - pa) * 0.08;
+  const niSecondary = Math.max(0, grossAnnual - basicTop) * 0.02;
+  const ni = niPrimary + niSecondary;
+  const takeHome = grossAnnual - tax - ni;
+  return { monthly: takeHome / 12, tax, ni, takeHome, effectiveRate: ((tax + ni) / grossAnnual) * 100 };
+}
+
+const BUDGET_PRESETS = [
+  {
+    label: "50/30/20",
+    description: "Needs 50%, Wants 30%, Savings 20%",
+    build: (m: number) => [
+      { name: "Needs", amount: Math.round(m * 0.5).toString() },
+      { name: "Wants", amount: Math.round(m * 0.3).toString() },
+      { name: "Savings", amount: Math.round(m * 0.2).toString() },
+    ],
+  },
+  {
+    label: "60/20/20",
+    description: "Needs 60%, Savings 20%, Wants 20%",
+    build: (m: number) => [
+      { name: "Needs", amount: Math.round(m * 0.6).toString() },
+      { name: "Savings", amount: Math.round(m * 0.2).toString() },
+      { name: "Wants", amount: Math.round(m * 0.2).toString() },
+    ],
+  },
+  {
+    label: "Detailed",
+    description: "Housing 35%, Food 15%, Transport 10%, Savings 20%, Other 20%",
+    build: (m: number) => [
+      { name: "Housing", amount: Math.round(m * 0.35).toString() },
+      { name: "Food & Groceries", amount: Math.round(m * 0.15).toString() },
+      { name: "Transport", amount: Math.round(m * 0.1).toString() },
+      { name: "Savings", amount: Math.round(m * 0.2).toString() },
+      { name: "Other", amount: Math.round(m * 0.2).toString() },
+    ],
+  },
 ];
 
 const FieldInput = ({
@@ -202,8 +251,14 @@ const PayslipSetup = () => {
     [categories]
   );
 
-  const isOverAllocated =
-    grossSalary !== "" && !Number.isNaN(Number(grossSalary)) && totalCategoryAmount > Number(grossSalary);
+  const liveEstimate = useMemo(() => estimateUKTakeHome(Number(grossSalary)), [grossSalary]);
+
+  const isOverAllocated = liveEstimate != null && totalCategoryAmount > liveEstimate.monthly;
+
+  const applyPreset = (preset: (typeof BUDGET_PRESETS)[0]) => {
+    if (!liveEstimate) return;
+    setCategories(preset.build(liveEstimate.monthly));
+  };
 
   const addCategory = () => setCategories((prev) => [...prev, { name: "", amount: "" }]);
   const removeCategory = (index: number) => setCategories((prev) => prev.filter((_, i) => i !== index));
@@ -227,8 +282,11 @@ const PayslipSetup = () => {
         nextErrors.push(`Category ${index + 1} amount must be 0 or more.`);
     });
     if (new Set(normalizedNames).size !== normalizedNames.length) nextErrors.push("Category names must be unique.");
-    if (!Number.isNaN(salary) && totalCategoryAmount > salary)
-      nextErrors.push("Total category amount cannot exceed gross salary.");
+    const estimate = estimateUKTakeHome(salary);
+    if (estimate && totalCategoryAmount > estimate.monthly)
+      nextErrors.push(
+        `Total category amounts (£${totalCategoryAmount.toFixed(0)}) exceed estimated monthly take-home (£${Math.round(estimate.monthly)}).`
+      );
     setErrors(nextErrors);
     return nextErrors.length === 0;
   };
@@ -383,6 +441,36 @@ const PayslipSetup = () => {
                 min="0"
                 data-onboarding="payslip-gross"
               />
+              <AnimatePresence>
+                {liveEstimate && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100 overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-500">Estimated monthly take-home</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        ~£{Math.round(liveEstimate.monthly).toLocaleString("en-GB")}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] text-gray-400">
+                      <div className="flex justify-between">
+                        <span>Income tax</span>
+                        <span>-£{Math.round(liveEstimate.tax / 12).toLocaleString("en-GB")}/mo</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>National Insurance</span>
+                        <span>-£{Math.round(liveEstimate.ni / 12).toLocaleString("en-GB")}/mo</span>
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-gray-300">
+                      Effective rate {liveEstimate.effectiveRate.toFixed(1)}% · 2024/25 UK estimate only
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Job title + location */}
@@ -525,6 +613,31 @@ const PayslipSetup = () => {
               className="bg-white rounded-xl border border-gray-200 shadow-sm p-5"
               data-onboarding="payslip-categories"
             >
+              {/* Budget presets */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3 h-3 text-purple-500" />
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Quick presets</p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {BUDGET_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      disabled={!liveEstimate || loading}
+                      onClick={() => applyPreset(preset)}
+                      title={preset.description}
+                      className="px-2.5 py-1 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-purple-400 hover:text-purple-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                {!liveEstimate && (
+                  <p className="mt-1.5 text-[11px] text-gray-400">Enter your salary above to enable presets</p>
+                )}
+              </div>
+
               <CategoryBuilder
                 categories={categories}
                 onAddCategory={addCategory}
@@ -533,6 +646,7 @@ const PayslipSetup = () => {
                 totalCategoryAmount={totalCategoryAmount}
                 isOverAllocated={isOverAllocated}
                 disabled={loading}
+                monthlyTakeHome={liveEstimate?.monthly}
               />
             </motion.div>
 

@@ -1,19 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from "recharts";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp, TrendingDown, DollarSign, Heart, PiggyBank,
-  AlertTriangle, ChevronDown, ChevronUp, BarChart2, Edit2, Eye, EyeOff,
+  TrendingUp,
+  DollarSign,
+  Heart,
+  PiggyBank,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  BarChart2,
+  Edit2,
+  Target,
+  ChevronRight,
+  CalendarClock,
 } from "lucide-react";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
-import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import BreakdownPanel from "../../components/BreakdownPanel";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
@@ -27,40 +32,11 @@ import { useStreakWarning } from "../../hooks/useStreakWarning";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
 import Modal from "../../components/Modal";
 import { attachDashboardDebug } from "../../dev/dashboardDebug";
-import { COLORS } from "../../constants/theme";
 import { SkeletonDashboard } from "../../components/ui/skeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { Progress } from "../../components/ui/progress";
 import { cn } from "../../lib/utils";
 import "./dashboard.css";
-
-const CATEGORY_COLOR_OVERRIDES: Record<string, string> = {
-  rent: COLORS.chart[0],
-  food: COLORS.chart[1],
-  groceries: COLORS.chart[1],
-  transport: COLORS.chart[2],
-  travel: COLORS.chart[2],
-  utilities: COLORS.chart[3],
-  bills: COLORS.chart[3],
-  savings: COLORS.purple400,
-  entertainment: COLORS.gold,
-};
-
-const normalizeCategoryKey = (value: string) =>
-  String(value || "").trim().toLowerCase();
-
-const getCategoryColor = (categoryName: string) => {
-  const key = normalizeCategoryKey(categoryName);
-  if (!key) return COLORS.chart[0];
-  if (CATEGORY_COLOR_OVERRIDES[key]) return CATEGORY_COLOR_OVERRIDES[key];
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash << 5) - hash + key.charCodeAt(i);
-    hash |= 0;
-  }
-  return COLORS.chart[Math.abs(hash) % COLORS.chart.length];
-};
 
 const formatGBP = (v: number | undefined) =>
   typeof v === "number"
@@ -68,65 +44,109 @@ const formatGBP = (v: number | undefined) =>
     : "\xA30.00";
 
 type AdzunaTip = {
-  type: string; title: string; description: string; priority: "high" | "medium" | "low";
+  type: string;
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
 };
 type HealthFactor = {
-  key: string; title: string; weight: number; score: number; contribution: number;
-  impact: "helping" | "lowering" | "neutral"; valueLabel: string; explanation: string;
+  key: string;
+  title: string;
+  weight: number;
+  score: number;
+  contribution: number;
+  impact: "helping" | "lowering" | "neutral";
+  valueLabel: string;
+  explanation: string;
 };
 type HealthBreakdown = {
-  healthScore: number; hasEnoughData: boolean; summary: string; factors: HealthFactor[];
+  healthScore: number;
+  hasEnoughData: boolean;
+  summary: string;
+  factors: HealthFactor[];
 };
 type ExpenseItem = {
-  _id: string; category: string; amount: number; day: number; month: number;
-  year: number; date: string; note?: string; createdAt: string;
+  _id: string;
+  category: string;
+  amount: number;
+  day: number;
+  month: number;
+  year: number;
+  date: string;
+  note?: string;
+  createdAt: string;
 };
 type DashboardData = {
-  healthScore: number; takeHome: number; budgetLeft: number; totalBudget: number;
+  healthScore: number;
+  takeHome: number;
+  budgetLeft: number;
+  totalBudget: number;
   actualSpending: { name: string; value: number }[];
   budgetAllocation: { name: string; value: number }[];
-  averageSalary?: number; adzunaTips?: AdzunaTip[];
-  healthBreakdown?: HealthBreakdown; expenses?: ExpenseItem[];
+  averageSalary?: number;
+  adzunaTips?: AdzunaTip[];
+  healthBreakdown?: HealthBreakdown;
+  expenses?: ExpenseItem[];
+};
+
+type SavingsGoal = {
+  _id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string;
+  emoji: string;
+  color: string;
+  isCompleted: boolean;
+};
+type RecurringBill = {
+  category: string;
+  avgAmount: number;
+  avgDay: number;
+  nextDate: string;
+  daysUntil: number;
+  paidThisMonth: boolean;
+  status: "paid" | "due_soon" | "upcoming" | "scheduled";
 };
 
 type KpiCardProps = {
-  label: string; value: string; meta?: string;
+  label: string;
+  value: string;
+  meta?: string;
   icon?: React.ComponentType<{ className?: string }>;
-  highlight?: boolean; accentColor?: string;
-  onClick?: () => void; dataOnboarding?: string;
+  highlight?: boolean;
+  accentColor?: string;
+  onClick?: () => void;
+  dataOnboarding?: string;
 };
 
 const KpiCard = ({ label, value, meta, icon: Icon, highlight, accentColor, onClick, dataOnboarding }: KpiCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
-    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(92,63,163,0.16)" }}
+    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
     onClick={onClick}
     data-onboarding={dataOnboarding}
     className={cn(
-      "relative bg-white border border-purple-300 rounded-lg p-5 overflow-hidden transition-shadow",
+      "relative bg-white border border-gray-200 rounded-lg p-5 overflow-hidden transition-shadow",
       onClick && "cursor-pointer",
-      highlight && "border-purple-400",
+      highlight && "border-purple-400"
     )}
   >
-    {highlight && (
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-gold" />
-    )}
+    {highlight && <div className="absolute top-0 left-0 right-0 h-[3px] bg-purple-600" />}
     <div className="flex items-start justify-between gap-2">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-gecko-muted uppercase tracking-wider mb-1">{label}</p>
-        <p className={cn("text-2xl font-bold truncate", accentColor || "text-purple-600")}>{value}</p>
-        {meta && <p className="text-xs text-gecko-muted mt-1 truncate">{meta}</p>}
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+        <p className={cn("text-2xl font-bold truncate", accentColor || "text-gray-900")}>{value}</p>
+        {meta && <p className="text-xs text-gray-500 mt-1 truncate">{meta}</p>}
       </div>
       {Icon && (
-        <div className="shrink-0 p-2 rounded-md bg-purple-100">
-          <Icon className="h-5 w-5 text-purple-600" />
+        <div className="shrink-0 p-2 rounded-md bg-gray-100">
+          <Icon className="h-5 w-5 text-gray-600" />
         </div>
       )}
     </div>
-    {onClick && (
-      <p className="mt-2 text-xs font-semibold text-purple-500">See breakdown &rarr;</p>
-    )}
+    {onClick && <p className="mt-2 text-xs font-semibold text-purple-600">See breakdown →</p>}
   </motion.div>
 );
 
@@ -139,8 +159,6 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [showExpenses, setShowExpenses] = useState(false);
-  const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
   const [forecast, setForecast] = useState<ForecastPayload | null>(null);
   const [showAllTips, setShowAllTips] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -151,27 +169,36 @@ const Dashboard = () => {
   const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
   const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshotData | null>(null);
   const [activeSnapshotPopupKey, setActiveSnapshotPopupKey] = useState<string | null>(null);
-  const [chartView, setChartView] = useState<"pie" | "bar">("pie");
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
   const hasFetchedRef = useRef(false);
 
   const { showStreakWarning } = useStreakWarning();
-  const { isOpen: isOnboardingOpen, activeStepNumber, steps: onboardingSteps, closeGuide, completeGuide, goToStep } =
-    usePageOnboarding("/dashboard");
+  const {
+    isOpen: isOnboardingOpen,
+    activeStepNumber,
+    steps: onboardingSteps,
+    closeGuide,
+    completeGuide,
+    goToStep,
+  } = usePageOnboarding("/dashboard");
 
   const monthlyTakeHome = dashboardData?.takeHome ?? 0;
   const incomeBudgetLeft =
-    (dashboardData?.takeHome ?? 0) -
-    (displayedData?.totalBudget ?? 0) +
-    (displayedData?.budgetLeft ?? 0);
-  const visibleTips = showAllTips
-    ? (displayedData?.adzunaTips ?? [])
-    : (displayedData?.adzunaTips ?? []).slice(0, 3);
-  const hasMoreTips = (displayedData?.adzunaTips?.length ?? 0) > 3;
+    (dashboardData?.takeHome ?? 0) - (displayedData?.totalBudget ?? 0) + (displayedData?.budgetLeft ?? 0);
+  const visibleTips = showAllTips ? (displayedData?.adzunaTips ?? []) : (displayedData?.adzunaTips ?? []).slice(0, 5);
+  const totalSpent = (displayedData?.actualSpending || []).reduce((sum, e) => sum + e.value, 0);
+  const actualByCategory = new Map((displayedData?.actualSpending || []).map((e) => [e.name.toLowerCase(), e.value]));
+  const now = new Date();
+  const monthLabel = now.toLocaleString("en-GB", { month: "long", year: "numeric" });
 
-  const mergeDashboardData = useCallback((newData: DashboardData) => {
-    setDashboardData(newData);
-    if (!isSnapshotMode) setDisplayedData(newData);
-  }, [isSnapshotMode]);
+  const mergeDashboardData = useCallback(
+    (newData: DashboardData) => {
+      setDashboardData(newData);
+      if (!isSnapshotMode) setDisplayedData(newData);
+    },
+    [isSnapshotMode]
+  );
 
   const broadcastDashboardSync = useCallback((eventType: string) => {
     window.dispatchEvent(new CustomEvent("dashboard:sync", { detail: { type: eventType } }));
@@ -180,10 +207,9 @@ const Dashboard = () => {
   const refreshSnapshotViewData = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/snapshots`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/snapshots`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (Array.isArray(res.data)) setSnapshots(res.data);
     } catch (_) {}
   }, [token]);
@@ -217,9 +243,15 @@ const Dashboard = () => {
     const fetchAll = async () => {
       try {
         const [dashRes, profileRes, snapshotRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/snapshots`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/snapshots`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         mergeDashboardData(dashRes.data);
         setProfile(profileRes.data);
@@ -229,8 +261,22 @@ const Dashboard = () => {
           const forecastData = await getForecast(token);
           setForecast(forecastData);
         } catch (_) {}
-      } catch (err) {
-        setError("Failed to load dashboard. Please refresh.");
+        try {
+          const [savRes, recRes] = await Promise.all([
+            axios.get(`${import.meta.env.VITE_API_URL}/api/v1/savings`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${import.meta.env.VITE_API_URL}/api/v1/recurring`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+          if (Array.isArray(savRes.data)) setSavingsGoals(savRes.data);
+          if (Array.isArray(recRes.data?.recurring)) setRecurringBills(recRes.data.recurring);
+        } catch (_) {}
+      } catch (err: any) {
+        const detail = err?.response?.data?.error ?? err?.response?.status ?? err?.message ?? String(err);
+        console.error("[Dashboard] fetch failed:", err);
+        setError(`Failed to load dashboard (${detail}). Check browser console for details.`);
         setLoading(false);
       }
     };
@@ -250,31 +296,30 @@ const Dashboard = () => {
   const deleteExpense = async (expenseId: string) => {
     if (!token) return;
     try {
-      const res = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data?.dashboard) {
         mergeDashboardData(res.data.dashboard);
         if (res.data?.forecast) setForecast(res.data.forecast);
       } else {
-        setDisplayedData(prev =>
-          prev ? { ...prev, expenses: (prev.expenses || []).filter(e => e._id !== expenseId) } : prev,
+        setDisplayedData((prev) =>
+          prev ? { ...prev, expenses: (prev.expenses || []).filter((e) => e._id !== expenseId) } : prev
         );
       }
       broadcastDashboardSync("expense:delete");
       void refreshSnapshotViewData();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const updateExpense = async (expenseId: string, editForm: any) => {
     if (!token) return;
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        editForm,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`, editForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data?.dashboard) {
         mergeDashboardData(res.data.dashboard);
         if (res.data?.forecast) setForecast(res.data.forecast);
@@ -282,30 +327,39 @@ const Dashboard = () => {
       const d = new Date(editForm.date + "T00:00:00");
       const editedMonth = d.getMonth() + 1;
       const editedYear = d.getFullYear();
-      setDisplayedData(prev => {
+      setDisplayedData((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          expenses: (prev.expenses || []).map(e =>
-            e._id !== expenseId ? e : {
-              ...e, category: editForm.category, amount: editForm.amount,
-              date: editForm.date, note: editForm.note, month: editedMonth, year: editedYear,
-            },
+          expenses: (prev.expenses || []).map((e) =>
+            e._id !== expenseId
+              ? e
+              : {
+                  ...e,
+                  category: editForm.category,
+                  amount: editForm.amount,
+                  date: editForm.date,
+                  note: editForm.note,
+                  month: editedMonth,
+                  year: editedYear,
+                }
           ),
         };
       });
       void refreshSnapshotViewData();
       broadcastDashboardSync("expense:update");
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDismissForecastWarning = async (warningId: string) => {
     try {
-      setForecast(prev => prev
-        ? { ...prev, warnings: prev.warnings.filter(w => w.id !== warningId) }
-        : prev);
+      setForecast((prev) => (prev ? { ...prev, warnings: prev.warnings.filter((w) => w.id !== warningId) } : prev));
       await dismissForecastWarning(warningId, token);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -315,7 +369,7 @@ const Dashboard = () => {
     const cy = now.getFullYear();
     const sm = cm === 1 ? 12 : cm - 1;
     const sy = cm === 1 ? cy - 1 : cy;
-    const latest = snapshots.find(s => s.month === sm && s.year === sy);
+    const latest = snapshots.find((s) => s.month === sm && s.year === sy);
     if (!latest) return;
     const cat = Date.parse(latest.createdAt || "");
     const fresh = Number.isFinite(cat) && now.getTime() - cat <= 86400000;
@@ -334,7 +388,7 @@ const Dashboard = () => {
         await axios.post(
           `${import.meta.env.VITE_API_URL}/api/v1/snapshots/popup-seen`,
           { popupKey: activeSnapshotPopupKey },
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       } catch (_) {}
     }
@@ -344,13 +398,15 @@ const Dashboard = () => {
 
   const healthScore = displayedData?.healthScore ?? 0;
   const healthColor = healthScore < 40 ? "text-red-500" : healthScore < 70 ? "text-amber-500" : "text-emerald-500";
-  const healthVariant = (healthScore < 40 ? "danger" : healthScore < 70 ? "warning" : "success") as "danger" | "warning" | "success";
+  const healthVariant = (healthScore < 40 ? "danger" : healthScore < 70 ? "warning" : "success") as
+    | "danger"
+    | "warning"
+    | "success";
 
   if (error) {
     return (
       <div className="app-page">
-        <TopNav />
-        <div className="max-w-screen-lg mx-auto px-4 mt-8">
+        <div className="max-w-screen-lg mx-auto mt-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 font-semibold">{error}</div>
         </div>
         <GroqChat />
@@ -360,306 +416,346 @@ const Dashboard = () => {
 
   return (
     <div className="app-page">
-      <TopNav />
       {!isSnapshotMode && (
         <ForecastWarningPopup warnings={forecast?.warnings || []} onDismiss={handleDismissForecastWarning} />
       )}
 
-      <div className="max-w-screen-xl mx-auto px-4 pb-16">
+      <div className="max-w-screen-xl mx-auto pb-12">
         {loading ? (
-          <div className="mt-4"><SkeletonDashboard /></div>
+          <div className="mt-4">
+            <SkeletonDashboard />
+          </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-6">
-
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             {/* Streak warning */}
             {showStreakWarning && (
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 font-medium">
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 font-medium mb-5">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 Complete a quiz this week to keep your streak alive
               </div>
             )}
 
-            {/* Snapshot banner */}
-            {isSnapshotMode && selectedSnapshot && (
-              <div className="bg-purple-100 border border-purple-300 rounded-lg px-5 py-4" data-onboarding="dashboard-takehome">
-                <h3 className="text-purple-700 font-semibold">
-                  Snapshot: {snapshots[snapshotIndex].month}/{snapshots[snapshotIndex].year}
-                </h3>
-                <p className="text-purple-500 text-sm mt-0.5">Viewing archived values for this month.</p>
+            {/* Page header */}
+            <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+              <div>
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0.5">
+                  {isSnapshotMode && selectedSnapshot
+                    ? `Snapshot - ${selectedSnapshot.month}/${selectedSnapshot.year}`
+                    : monthLabel}
+                </p>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               </div>
-            )}
-
-            {/* Hero banner */}
-            <div className="relative overflow-hidden rounded-xl border border-purple-300 bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-white shadow-lg" data-onboarding="dashboard-takehome">
-              <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/10" />
-              <div className="absolute -bottom-6 -left-4 h-32 w-32 rounded-full bg-yellow-400/20" />
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-purple-200 text-sm font-semibold uppercase tracking-wider mb-1">Monthly overview</p>
-                  <h2 className="text-2xl font-bold">Your money at a glance</h2>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <span className="inline-flex items-center gap-2 bg-white/20 rounded-pill px-4 py-2 text-sm font-semibold">
-                    <DollarSign className="h-4 w-4" />
-                    Take-home: {formatGBP(monthlyTakeHome)}
-                  </span>
-                  <span className="inline-flex items-center gap-2 bg-white/20 rounded-pill px-4 py-2 text-sm font-semibold">
-                    Budget: {formatGBP(displayedData?.totalBudget)}
-                  </span>
-                </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={!isSnapshotMode ? () => setShowBreakdown(true) : undefined}
+                  className={cn(
+                    "flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm",
+                    !isSnapshotMode && "hover:border-purple-300 cursor-pointer transition-colors"
+                  )}
+                  data-onboarding="dashboard-health-score"
+                >
+                  <Heart className={cn("w-4 h-4", healthColor)} />
+                  <span className={cn("font-bold", healthColor)}>{healthScore}</span>
+                  <span className="text-gray-400 text-xs">/100</span>
+                  <Badge variant={healthVariant} className="ml-1 text-xs">
+                    {healthScore < 40 ? "Poor" : healthScore < 70 ? "Fair" : "Good"}
+                  </Badge>
+                  {!isSnapshotMode && <span className="text-xs text-gray-400">details</span>}
+                </button>
+                <SnapshotNavigator
+                  snapshots={snapshots}
+                  snapshotIndex={snapshotIndex}
+                  setSnapshotIndex={setSnapshotIndex}
+                />
               </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* KPI row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-onboarding="dashboard-takehome">
+              <KpiCard label="Take-home" value={formatGBP(monthlyTakeHome)} icon={DollarSign} />
               <KpiCard
-                label="Health score"
-                value={String(healthScore)}
-                meta={healthScore < 40 ? "Needs attention" : healthScore < 70 ? "Room to improve" : "Looking great"}
-                icon={Heart}
-                accentColor={healthColor}
-                highlight
-                onClick={!isSnapshotMode ? () => setShowBreakdown(true) : undefined}
-                dataOnboarding="dashboard-health-score"
-              />
-              <KpiCard
-                label="Take-home"
-                value={formatGBP(monthlyTakeHome)}
-                icon={DollarSign}
-                dataOnboarding="dashboard-takehome"
+                label="Spent this month"
+                value={formatGBP(totalSpent)}
+                icon={TrendingUp}
+                accentColor={totalSpent > monthlyTakeHome ? "text-red-600" : "text-gray-900"}
               />
               <KpiCard
                 label="Budget remaining"
                 value={formatGBP(incomeBudgetLeft)}
                 icon={PiggyBank}
+                highlight
                 accentColor={incomeBudgetLeft < 0 ? "text-red-500" : "text-emerald-600"}
               />
-              <KpiCard
-                label="Budget status"
-                value={incomeBudgetLeft >= 0 ? "Under budget" : "Over budget"}
-                meta={incomeBudgetLeft >= 0
-                  ? `${formatGBP(incomeBudgetLeft)} remaining`
-                  : `${formatGBP(Math.abs(incomeBudgetLeft))} over`}
-                icon={incomeBudgetLeft >= 0 ? TrendingDown : TrendingUp}
-                accentColor={incomeBudgetLeft >= 0 ? "text-emerald-600" : "text-red-500"}
-                dataOnboarding="dashboard-budget-vs-actual"
-              />
-              {displayedData?.averageSalary && (
+              {displayedData?.averageSalary ? (
                 <KpiCard
                   label="Market salary"
                   value={"\xA3" + displayedData.averageSalary.toLocaleString()}
                   meta="Average for your role"
                   icon={BarChart2}
                 />
+              ) : (
+                <KpiCard
+                  label="Budget used"
+                  value={monthlyTakeHome > 0 ? Math.round((totalSpent / monthlyTakeHome) * 100) + "%" : "—"}
+                  meta="of take-home pay"
+                  icon={BarChart2}
+                  accentColor={totalSpent > monthlyTakeHome ? "text-red-600" : "text-gray-900"}
+                />
               )}
             </div>
 
-            {/* Health progress bar */}
-            <div className="bg-white border border-purple-200 rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-purple-700">Financial Health Score</h4>
-                <Badge variant={healthVariant}>{healthScore}/100</Badge>
-              </div>
-              <Progress value={healthScore} variant={healthVariant} size="lg" showLabel />
-            </div>
-
-            {/* Chart view toggle + charts */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-purple-700">Budget Analysis</h3>
-              <div className="flex items-center gap-1 bg-purple-100 rounded-md p-1">
-                <button
-                  onClick={() => setChartView("pie")}
-                  className={cn("px-3 py-1 rounded text-xs font-semibold transition-colors", chartView === "pie" ? "bg-white text-purple-700 shadow-sm" : "text-gecko-muted hover:text-purple-600")}
+            {/* Main two-column grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
+              {/* Left: budget bars + expense list */}
+              <div className="space-y-5">
+                {/* Budget vs Actual */}
+                <div
+                  className="bg-white border border-gray-200 rounded-lg p-5"
+                  data-onboarding="dashboard-budget-vs-actual"
                 >
-                  Pie
-                </button>
-                <button
-                  onClick={() => setChartView("bar")}
-                  className={cn("px-3 py-1 rounded text-xs font-semibold transition-colors", chartView === "bar" ? "bg-white text-purple-700 shadow-sm" : "text-gecko-muted hover:text-purple-600")}
-                >
-                  Bar
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Budget Allocation */}
-              <div className="bg-white border border-purple-200 rounded-lg p-5" data-onboarding="dashboard-allocation">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-semibold text-purple-700">Budget Allocation</h4>
-                  {!isSnapshotMode && (
-                    <Button variant="ghost" size="sm" onClick={() => navigate("/payslip?mode=edit", { state: { prefillJobTitle: profile?.payslipData?.jobTitle ?? "", prefillLocation: profile?.payslipData?.location ?? "" } })}>
-                      <Edit2 className="h-3 w-3 mr-1" /> Edit
-                    </Button>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold text-gray-800">Budget vs Actual</h4>
+                    {!isSnapshotMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          navigate("/payslip?mode=edit", {
+                            state: {
+                              prefillJobTitle: profile?.payslipData?.jobTitle ?? "",
+                              prefillLocation: profile?.payslipData?.location ?? "",
+                            },
+                          })
+                        }
+                      >
+                        <Edit2 className="h-3 w-3 mr-1" /> Edit budget
+                      </Button>
+                    )}
+                  </div>
+                  {(displayedData?.budgetAllocation || []).length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-gray-400 mb-3">No budget set up yet.</p>
+                      <Button variant="secondary" size="sm" onClick={() => navigate("/payslip")}>
+                        Set up payslip
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5">
+                      {(displayedData?.budgetAllocation || []).map(({ name, value: budget }) => {
+                        const actual = actualByCategory.get(name.toLowerCase()) ?? 0;
+                        const pct = budget > 0 ? Math.min((actual / budget) * 100, 100) : 0;
+                        const over = actual > budget && budget > 0;
+                        return (
+                          <div key={name}>
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="font-medium text-gray-700 capitalize">{name}</span>
+                              <span
+                                className={cn("font-semibold tabular-nums", over ? "text-red-600" : "text-gray-500")}
+                              >
+                                {formatGBP(actual)}{" "}
+                                <span className="font-normal text-gray-300">/ {formatGBP(budget)}</span>
+                                {over && <span className="ml-1 text-red-400 font-normal text-[11px]">over</span>}
+                              </span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={cn(
+                                  "h-full rounded-full transition-all duration-500",
+                                  over ? "bg-red-500" : pct > 85 ? "bg-amber-400" : "bg-purple-600"
+                                )}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-                {chartView === "pie" ? (
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={displayedData?.budgetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
-                        {(displayedData?.budgetAllocation || []).map((entry, i) => (
-                          <Cell key={`alloc-${i}`} fill={getCategoryColor(entry.name)} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
-                      <Legend verticalAlign="bottom" height={24} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={displayedData?.budgetAllocation || []} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ede8f8" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {(displayedData?.budgetAllocation || []).map((entry, i) => (
-                          <Cell key={`alloc-bar-${i}`} fill={getCategoryColor(entry.name)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+
+                {/* Savings goals */}
+                {!isSnapshotMode && savingsGoals.filter((g) => !g.isCompleted).length > 0 && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-purple-50">
+                          <Target className="w-3.5 h-3.5 text-purple-600" />
+                        </div>
+                        <h4 className="text-sm font-semibold text-gray-800">Savings Goals</h4>
+                      </div>
+                      <button
+                        onClick={() => navigate("/savings")}
+                        className="flex items-center gap-0.5 text-xs font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                      >
+                        View all <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {savingsGoals
+                        .filter((g) => !g.isCompleted)
+                        .slice(0, 3)
+                        .map((goal) => {
+                          const pct =
+                            goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0;
+                          return (
+                            <div key={goal._id}>
+                              <div className="flex items-center justify-between text-xs mb-1.5">
+                                <span className="font-medium text-gray-700">
+                                  {goal.emoji} {goal.name}
+                                </span>
+                                <span className="font-semibold text-gray-500 tabular-nums">
+                                  {formatGBP(goal.currentAmount)}{" "}
+                                  <span className="font-normal text-gray-300">/ {formatGBP(goal.targetAmount)}</span>
+                                </span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${pct}%`, backgroundColor: goal.color || "#8b6fd4" }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    {savingsGoals.filter((g) => !g.isCompleted).length > 3 && (
+                      <p className="mt-2 text-[11px] text-gray-400 text-center">
+                        +{savingsGoals.filter((g) => !g.isCompleted).length - 3} more goals
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
 
-              {/* Actual Spending */}
-              <div className="bg-white border border-purple-200 rounded-lg p-5" data-onboarding="dashboard-actual-spending">
-                <h4 className="text-sm font-semibold text-purple-700 mb-4">Actual Spending</h4>
-                {chartView === "pie" ? (
-                  <ResponsiveContainer width="100%" height={260}>
-                    <PieChart>
-                      <Pie data={displayedData?.actualSpending || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
-                        {(displayedData?.actualSpending || []).map((entry, i) => (
-                          <Cell key={`spend-${i}`} fill={getCategoryColor(entry.name)} />
+                {/* Upcoming recurring bills */}
+                {!isSnapshotMode && recurringBills.filter((b) => !b.paidThisMonth).length > 0 && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-amber-50">
+                          <CalendarClock className="w-3.5 h-3.5 text-amber-500" />
+                        </div>
+                        <h4 className="text-sm font-semibold text-gray-800">Upcoming Bills</h4>
+                      </div>
+                      <Badge variant="outline" className="text-[11px]">
+                        {recurringBills.filter((b) => !b.paidThisMonth).length} pending
+                      </Badge>
+                    </div>
+                    <div className="space-y-0">
+                      {recurringBills
+                        .filter((b) => !b.paidThisMonth)
+                        .slice(0, 5)
+                        .map((bill, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                          >
+                            <div>
+                              <p className="text-xs font-medium text-gray-700 capitalize">{bill.category}</p>
+                              <p
+                                className={cn(
+                                  "text-[11px] mt-0.5",
+                                  bill.status === "due_soon" ? "text-red-500 font-semibold" : "text-gray-400"
+                                )}
+                              >
+                                {bill.daysUntil <= 0
+                                  ? "Due today"
+                                  : bill.daysUntil === 1
+                                    ? "Due tomorrow"
+                                    : `Due in ${bill.daysUntil} days`}
+                              </p>
+                            </div>
+                            <span className="text-xs font-bold text-gray-800 tabular-nums">
+                              {formatGBP(bill.avgAmount)}
+                            </span>
+                          </div>
                         ))}
-                      </Pie>
-                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
-                      <Legend verticalAlign="bottom" height={24} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={displayedData?.actualSpending || []} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ede8f8" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {(displayedData?.actualSpending || []).map((entry, i) => (
-                          <Cell key={`spend-bar-${i}`} fill={getCategoryColor(entry.name)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                    </div>
+                    {(() => {
+                      const total = recurringBills.filter((b) => !b.paidThisMonth).reduce((s, b) => s + b.avgAmount, 0);
+                      return total > 0 ? (
+                        <p className="mt-3 text-[11px] text-gray-400 text-right font-medium">
+                          {formatGBP(total)} remaining this month
+                        </p>
+                      ) : null;
+                    })()}
+                  </div>
                 )}
-              </div>
-            </div>
 
-            {/* Quick expense log */}
-            {!isSnapshotMode && (
-              <div>
-                <Button variant="secondary" size="md" onClick={() => setShowExpenses(v => !v)} className="mb-3">
-                  {showExpenses ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                  {showExpenses ? "Hide expense form" : "Log new expense"}
-                </Button>
-                <AnimatePresence>
-                  {showExpenses && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                      data-onboarding="dashboard-embedded-expenses"
-                    >
-                      <Expenses
-                        categories={displayedData?.budgetAllocation}
-                        onExpenseCreated={(dashboard, forecastPayload) => {
-                          if (dashboard) mergeDashboardData(dashboard);
-                          if (forecastPayload) setForecast(forecastPayload);
-                          broadcastDashboardSync("expense:create");
-                        }}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-
-            {/* Expense breakdown */}
-            {isSnapshotMode ? (
-              <ExpenseBreakdown
-                expenses={displayedData?.expenses || []}
-                budgetAllocation={displayedData?.budgetAllocation || []}
-                onDelete={deleteExpense}
-                onUpdate={updateExpense}
-              />
-            ) : (
-              <div>
-                <Button variant="outline" size="md" onClick={() => setShowExpenseBreakdown(v => !v)} className="mb-3">
-                  {showExpenseBreakdown ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
-                  {showExpenseBreakdown ? "Hide expenses" : "View all expenses"}
-                </Button>
-                <AnimatePresence>
-                  {showExpenseBreakdown && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                    >
-                      <ExpenseBreakdown
-                        expenses={displayedData?.expenses || []}
-                        budgetAllocation={displayedData?.budgetAllocation || []}
-                        onDelete={deleteExpense}
-                        onUpdate={updateExpense}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-
-            <SnapshotNavigator snapshots={snapshots} snapshotIndex={snapshotIndex} setSnapshotIndex={setSnapshotIndex} />
-
-            {/* Market tips */}
-            {(displayedData?.adzunaTips?.length ?? 0) > 0 && (
-              <div className="space-y-4" data-onboarding="dashboard-adzuna-tips">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-purple-700">Market-based Financial Tips</h3>
-                  <Badge variant="outline">{displayedData!.adzunaTips!.length} tips</Badge>
+                {/* Expense breakdown - always visible */}
+                <div data-onboarding="dashboard-embedded-expenses">
+                  <ExpenseBreakdown
+                    expenses={displayedData?.expenses || []}
+                    budgetAllocation={displayedData?.budgetAllocation || []}
+                    onDelete={deleteExpense}
+                    onUpdate={updateExpense}
+                  />
                 </div>
-                <div className="space-y-3">
-                  {visibleTips.map((tip, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className={cn(
-                        "rounded-lg border-l-4 p-4",
-                        tip.priority === "high"
-                          ? "bg-amber-50 border-yellow-400"
-                          : tip.priority === "medium"
-                            ? "bg-purple-50 border-purple-400"
-                            : "bg-purple-100/60 border-purple-300",
+              </div>
+
+              {/* Right: quick-add form + tips */}
+              <div className="space-y-4">
+                {/* Expense form - always visible, hidden in snapshot mode */}
+                {!isSnapshotMode && (
+                  <div data-onboarding="dashboard-allocation">
+                    <Expenses
+                      categories={displayedData?.budgetAllocation}
+                      onExpenseCreated={(dashboard, forecastPayload) => {
+                        if (dashboard) mergeDashboardData(dashboard);
+                        if (forecastPayload) setForecast(forecastPayload);
+                        broadcastDashboardSync("expense:create");
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Market tips */}
+                {(displayedData?.adzunaTips?.length ?? 0) > 0 && (
+                  <div
+                    className="bg-white border border-gray-200 rounded-lg p-4"
+                    data-onboarding="dashboard-adzuna-tips"
+                  >
+                    <button
+                      className="flex items-center justify-between w-full text-left"
+                      onClick={() => setShowAllTips((v) => !v)}
+                    >
+                      <h4 className="text-sm font-semibold text-gray-800">Market Tips</h4>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{displayedData!.adzunaTips!.length}</Badge>
+                        {showAllTips ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </button>
+                    <AnimatePresence>
+                      {showAllTips && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden mt-3 space-y-2"
+                        >
+                          {visibleTips.map((tip, i) => (
+                            <div
+                              key={i}
+                              className={cn(
+                                "p-3 rounded-md border-l-2",
+                                tip.priority === "high" ? "bg-amber-50 border-amber-400" : "bg-slate-50 border-gray-300"
+                              )}
+                            >
+                              <p className="font-semibold text-gray-800 text-xs mb-0.5">{tip.title}</p>
+                              <p className="text-gray-500 text-xs">{tip.description}</p>
+                            </div>
+                          ))}
+                        </motion.div>
                       )}
-                    >
-                      <p className="text-sm font-semibold text-purple-700 mb-1">{tip.title}</p>
-                      <p className="text-sm text-gecko-muted">{tip.description}</p>
-                    </motion.div>
-                  ))}
-                </div>
-                {hasMoreTips && (
-                  <Button variant="ghost" size="sm" onClick={() => setShowAllTips(v => !v)}>
-                    {showAllTips ? "Show fewer" : `Show all ${displayedData!.adzunaTips!.length} tips`}
-                    {showAllTips ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
+                    </AnimatePresence>
+                  </div>
                 )}
               </div>
-            )}
-
+            </div>
           </motion.div>
         )}
       </div>
@@ -674,7 +770,11 @@ const Dashboard = () => {
         onGoToStep={goToStep}
       />
       {!isSnapshotMode && (
-        <BreakdownPanel isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} breakdown={displayedData?.healthBreakdown || null} />
+        <BreakdownPanel
+          isOpen={showBreakdown}
+          onClose={() => setShowBreakdown(false)}
+          breakdown={displayedData?.healthBreakdown || null}
+        />
       )}
       {showSnapshotPopup && popupSnapshot && (
         <Modal onClose={handleCloseSnapshotPopup}>

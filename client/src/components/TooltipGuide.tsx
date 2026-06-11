@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
 import { OnboardingStep } from "../onboarding/content";
@@ -12,8 +12,12 @@ type Props = {
   onGoToStep: (stepNumber: number) => void;
 };
 
+const PADDING = 6;
+
 const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, onGoToStep }: Props) => {
   const [dismissed, setDismissed] = useState(false);
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+  const rafRef = useRef<number>(0);
 
   const activeIndex = useMemo(
     () => (steps ?? []).findIndex((s) => s.number === activeStepNumber),
@@ -22,6 +26,36 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   const activeStep = activeIndex >= 0 ? steps[activeIndex] : (steps[0] ?? null);
   const isLastStep = activeIndex >= steps.length - 1;
   const isFirstStep = activeIndex <= 0;
+
+  // Track target element position
+  useEffect(() => {
+    if (!isOpen || dismissed || !activeStep?.target) {
+      setHighlightRect(null);
+      return;
+    }
+    const measure = () => {
+      const el = document.querySelector(activeStep.target);
+      if (!el) {
+        setHighlightRect(null);
+        return;
+      }
+      setHighlightRect(el.getBoundingClientRect());
+      // Scroll element into view if offscreen
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+    measure();
+    const onUpdate = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(measure);
+    };
+    window.addEventListener("scroll", onUpdate, true);
+    window.addEventListener("resize", onUpdate);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("scroll", onUpdate, true);
+      window.removeEventListener("resize", onUpdate);
+    };
+  }, [activeStep, isOpen, dismissed]);
 
   const goPrev = () => {
     if (!isFirstStep) onGoToStep(steps[activeIndex - 1].number);
@@ -34,6 +68,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
   };
   const dismiss = () => {
     setDismissed(true);
+    setHighlightRect(null);
     onClose();
   };
 
@@ -49,7 +84,30 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
 
   return (
     <>
-      {/* Main tip card */}
+      {/* Element highlight ring */}
+      <AnimatePresence>
+        {isOpen && !dismissed && highlightRect && (
+          <motion.div
+            key={`highlight-${activeStepNumber}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed pointer-events-none z-[2400]"
+            style={{
+              top: highlightRect.top - PADDING,
+              left: highlightRect.left - PADDING,
+              width: highlightRect.width + PADDING * 2,
+              height: highlightRect.height + PADDING * 2,
+              borderRadius: 10,
+              boxShadow: "0 0 0 2px #7c3aed, 0 0 0 5px rgba(124,58,237,0.18)",
+              background: "rgba(124,58,237,0.04)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Tip card */}
       <AnimatePresence>
         {isOpen && !dismissed && activeStep && (
           <motion.div
@@ -124,7 +182,7 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
         )}
       </AnimatePresence>
 
-      {/* Re-open pill - only when dismissed and not in the way of the chat FAB */}
+      {/* Re-open pill */}
       <AnimatePresence>
         {dismissed && (
           <motion.button
