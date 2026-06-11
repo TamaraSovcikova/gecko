@@ -72,11 +72,6 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
     onClose();
   };
 
-  const reopen = () => {
-    setDismissed(false);
-    if (steps[0]) onGoToStep(steps[0].number);
-  };
-
   if (!steps.length) return null;
 
   const stepCount = steps.length;
@@ -179,24 +174,6 @@ const TooltipGuide = ({ isOpen, activeStepNumber, steps, onClose, onComplete, on
               </button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Re-open pill */}
-      <AnimatePresence>
-        {dismissed && (
-          <motion.button
-            key="reopen"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            type="button"
-            onClick={reopen}
-            className="fixed bottom-20 left-4 z-[2500] flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-500 hover:text-gray-700 hover:border-gray-300 shadow-sm transition-colors"
-          >
-            <Lightbulb className="w-3 h-3 text-amber-400" />
-            Page tips
-          </motion.button>
         )}
       </AnimatePresence>
     </>

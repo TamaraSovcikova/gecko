@@ -16,6 +16,8 @@ import {
   Target,
   ChevronRight,
   CalendarClock,
+  Zap,
+  Info,
 } from "lucide-react";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
@@ -692,8 +694,81 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Right: quick-add form + tips */}
+              {/* Right: market tips (if any) + quick-add form */}
               <div className="space-y-4">
+                {/* Market insights - always visible, sorted high-priority first */}
+                {(displayedData?.adzunaTips?.length ?? 0) > 0 && !isSnapshotMode && (
+                  <div
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                    data-onboarding="dashboard-adzuna-tips"
+                  >
+                    <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-gray-100">
+                      <div className="p-1.5 rounded-md bg-amber-50">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 leading-none">Market Insights</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Based on your role and location</p>
+                      </div>
+                      {(displayedData?.adzunaTips?.length ?? 0) > 3 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllTips((v) => !v)}
+                          className="flex items-center gap-0.5 text-[11px] font-semibold text-purple-600 hover:text-purple-700 shrink-0"
+                        >
+                          {showAllTips ? "Less" : `+${(displayedData?.adzunaTips?.length ?? 0) - 3} more`}
+                          {showAllTips ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      )}
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {[...(displayedData?.adzunaTips ?? [])]
+                        .sort((a, b) => (a.priority === "high" ? -1 : b.priority === "high" ? 1 : 0))
+                        .slice(0, showAllTips ? undefined : 3)
+                        .map((tip, i) => (
+                          <div
+                            key={i}
+                            className={cn(
+                              "flex gap-3 px-4 py-3",
+                              tip.priority === "high" ? "bg-amber-50/60" : "bg-white"
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                "shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center",
+                                tip.priority === "high" ? "bg-amber-100" : "bg-gray-100"
+                              )}
+                            >
+                              {tip.priority === "high" ? (
+                                <AlertTriangle className="w-3 h-3 text-amber-600" />
+                              ) : (
+                                <Info className="w-3 h-3 text-gray-400" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p
+                                className={cn(
+                                  "text-xs font-semibold mb-0.5",
+                                  tip.priority === "high" ? "text-amber-900" : "text-gray-800"
+                                )}
+                              >
+                                {tip.title}
+                              </p>
+                              <p
+                                className={cn(
+                                  "text-[11px] leading-relaxed",
+                                  tip.priority === "high" ? "text-amber-700" : "text-gray-500"
+                                )}
+                              >
+                                {tip.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Expense form - always visible, hidden in snapshot mode */}
                 {!isSnapshotMode && (
                   <div data-onboarding="dashboard-allocation">
@@ -705,53 +780,6 @@ const Dashboard = () => {
                         broadcastDashboardSync("expense:create");
                       }}
                     />
-                  </div>
-                )}
-
-                {/* Market tips */}
-                {(displayedData?.adzunaTips?.length ?? 0) > 0 && (
-                  <div
-                    className="bg-white border border-gray-200 rounded-lg p-4"
-                    data-onboarding="dashboard-adzuna-tips"
-                  >
-                    <button
-                      className="flex items-center justify-between w-full text-left"
-                      onClick={() => setShowAllTips((v) => !v)}
-                    >
-                      <h4 className="text-sm font-semibold text-gray-800">Market Tips</h4>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{displayedData!.adzunaTips!.length}</Badge>
-                        {showAllTips ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-                    </button>
-                    <AnimatePresence>
-                      {showAllTips && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden mt-3 space-y-2"
-                        >
-                          {visibleTips.map((tip, i) => (
-                            <div
-                              key={i}
-                              className={cn(
-                                "p-3 rounded-md border-l-2",
-                                tip.priority === "high" ? "bg-amber-50 border-amber-400" : "bg-slate-50 border-gray-300"
-                              )}
-                            >
-                              <p className="font-semibold text-gray-800 text-xs mb-0.5">{tip.title}</p>
-                              <p className="text-gray-500 text-xs">{tip.description}</p>
-                            </div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 )}
               </div>
