@@ -1,25 +1,24 @@
-// auth.js — Authentication middleware.
+// auth.js - Authentication middleware.
 // This runs on every protected route BEFORE the route handler.
 
-// can't initialise firebase for testing purposes
-// const admin = require('../config/firebase');
-const admin = require('firebase-admin');
+const admin = require('../config/firebase');
 const User = require('../models/User');
 
 const authMiddleware = async (req, res, next) => {
+  if (!admin) {
+    return res.status(503).json({ error: 'Server not configured - Firebase Admin credentials missing from .env' });
+  }
+
   const authHeader = req.headers.authorization;
 
-  // Check the Authorization header exists and starts with "Bearer "
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized - no token provided' });
   }
 
-  // Pull the token
   const token = authHeader.split(' ')[1];
 
   let decodedToken;
   try {
-    // Ask Firebase Admin to verify the token is real and not expired.
     decodedToken = await admin.auth().verifyIdToken(token);
   } catch (err) {
     console.error('Token verification failed:', err.message);
@@ -27,9 +26,6 @@ const authMiddleware = async (req, res, next) => {
   }
 
   const normalizedUid = decodedToken.uid || decodedToken.user_id || decodedToken.sub;
-
-  // DEBUGGING
-  console.log("AUTH UID:", normalizedUid);
 
   if (!normalizedUid) {
     return res.status(401).json({ error: 'Unauthorized - token missing user id' });

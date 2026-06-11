@@ -6,12 +6,19 @@
 
 const admin = require('firebase-admin');
 
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  }),
-});
+const projectId   = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey  = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-module.exports = admin;
+if (!projectId || !clientEmail || !privateKey) {
+  console.warn(
+    '[firebase] Admin SDK NOT initialised - missing FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY. ' +
+    'Auth-protected routes will return 503 until credentials are added to server/.env.'
+  );
+  module.exports = null;
+} else {
+  admin.initializeApp({
+    credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+  });
+  module.exports = admin;
+}

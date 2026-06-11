@@ -11,4 +11,4 @@ export {
 	updatePassword,
 	updateProfile,
 	verifyBeforeUpdateEmail,
-} from "../../node_modules/firebase/auth/dist/esm/index.esm.js";
+} from "firebase/auth";
