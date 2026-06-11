@@ -1,7 +1,7 @@
 import { AlertTriangle, Lightbulb, TrendingUp, X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
+import { ConceptLink } from "./ConceptLink";
 import type { Callout } from "../data/calloutConditions";
 
 type Props = {
@@ -52,12 +52,12 @@ export function FinanceCallout({ callout }: Props) {
         <p className={cn("text-xs font-bold mb-0.5", c.titleColor)}>{callout.title}</p>
         <p className={cn("text-xs leading-relaxed", c.bodyColor)}>{callout.body}</p>
         {callout.learnSlug && (
-          <Link
-            to={`/learn/concepts/${callout.learnSlug}`}
-            className={cn("text-[11px] font-semibold mt-1 inline-block", c.iconColor, "hover:underline")}
+          <ConceptLink
+            slug={callout.learnSlug}
+            className={cn("text-[11px] font-semibold mt-1 inline-block", c.iconColor)}
           >
             Learn more →
-          </Link>
+          </ConceptLink>
         )}
       </div>
       <button

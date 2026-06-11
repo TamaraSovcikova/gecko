@@ -17,6 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PayslipSetup from "./pages/PayslipSetup";
 import Expenses from "./pages/Expenses/Expenses";
 import Learn from "./pages/Learn/index.tsx";
+import ConceptPage from "./pages/Learn/ConceptPage";
 import Quiz from "./pages/Quiz";
 import Terms from "./pages/Terms";
 import SettingsPage from "./pages/Settings";
@@ -49,6 +50,7 @@ function App() {
         <Route path="/payslip" element={<PayslipSetup />} />
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/learn" element={<Learn />} />
+        <Route path="/learn/concepts/:slug" element={<ConceptPage />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />

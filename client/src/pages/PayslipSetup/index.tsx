@@ -10,6 +10,7 @@ import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import { motion, AnimatePresence } from "framer-motion";
 import { PoundSterling, Briefcase, MapPin, Info, AlertCircle, Sparkles, ChevronDown, BookOpen } from "lucide-react";
+import { ConceptLink } from "../../components/ConceptLink";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 
@@ -225,8 +226,15 @@ function PayslipTeachingCard({
               <div className="space-y-1.5">
                 <p className="text-[11px] font-bold text-gray-700">Income tax</p>
                 <p className="text-[11px] text-gray-500 leading-relaxed">
-                  Tax is calculated in bands on earnings above your personal allowance (£12,570). You pay 0% on the
-                  first £12,570, then 20% on earnings up to £50,270.{" "}
+                  Tax is calculated in{" "}
+                  <ConceptLink slug="income-tax-bands" className="text-[11px]">
+                    bands
+                  </ConceptLink>{" "}
+                  on earnings above your{" "}
+                  <ConceptLink slug="personal-allowance" className="text-[11px]">
+                    personal allowance
+                  </ConceptLink>{" "}
+                  (£12,570). You pay 0% on the first £12,570, then 20% up to £50,270.{" "}
                   {!inBasicBand && "You're in the higher rate band - earnings above £50,270 are taxed at 40%."}
                   {inBasicBand && grossAnnual > 12570 && ` You're in the ${bandLabel} band.`}
                 </p>
@@ -234,17 +242,26 @@ function PayslipTeachingCard({
               <div className="space-y-1.5">
                 <p className="text-[11px] font-bold text-gray-700">National Insurance</p>
                 <p className="text-[11px] text-gray-500 leading-relaxed">
-                  NI is a separate deduction (not income tax). You pay 8% on earnings between £12,570-£50,270 and 2%
-                  above that. NI contributions build your State Pension entitlement - you need 35 qualifying years for a
-                  full pension - and fund NHS access.
+                  <ConceptLink slug="national-insurance" className="text-[11px]">
+                    NI
+                  </ConceptLink>{" "}
+                  is separate from income tax. You pay 8% on earnings between £12,570-£50,270 and 2% above that.
+                  Contributions build your{" "}
+                  <ConceptLink slug="state-pension" className="text-[11px]">
+                    State Pension
+                  </ConceptLink>{" "}
+                  entitlement - you need 35 qualifying years for a full pension.
                 </p>
               </div>
               <div className="space-y-1.5">
                 <p className="text-[11px] font-bold text-gray-700">Tax code</p>
                 <p className="text-[11px] text-gray-500 leading-relaxed">
-                  Most people have tax code 1257L. The number (1257) × 10 = your personal allowance (£12,570). The "L"
-                  means you get the standard allowance. If your payslip shows a different code, it may affect how much
-                  tax is deducted.
+                  Most people have{" "}
+                  <ConceptLink slug="tax-code" className="text-[11px]">
+                    tax code
+                  </ConceptLink>{" "}
+                  1257L. The number × 10 = your personal allowance (£12,570). If yours differs, it affects your monthly
+                  deductions.
                 </p>
               </div>
             </div>
