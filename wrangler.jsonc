@@ -1,0 +1,12 @@
+// Cloudflare Pages deployment configuration for gecko client
+// Deploy with: npx wrangler pages deploy client/dist --project-name gecko-client
+{
+  "name": "gecko-client",
+  "compatibility_date": "2024-09-23",
+  "pages_build_output_dir": "client/dist",
+  // Set VITE_API_URL in Cloudflare Pages dashboard (Settings > Environment variables)
+  // Example: https://gecko-server.onrender.com
+  "vars": {
+    "NODE_VERSION": "20"
+  }
+}

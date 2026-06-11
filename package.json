@@ -10,7 +10,8 @@
     "client": "npm run dev --prefix client",
     "clear:expenses": "node scripts/clearExpenses.js",
     "seed:data": "npm run seed --prefix server",
-    "verify:seed": "npm run verify:seed --prefix server"
+    "verify:seed": "npm run verify:seed --prefix server",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -28,9 +29,17 @@
     "react-markdown": "^10.1.0",
     "recharts": "^3.8.0"
   },
+  "lint-staged": {
+    "client/src/**/*.{ts,tsx}": ["prettier --write"],
+    "server/src/**/*.js": ["prettier --write"],
+    "server/tests/**/*.js": ["prettier --write"]
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
-    "eslint": "^8.57.1"
+    "eslint": "^8.57.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.4"
   }
 }
