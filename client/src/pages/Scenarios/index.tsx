@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, PiggyBank, MapPin, CreditCard, ChevronDown } from "lucide-react";
+import { TrendingUp, PiggyBank, MapPin, CreditCard } from "lucide-react";
 import { estimateUKTakeHome, fmt } from "../../lib/ukTaxCalc";
 import { ConceptLink } from "../../components/ConceptLink";
 import { cn } from "../../lib/utils";
