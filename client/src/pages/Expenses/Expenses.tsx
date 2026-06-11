@@ -446,31 +446,25 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         </div>
 
         {/* Receipt scan */}
-        <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-3 space-y-2">
-          <div className="flex items-center gap-1.5 mb-1">
-            <ScanLine className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-            <span className="text-xs font-semibold text-gray-600 whitespace-nowrap">Scan receipt</span>
-            <span className="text-xs text-gray-400 whitespace-nowrap">— auto-fills amount</span>
-          </div>
+        <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-3">
+          <p className="text-xs font-semibold text-gray-600 mb-2">Scan receipt</p>
           <div className="flex gap-2">
-            {/* Camera button */}
             <button
               type="button"
               onClick={() => setShowCamera(true)}
               disabled={isScanning}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              <Camera className="h-3.5 w-3.5 text-gray-500" />
+              <Camera className="h-3.5 w-3.5 shrink-0 text-gray-500" />
               Camera
             </button>
-            {/* File upload */}
             <label
               className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-md bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer",
+                "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer",
                 isScanning && "opacity-50 cursor-not-allowed"
               )}
             >
-              <ScanLine className="h-3.5 w-3.5 text-gray-500" />
+              <ScanLine className="h-3.5 w-3.5 shrink-0 text-gray-500" />
               Upload
               <input
                 type="file"
@@ -482,9 +476,9 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
             </label>
           </div>
           {isScanning && (
-            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full border-2 border-gray-400 border-r-transparent animate-spin" />
-              Scanning receipt...
+            <p className="mt-2 text-xs text-gray-500 flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full border-2 border-gray-400 border-r-transparent animate-spin shrink-0" />
+              Scanning...
             </p>
           )}
         </div>
