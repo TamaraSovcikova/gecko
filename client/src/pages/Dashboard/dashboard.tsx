@@ -38,6 +38,10 @@ import { SkeletonDashboard } from "../../components/ui/skeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
+import { buildHealthNarrative } from "../../lib/healthNarrative";
+import { evaluateCallouts } from "../../data/calloutConditions";
+import { getBenchmarkBand, benchmarkPosition } from "../../data/benchmarks";
+import { FinanceCalloutList } from "../../components/FinanceCallout";
 import "./dashboard.css";
 
 const formatGBP = (v: number | undefined) =>
@@ -506,6 +510,39 @@ const Dashboard = () => {
               )}
             </div>
 
+            {/* Health narrative + callouts */}
+            {!isSnapshotMode &&
+              displayedData &&
+              (() => {
+                const narrative = buildHealthNarrative({
+                  healthScore: displayedData.healthScore ?? 0,
+                  takeHome: monthlyTakeHome,
+                  budgetLeft: incomeBudgetLeft,
+                  totalBudget: displayedData.totalBudget ?? 0,
+                  actualSpending: displayedData.actualSpending ?? [],
+                  budgetAllocation: displayedData.budgetAllocation ?? [],
+                });
+                const callouts = evaluateCallouts({
+                  healthScore: displayedData.healthScore ?? 0,
+                  takeHome: monthlyTakeHome,
+                  budgetLeft: incomeBudgetLeft,
+                  totalBudget: displayedData.totalBudget ?? 0,
+                  actualSpending: displayedData.actualSpending ?? [],
+                  budgetAllocation: displayedData.budgetAllocation ?? [],
+                });
+                if (!narrative && !callouts.length) return null;
+                return (
+                  <div className="space-y-2 mb-5">
+                    {narrative && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                        <p className="text-xs text-gray-600 leading-relaxed">{narrative}</p>
+                      </div>
+                    )}
+                    <FinanceCalloutList callouts={callouts} />
+                  </div>
+                );
+              })()}
+
             {/* Main two-column grid */}
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
               {/* Left: budget bars + expense list */}
@@ -547,17 +584,30 @@ const Dashboard = () => {
                         const actual = actualByCategory.get(name.toLowerCase()) ?? 0;
                         const pct = budget > 0 ? Math.min((actual / budget) * 100, 100) : 0;
                         const over = actual > budget && budget > 0;
+                        const benchmarkInfo = monthlyTakeHome > 0 ? getBenchmarkBand(name) : null;
+                        const spendPct = monthlyTakeHome > 0 ? (actual / monthlyTakeHome) * 100 : 0;
+                        const benchPos = benchmarkInfo ? benchmarkPosition(spendPct, benchmarkInfo.band) : null;
                         return (
                           <div key={name}>
                             <div className="flex items-center justify-between text-xs mb-1.5">
                               <span className="font-medium text-gray-700 capitalize">{name}</span>
-                              <span
-                                className={cn("font-semibold tabular-nums", over ? "text-red-600" : "text-gray-500")}
-                              >
-                                {formatGBP(actual)}{" "}
-                                <span className="font-normal text-gray-300">/ {formatGBP(budget)}</span>
-                                {over && <span className="ml-1 text-red-400 font-normal text-[11px]">over</span>}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {benchmarkInfo && benchPos === "very_high" && (
+                                  <span className="text-[10px] text-amber-600 font-semibold">
+                                    above UK median ({benchmarkInfo.band.median}%)
+                                  </span>
+                                )}
+                                {benchmarkInfo && benchPos === "low" && (
+                                  <span className="text-[10px] text-emerald-600 font-semibold">below UK median</span>
+                                )}
+                                <span
+                                  className={cn("font-semibold tabular-nums", over ? "text-red-600" : "text-gray-500")}
+                                >
+                                  {formatGBP(actual)}{" "}
+                                  <span className="font-normal text-gray-300">/ {formatGBP(budget)}</span>
+                                  {over && <span className="ml-1 text-red-400 font-normal text-[11px]">over</span>}
+                                </span>
+                              </div>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                               <div

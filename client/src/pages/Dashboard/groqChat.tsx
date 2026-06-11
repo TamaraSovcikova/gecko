@@ -15,14 +15,16 @@ type Message = {
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "Hi! I'm your Gecko finance assistant. I can see your spending, budget, and health score — ask me anything about your money.",
+    "Hi! I'm your Gecko finance tutor. I can see your real spending, budget, and health score — ask me anything about your money, or use one of the prompts below to get started.",
 };
 
 const SUGGESTED_PROMPTS = [
-  "Where am I overspending this month?",
-  "How can I improve my health score?",
-  "Am I saving enough?",
-  "How much should I set aside for an emergency fund?",
+  "Explain my payslip deductions in plain English",
+  "What does my National Insurance contribution actually pay for?",
+  "Am I saving enough for my age?",
+  "How do I build an emergency fund?",
+  "Why is my health score what it is?",
+  "What should I do with leftover budget this month?",
 ];
 
 function AssistantMessage({ content, streaming }: { content: string; streaming?: boolean }) {
@@ -251,8 +253,8 @@ const GroqChat = () => {
                   <Sparkles className="w-3.5 h-3.5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold leading-none">Gecko AI</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Knows your finances</p>
+                  <p className="text-sm font-bold leading-none">Finance Tutor</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Knows your real numbers</p>
                 </div>
               </div>
               <button
