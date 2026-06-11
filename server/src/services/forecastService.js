@@ -4,473 +4,213 @@ const Expense = require("../models/Expense");
 const MonthlyBudget = require("../models/MonthlyBudget");
 const User = require("../models/User");
 
-/**
- * Utility: format a Date into YYYY-MM
- */
-function getMonthKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
+function getMonthKey(date) {
+  const d = date || new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+function getDaysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function round2(v) { return Number(Number(v || 0).toFixed(2)); }
+function normCat(v) { return String(v || "").trim().toLowerCase(); }
+function monthIndex(d) { return d.getFullYear() * 12 + d.getMonth(); }
+
+function median(arr) {
+  if (!arr.length) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[m - 1] + s[m]) / 2 : s[m];
+}
+function mean(arr) { return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0; }
+function stdDev(arr) {
+  if (arr.length < 2) return 0;
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / (arr.length - 1));
+}
+function detectAnomaly(series, value) {
+  if (series.length < 4) return false;
+  const sd = stdDev(series);
+  return sd > 0 && Math.abs((value - mean(series)) / sd) > 2.0;
+}
+function seasonalPrediction(series, targetMonth) {
+  const s = series.filter(i => new Date(i.monthKey + "-01").getMonth() === targetMonth);
+  return s.length ? round2(mean(s.map(i => i.total))) : null;
+}
+function rollingMedian3(series) {
+  const last3 = series.slice(-3).map(i => i.total);
+  return last3.length ? round2(median(last3)) : null;
+}
+function linearPrediction(series) {
+  const x = series.map(i => i.monthIndex);
+  const y = series.map(i => i.total);
+  if (series.length < 2) return 0;
+  if (y.every(v => v === y[0])) return round2(y[0]);
+  const reg = new SimpleLinearRegression(x, y);
+  return round2(Math.max(0, reg.predict(x[x.length - 1] + 1)));
+}
+function computeConfidence(values) {
+  if (values.length < 2) return 50;
+  const m = mean(values);
+  if (m === 0) return 50;
+  return Math.round(Math.max(10, Math.min(99, 100 - (stdDev(values) / m) * 100)));
+}
+function trendDirection(series) {
+  if (series.length < 3) return "stable";
+  const last = series.slice(-3).map(i => i.total);
+  const slope = (last[2] - last[0]) / 2;
+  const m = mean(last);
+  if (slope > m * 0.1) return "up";
+  if (slope < -m * 0.1) return "down";
+  return "stable";
 }
 
-/**
- * Utility: get total days in a month
- */
-function getDaysInMonth(year, monthIndexZeroBased) {
-  return new Date(year, monthIndexZeroBased + 1, 0).getDate();
-}
-
-/**
- * Utility: safe number
- */
-function toMoneyNumber(value) {
-  const num = Number(value || 0);
-  if (Number.isNaN(num)) return 0;
-  return Number(num.toFixed(2));
-}
-
-/**
- * Utility: round to 2 dp
- */
-function round2(value) {
-  return Number(Number(value || 0).toFixed(2));
-}
-
-function normalizeCategoryName(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-/**
- * Utility: month difference helper
- */
-function getMonthIndex(date) {
-  return date.getFullYear() * 12 + date.getMonth();
-}
-
-/**
- * Clears dismissed warnings if month changed.
- */
 async function ensureForecastMonthState(userDoc) {
-  const currentMonthKey = getMonthKey(new Date());
-
-  if (
-    !userDoc.forecastWarningState ||
-    userDoc.forecastWarningState.monthKey !== currentMonthKey
-  ) {
-    console.log("[forecast] Month changed or no state found. Resetting dismissed warnings.");
-
-    userDoc.forecastWarningState = {
-      monthKey: currentMonthKey,
-      dismissedWarningIds: [],
-    };
-
+  const key = getMonthKey();
+  if (!userDoc.forecastWarningState || userDoc.forecastWarningState.monthKey !== key) {
+    userDoc.forecastWarningState = { monthKey: key, dismissedWarningIds: [] };
     await userDoc.save();
   }
-
   return userDoc.forecastWarningState;
 }
 
-/**
- * Build category budget map from MonthlyBudget.categories.
- * Assumes categories is an array like:
- * [{ name: "Food", budgetedAmount: 200 }]
- * or similar.
- *
- * Adjust this mapper to your exact schema.
- */
-function buildCategoryBudgetMap(monthlyBudgetDoc) {
-  const categoryBudgetMap = {};
-  const categoryLabelMap = {};
-
-  const categories = monthlyBudgetDoc?.categories || [];
-
-  for (const category of categories) {
-    const rawName = category.name || category.category || category.label;
-    const name = normalizeCategoryName(rawName);
-    const budget =
-      category.budgetedAmount ??
-      category.budget ??
-      category.amount ??
-      0;
-
+function buildCategoryBudgetMap(doc) {
+  const bm = {}, lm = {};
+  for (const c of (doc?.categories || [])) {
+    const raw = c.name || c.category || c.label;
+    const name = normCat(raw);
     if (!name) continue;
-
-    categoryBudgetMap[name] = toMoneyNumber(budget);
-
-    if (!categoryLabelMap[name]) {
-      categoryLabelMap[name] = String(rawName || "").trim() || name;
-    }
+    bm[name] = round2(c.budgetedAmount ?? c.budget ?? c.amount ?? 0);
+    if (!lm[name]) lm[name] = String(raw || "").trim() || name;
   }
-
-  console.log("[forecast] categoryBudgetMap =", categoryBudgetMap);
-  return { categoryBudgetMap, categoryLabelMap };
+  return { categoryBudgetMap: bm, categoryLabelMap: lm };
 }
 
-/**
- * Build monthly category totals from expense documents.
- * Returns:
- * {
- *   Food: [
- *     { monthIndex: 24299, monthKey: "2025-12", total: 120 },
- *     ...
- *   ]
- * }
- */
-function buildHistoricalCategorySeries(expenses, categoryLabelMap = {}) {
-  const byCategoryAndMonth = {};
-
-  for (const expense of expenses) {
-    const expenseDate = new Date(expense.date);
-    const category = normalizeCategoryName(expense.category);
-
-    if (!category || Number(expense.amount) <= 0) continue;
-
-    if (!categoryLabelMap[category]) {
-      categoryLabelMap[category] = String(expense.category || "").trim() || category;
-    }
-
-    const monthKey = getMonthKey(expenseDate);
-    const monthIndex = getMonthIndex(expenseDate);
-
-    if (!byCategoryAndMonth[category]) {
-      byCategoryAndMonth[category] = {};
-    }
-
-    if (!byCategoryAndMonth[category][monthKey]) {
-      byCategoryAndMonth[category][monthKey] = {
-        monthIndex,
-        monthKey,
-        total: 0,
-      };
-    }
-
-    byCategoryAndMonth[category][monthKey].total += Number(expense.amount);
+function buildHistoricalSeries(expenses, lm) {
+  const bc = {};
+  for (const e of expenses) {
+    const date = new Date(e.date);
+    const cat = normCat(e.category);
+    if (!cat || Number(e.amount) <= 0) continue;
+    if (!lm[cat]) lm[cat] = String(e.category || "").trim() || cat;
+    const mk = getMonthKey(date);
+    const mi = monthIndex(date);
+    if (!bc[cat]) bc[cat] = {};
+    if (!bc[cat][mk]) bc[cat][mk] = { monthIndex: mi, monthKey: mk, total: 0 };
+    bc[cat][mk].total += Number(e.amount);
   }
-
-  const result = {};
-
-  for (const category of Object.keys(byCategoryAndMonth)) {
-    result[category] = Object.values(byCategoryAndMonth[category])
-      .map((item) => ({
-        ...item,
-        total: round2(item.total),
-      }))
-      .sort((a, b) => a.monthIndex - b.monthIndex);
+  const r = {};
+  for (const cat of Object.keys(bc)) {
+    r[cat] = Object.values(bc[cat]).map(i => ({ ...i, total: round2(i.total) })).sort((a, b) => a.monthIndex - b.monthIndex);
   }
-
-  console.log("[forecast] historical category series =", JSON.stringify(result, null, 2));
-  return result;
+  return r;
 }
 
-/**
- * Run regression prediction for a category series
- */
-function runCategoryRegression(series) {
-  // series = [{ monthIndex, total }, ...]
-  const x = series.map((item) => item.monthIndex);
-  const y = series.map((item) => item.total);
-  
-  console.log("[forecast] SimpleLinearRegression import =", SimpleLinearRegression);
-  console.log("[forecast] Regression inputs x =", x, "y =", y);
-
-  if (series.length < 2) {
-    return {
-      regressionPrediction: 0,
-      slope: 0,
-      intercept: 0,
-      enoughData: false,
-    };
+function buildCurrentSpendMap(expenses, now, lm) {
+  const ck = getMonthKey(now);
+  const map = {};
+  for (const e of expenses) {
+    if (getMonthKey(new Date(e.date)) !== ck) continue;
+    const cat = normCat(e.category);
+    if (!cat) continue;
+    if (!lm[cat]) lm[cat] = String(e.category || "").trim() || cat;
+    map[cat] = round2((map[cat] || 0) + Number(e.amount));
   }
-
-  const allSame = y.every((value) => value === y[0]);
-
-  if (allSame) {
-    console.log("[forecast] Flat spending detected.");
-    return {
-      regressionPrediction: round2(y[0]),
-      slope: 0,
-      intercept: y[0],
-      enoughData: true,
-    };
-  }
-
-  const regression = new SimpleLinearRegression(x, y);
-  const nextMonthIndex = x[x.length - 1] + 1;
-
-  let prediction = regression.predict(nextMonthIndex);
-
-  // Guard against negative prediction
-  if (prediction < 0) {
-    console.log("[forecast] Negative prediction detected. Clamping to 0.");
-    prediction = 0;
-  }
-
-  return {
-    regressionPrediction: round2(prediction),
-    slope: round2(regression.slope),
-    intercept: round2(regression.intercept),
-    enoughData: true,
-  };
+  return map;
 }
 
-/**
- * Gets current month spend per category
- */
-function buildCurrentMonthSpendMap(expenses, now = new Date(), categoryLabelMap = {}) {
-  const currentMonthKey = getMonthKey(now);
-  const spendMap = {};
-
-  for (const expense of expenses) {
-    const expenseDate = new Date(expense.date);
-    const expenseMonthKey = getMonthKey(expenseDate);
-
-    if (expenseMonthKey !== currentMonthKey) continue;
-
-    const category = normalizeCategoryName(expense.category);
-    if (!category) continue;
-
-    if (!categoryLabelMap[category]) {
-      categoryLabelMap[category] = String(expense.category || "").trim() || category;
-    }
-
-    spendMap[category] = round2((spendMap[category] || 0) + Number(expense.amount));
+function applySalaryBound(forecasts, gross) {
+  const total = Object.values(forecasts).reduce((s, i) => s + i.finalForecast, 0);
+  if (!gross || total <= gross) return forecasts;
+  const scale = gross / total;
+  const r = {};
+  for (const [c, item] of Object.entries(forecasts)) {
+    r[c] = { ...item, finalForecast: round2(item.finalForecast * scale), salaryClamped: true };
   }
-
-  console.log("[forecast] currentMonthSpendMap =", spendMap);
-  return spendMap;
+  return r;
 }
 
-/**
- * Scale projected category totals so the total does not exceed gross salary.
- */
-function applyGrossSalaryUpperBound(categoryForecasts, grossSalary) {
-  const totalProjection = Object.values(categoryForecasts).reduce(
-    (sum, item) => sum + item.finalForecast,
-    0
-  );
-
-  console.log("[forecast] totalProjection before salary clamp =", totalProjection);
-  console.log("[forecast] grossSalary upper bound =", grossSalary);
-
-  if (!grossSalary || totalProjection <= grossSalary) {
-    return categoryForecasts;
-  }
-
-  const scaleFactor = grossSalary / totalProjection;
-
-  console.log("[forecast] Applying salary clamp with scaleFactor =", scaleFactor);
-
-  const scaled = {};
-
-  for (const [category, item] of Object.entries(categoryForecasts)) {
-    scaled[category] = {
-      ...item,
-      finalForecast: round2(item.finalForecast * scaleFactor),
-      salaryClamped: true,
-    };
-  }
-
-  return scaled;
-}
-
-/**
- * Build user-facing warnings from category forecasts
- */
-function buildWarnings({
-  categoryForecasts,
-  categoryBudgetMap,
-  categoryLabelMap,
-  dismissedWarningIds,
-  currentMonthKey,
-}) {
-  const warnings = [];
-
-  for (const [category, item] of Object.entries(categoryForecasts)) {
-    const displayCategory = categoryLabelMap[category] || item.category || category;
-    const budget = categoryBudgetMap[category] || 0;
-
-    if (!budget || budget <= 0) continue;
-
-    const overspendThreshold = budget * 1.15;
-    const finalForecast = item.finalForecast;
-
-    if (finalForecast > overspendThreshold) {
-      const overspendAmount = round2(finalForecast - budget);
-      const warningId = `overspend:${category}:${currentMonthKey}`;
-
-      if (dismissedWarningIds.includes(warningId)) {
-        console.log(`[forecast] Skipping dismissed warning ${warningId}`);
-        continue;
+function buildWarnings({ categoryForecasts, categoryBudgetMap, categoryLabelMap, dismissedWarningIds, currentMonthKey }) {
+  const w = [];
+  for (const [cat, item] of Object.entries(categoryForecasts)) {
+    const label = categoryLabelMap[cat] || cat;
+    const budget = categoryBudgetMap[cat] || 0;
+    if (budget > 0 && item.finalForecast > budget * 1.15) {
+      const id = "overspend:" + cat + ":" + currentMonthKey;
+      if (!dismissedWarningIds.includes(id)) {
+        const over = round2(item.finalForecast - budget);
+        w.push({ id, type: "overspend", category: label, budget: round2(budget), projectedSpend: round2(item.finalForecast), overspendAmount: over, message: "You're on track to overspend on " + label + " by \xA3" + over.toFixed(2) + " this month." });
       }
-
-      warnings.push({
-        id: warningId,
-        type: "overspend",
-        category: displayCategory,
-        budget: round2(budget),
-        projectedSpend: round2(finalForecast),
-        overspendAmount,
-        message: `You're on track to overspend on ${displayCategory} by £${overspendAmount.toFixed(
-          2
-        )} this month based on your recent activity.`,
-      });
+    }
+    if (item.anomaly) {
+      const id = "anomaly:" + cat + ":" + currentMonthKey;
+      if (!dismissedWarningIds.includes(id)) w.push({ id, type: "anomaly", category: label, message: "Unusual spending pattern in " + label + "." });
     }
   }
-
-  console.log("[forecast] warnings =", warnings);
-  return warnings;
+  return w;
 }
 
-/**
- * Main entry point
- */
 async function computeForecastForUser(userId) {
-  console.log("[forecast] -------------------------------------------");
-  console.log("[forecast] computeForecastForUser called for userId =", userId);
-
   const now = new Date();
-  const currentMonthKey = getMonthKey(now);
-  const currentMonthIndex = getMonthIndex(now);
+  const cKey = getMonthKey(now);
+  const cIdx = monthIndex(now);
   const daysElapsed = now.getDate();
-  const totalDaysInMonth = getDaysInMonth(now.getFullYear(), now.getMonth());
+  const totalDays = getDaysInMonth(now.getFullYear(), now.getMonth());
+  const targetMonth = (now.getMonth() + 1) % 12;
 
   const user = await User.findById(userId);
-  if (!user) {
-    throw new Error("Forecast failed: user not found");
-  }
-
+  if (!user) throw new Error("User not found");
   await ensureForecastMonthState(user);
 
-  const monthlyBudget = await MonthlyBudget.findOne({ userId }).sort({createdAt: -1});
-  if (!monthlyBudget) {
-    console.log("[forecast] No MonthlyBudget found. Returning inactive forecast.");
-    return {
-      forecastingActive: false,
-      reason: "NO_BUDGET_FOUND",
-      projections: {},
-      warnings: [],
-    };
-  }
+  const budget = await MonthlyBudget.findOne({ userId }).sort({ createdAt: -1 });
+  if (!budget) return { forecastingActive: false, reason: "NO_BUDGET_FOUND", projections: {}, warnings: [] };
 
   const allExpenses = await Expense.find({ userId }).sort({ date: 1 });
+  const { categoryBudgetMap, categoryLabelMap } = buildCategoryBudgetMap(budget);
+  const histSeries = buildHistoricalSeries(allExpenses, categoryLabelMap);
+  const curSpendMap = buildCurrentSpendMap(allExpenses, now, categoryLabelMap);
 
-  console.log("[forecast] Total expenses found =", allExpenses.length);
-
-  const { categoryBudgetMap, categoryLabelMap } = buildCategoryBudgetMap(monthlyBudget);
-  const historicalSeries = buildHistoricalCategorySeries(allExpenses, categoryLabelMap);
-  const currentMonthSpendMap = buildCurrentMonthSpendMap(allExpenses, now, categoryLabelMap);
-
-  // Only count months BEFORE the current month as history
-  const historicalMonthKeys = new Set();
-
-  for (const expense of allExpenses) {
-    const expenseDate = new Date(expense.date);
-    const expenseMonthIndex = getMonthIndex(expenseDate);
-
-    if (expenseMonthIndex < currentMonthIndex) {
-      historicalMonthKeys.add(getMonthKey(expenseDate));
-    }
+  const histKeys = new Set();
+  for (const e of allExpenses) {
+    const idx = monthIndex(new Date(e.date));
+    if (idx < cIdx) histKeys.add(getMonthKey(new Date(e.date)));
   }
-
-  const monthsOfHistory = historicalMonthKeys.size;
-
-  console.log("[forecast] monthsOfHistory =", monthsOfHistory);
-
-  if (monthsOfHistory < 2) {
-    console.log("[forecast] Not enough history. Forecast inactive.");
-    return {
-      forecastingActive: false,
-      reason: "INSUFFICIENT_HISTORY",
-      monthsOfHistory,
-      projections: {},
-      warnings: [],
-    };
-  }
+  const monthsOfHistory = histKeys.size;
+  if (monthsOfHistory < 2) return { forecastingActive: false, reason: "INSUFFICIENT_HISTORY", monthsOfHistory, projections: {}, warnings: [] };
 
   const categoryForecasts = {};
+  const cats = new Set([...Object.keys(categoryBudgetMap), ...Object.keys(histSeries), ...Object.keys(curSpendMap)]);
 
-  const categoriesToEvaluate = new Set([
-    ...Object.keys(categoryBudgetMap),
-    ...Object.keys(historicalSeries),
-    ...Object.keys(currentMonthSpendMap),
-  ]);
-
-  for (const category of categoriesToEvaluate) {
-    const categorySeriesFull = historicalSeries[category] || [];
-
-    // Only regression on completed previous months, not current month
-    const categorySeriesHistoryOnly = categorySeriesFull.filter(
-      (item) => item.monthIndex < currentMonthIndex
-    );
-
-    if (categorySeriesHistoryOnly.length < 2) {
-      console.log(`[forecast] Skipping category ${category} because it has < 2 months of history.`);
-      continue;
-    }
-
-    const regressionOutput = runCategoryRegression(categorySeriesHistoryOnly);
-
-    const currentSpend = currentMonthSpendMap[category] || 0;
-    const currentTrendMean =
-      daysElapsed > 0
-        ? round2((currentSpend / daysElapsed) * totalDaysInMonth)
-        : 0;
-
-    // Blend long-term + short-term
-    let finalForecast =
-      0.6 * regressionOutput.regressionPrediction + 0.4 * currentTrendMean;
-
-    if (finalForecast < 0) finalForecast = 0;
-
-    categoryForecasts[category] = {
-      category: categoryLabelMap[category] || category,
-      currentSpend: round2(currentSpend),
-      currentTrendMean: round2(currentTrendMean),
-      regressionPrediction: round2(regressionOutput.regressionPrediction),
-      slope: regressionOutput.slope,
-      intercept: regressionOutput.intercept,
-      finalForecast: round2(finalForecast),
-      budget: round2(categoryBudgetMap[category] || 0),
-      salaryClamped: false,
+  for (const cat of cats) {
+    const full = histSeries[cat] || [];
+    const hist = full.filter(i => i.monthIndex < cIdx);
+    if (hist.length < 2) continue;
+    const totals = hist.map(i => i.total);
+    const linPred = linearPrediction(hist);
+    const seasonal = seasonalPrediction(hist, targetMonth);
+    const rolling = rollingMedian3(hist);
+    const curSpend = curSpendMap[cat] || 0;
+    const curTrend = daysElapsed > 0 ? round2(curSpend / daysElapsed * totalDays) : 0;
+    const components = [[0.30, linPred], [0.20, seasonal], [0.30, rolling], [0.20, curTrend > 0 ? curTrend : null]].filter(([, v]) => v !== null);
+    const tw = components.reduce((s, [w]) => s + w, 0);
+    const ensemble = Math.max(0, tw > 0 ? components.reduce((s, [w, v]) => s + (w / tw) * v, 0) : linPred);
+    const sd = stdDev(totals);
+    categoryForecasts[cat] = {
+      category: categoryLabelMap[cat] || cat, currentSpend: round2(curSpend), currentTrendMean: curTrend,
+      linearPrediction: round2(linPred), seasonalPrediction: seasonal != null ? round2(seasonal) : null,
+      rollingMedian: rolling != null ? round2(rolling) : null, finalForecast: round2(ensemble),
+      lowerBound: Math.max(0, round2(ensemble - sd)), upperBound: round2(ensemble + sd),
+      confidence: computeConfidence(totals), trend: trendDirection(hist),
+      anomaly: detectAnomaly(totals, curSpend), budget: round2(categoryBudgetMap[cat] || 0), salaryClamped: false
     };
-
-    console.log(`[forecast] category=${category}`, categoryForecasts[category]);
   }
 
-  const grossSalary = Number(monthlyBudget.grossSalary || 0);
-  const clampedForecasts = applyGrossSalaryUpperBound(categoryForecasts, grossSalary);
+  const gross = Number(budget.grossSalary || 0);
+  const clamped = applySalaryBound(categoryForecasts, gross);
+  const warnings = buildWarnings({ categoryForecasts: clamped, categoryBudgetMap, categoryLabelMap, dismissedWarningIds: user.forecastWarningState?.dismissedWarningIds || [], currentMonthKey: cKey });
 
-  const warnings = buildWarnings({
-    categoryForecasts: clampedForecasts,
-    categoryBudgetMap,
-    categoryLabelMap,
-    dismissedWarningIds: user.forecastWarningState?.dismissedWarningIds || [],
-    currentMonthKey,
-  });
-
-  const totalProjectedSpend = round2(
-    Object.values(clampedForecasts).reduce((sum, item) => sum + item.finalForecast, 0)
-  );
-
-  const response = {
-    forecastingActive: true,
-    reason: null,
-    monthKey: currentMonthKey,
-    monthsOfHistory,
-    projections: clampedForecasts,
-    totals: {
-      totalProjectedSpend,
-      grossSalaryUpperBound: round2(grossSalary),
-    },
-    warnings,
+  return {
+    forecastingActive: true, reason: null, monthKey: cKey, monthsOfHistory, projections: clamped,
+    totals: { totalProjectedSpend: round2(Object.values(clamped).reduce((s, i) => s + i.finalForecast, 0)), grossSalaryUpperBound: round2(gross) },
+    warnings
   };
-
-  console.log("[forecast] Final forecast response =", JSON.stringify(response, null, 2));
-  console.log("[forecast] -------------------------------------------");
-
-  return response;
 }
 
-module.exports = {
-  computeForecastForUser,
-};
+module.exports = { computeForecastForUser };

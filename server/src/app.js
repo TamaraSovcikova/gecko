@@ -18,6 +18,8 @@ require("./config/firebase"); // initializes Firebase once
 
 const snapshotRoutes = require("./routes/snapshot");
 const chatRoutes = require("./routes/chat");
+const savingsRoutes = require("./routes/savings");
+const recurringRoutes = require("./routes/recurring");
 
 const app = express();
 
@@ -58,6 +60,8 @@ app.use("/api/v1/payslip", authMiddleware, apiLimiter, payslipRouter);
 app.use("/api/v1/user", authMiddleware, apiLimiter, userRouter);
 app.use("/api/v1/forecast", authMiddleware, apiLimiter, forecastRoutes);
 app.use("/api/v1/chat", authMiddleware, chatLimiter, chatRoutes);
+app.use("/api/v1/savings", authMiddleware, apiLimiter, savingsRoutes);
+app.use("/api/v1/recurring", authMiddleware, apiLimiter, recurringRoutes);
 
 app.use("/", router);
 

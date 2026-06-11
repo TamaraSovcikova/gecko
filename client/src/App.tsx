@@ -22,6 +22,9 @@ import Terms from "./pages/Terms";
 import SettingsPage from "./pages/Settings";
 import ChangePasswordPage from "./pages/ChangePassword";
 import DataPolicyPage from "./pages/DataPolicy";
+import SavingsPage from "./pages/Savings/index.tsx";
+import ForecastPage from "./pages/Forecasting/Forecast.tsx";
+import BillsPage from "./pages/Bills/index.tsx";
 import MainLayout from "./MainLayout";
 
 function App() {
@@ -49,6 +52,9 @@ function App() {
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/savings" element={<SavingsPage />} />
+        <Route path="/forecast" element={<ForecastPage />} />
+        <Route path="/bills" element={<BillsPage />} />
       </Route>
 
       {/* NON-LAYOUT PROTECTED ROUTES */}

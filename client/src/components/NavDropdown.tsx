@@ -3,19 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
+import { User, Settings, KeyRound, FileText, Shield, LogOut, LogIn } from "lucide-react";
 import ProfileAvatar from "./ProfileAvatar";
-import { COLORS } from "../constants/theme";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../lib/utils";
 
-const itemStyle = {
-  display: "block",
-  width: "100%",
-  padding: "12px 14px",
-  textDecoration: "none",
-  color: COLORS.textSecondary,
-  background: "transparent",
-  border: "none",
-  textAlign: "left" as const,
-  fontSize: "14px",
+type MenuItem = {
+  to?: string;
+  label: string;
+  icon: React.ElementType;
+  authRequired?: boolean;
+  onClick?: () => void;
+  danger?: boolean;
+  "data-onboarding"?: string;
 };
 
 const NavDropdown = () => {
@@ -26,25 +26,15 @@ const NavDropdown = () => {
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
+    if (!open) return;
     const handlePointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
     };
-
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
+      if (event.key === "Escape") setOpen(false);
     };
-
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
@@ -54,91 +44,70 @@ const NavDropdown = () => {
   const handleLogout = async () => {
     try {
       setLogoutError("");
+      setOpen(false);
       await signOut(auth);
       navigate("/", { replace: true });
     } catch (error) {
-      console.error("Unable to log out", error);
       setLogoutError("Unable to log out right now.");
     }
   };
 
   const isAuthenticated = Boolean(currentUser);
 
+  const menuItems: MenuItem[] = [
+    { to: "/profile", label: "Profile", icon: User, authRequired: true, "data-onboarding": "dropdown-profile-link" },
+    { to: "/settings", label: "Edit Account", icon: Settings, authRequired: true, "data-onboarding": "dropdown-settings-link" },
+    { to: "/change-password", label: "Change Password", icon: KeyRound, authRequired: true, "data-onboarding": "dropdown-change-password-link" },
+    { to: "/terms", label: "Terms & Conditions", icon: FileText, "data-onboarding": "dropdown-terms-link" },
+    { to: "/data-policy", label: "Data Policy", icon: Shield, "data-onboarding": "dropdown-data-policy-link" },
+  ];
+
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        data-onboarding="nav-account-menu"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Open account menu"
-        style={{
-          padding: 0,
-          border: "none",
-          background: "transparent",
-          borderRadius: "50%",
-          lineHeight: 0,
-        }}
-      >
+    <div ref={containerRef} className="relative">
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        data-onboarding="nav-account-menu" aria-haspopup="menu" aria-expanded={open} aria-label="Open account menu"
+        className="p-0 border-none bg-transparent rounded-full leading-none hover:ring-2 hover:ring-purple-300 transition-shadow">
         <ProfileAvatar size={42} />
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          aria-label="Account options"
-          style={{
-            position: "absolute",
-            right: 0,
-            top: "calc(100% + 10px)",
-            width: "min(230px, calc(100vw - 24px))",
-            backgroundColor: COLORS.purple50,
-            border: `1px solid ${COLORS.purple300}`,
-            borderRadius: "12px",
-            boxShadow: "0 18px 32px rgba(92, 63, 163, 0.12)",
-            padding: "8px",
-            zIndex: 200,
-            boxSizing: "border-box",
-          }}
-        >
-          {isAuthenticated && (
-            <Link to="/profile" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-profile-link">
-              Profile
-            </Link>
-          )}
-          {isAuthenticated && (
-            <Link to="/settings" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-settings-link">
-              Edit Account Details
-            </Link>
-          )}
-          {isAuthenticated && (
-            <Link to="/change-password" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-change-password-link">
-              Change Password
-            </Link>
-          )}
-          <Link to="/terms" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-terms-link">
-            Terms & Conditions
-          </Link>
-          <Link to="/data-policy" onClick={() => setOpen(false)} style={itemStyle} data-onboarding="dropdown-data-policy-link">
-            Data Policy
-          </Link>
-          {isAuthenticated ? (
-            <button type="button" onClick={handleLogout} style={{ ...itemStyle, color: COLORS.error, fontWeight: 700 }}>
-              Logout
-            </button>
-          ) : (
-            <Link to="/login" onClick={() => setOpen(false)} style={{ ...itemStyle, fontWeight: 700 }}>
-              Log In
-            </Link>
-          )}
-          {logoutError && (
-            <p style={{ margin: "8px 14px 4px", color: COLORS.error, fontSize: "12px" }}>
-              {logoutError}
-            </p>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div role="menu" aria-label="Account options"
+            initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute right-0 top-[calc(100%+10px)] w-56 bg-white border border-purple-200 rounded-xl shadow-lg p-1.5 z-[200]">
+            {menuItems.map((item) => {
+              if (item.authRequired && !isAuthenticated) return null;
+              return (
+                <Link key={item.label} to={item.to!} onClick={() => setOpen(false)}
+                  data-onboarding={item["data-onboarding"]}
+                  className={cn("flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm no-underline transition-colors",
+                    "text-purple-700 hover:bg-purple-50 hover:text-purple-800")}>
+                  <item.icon className="w-4 h-4 text-purple-400 shrink-0" />
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            <div className="my-1 border-t border-purple-100" />
+
+            {isAuthenticated ? (
+              <button type="button" onClick={handleLogout}
+                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm transition-colors text-red-600 hover:bg-red-50 font-semibold">
+                <LogOut className="w-4 h-4 shrink-0" />Logout
+              </button>
+            ) : (
+              <Link to="/login" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm no-underline transition-colors text-purple-700 hover:bg-purple-50 font-semibold">
+                <LogIn className="w-4 h-4 text-purple-400 shrink-0" />Log In
+              </Link>
+            )}
+            {logoutError && (
+              <p className="mx-3 mt-1 mb-0.5 text-xs text-red-600">{logoutError}</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

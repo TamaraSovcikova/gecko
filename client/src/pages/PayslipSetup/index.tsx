@@ -8,10 +8,14 @@ import PayslipBreakdown from "../../components/PayslipBreakdown.jsx";
 import TopNav from "../../components/TopNav";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
+import { motion, AnimatePresence } from "framer-motion";
+import { PoundSterling, Briefcase, MapPin, Lightbulb, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { cn } from "../../lib/utils";
 
 type Category = {
   name: string;
-  amount: string; // string while typing; converted to budget number on submit
+  amount: string;
 };
 
 type JobOption = {
@@ -25,7 +29,6 @@ type LocationOption = {
   label: string;
 };
 
-// Shape returned by POST /api/v1/payslip and GET /api/v1/payslip
 type PayslipResponse = {
   grossSalary: number;
   taxPaid: number;
@@ -36,14 +39,29 @@ type PayslipResponse = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const FieldInput = ({ label, id, type, value, onChange, placeholder, icon: Icon, required, step, min, "data-onboarding": dataOnboarding }: {
+  label: string; id: string; type: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string; icon: React.ElementType; required?: boolean; step?: string; min?: string;
+  "data-onboarding"?: string;
+}) => (
+  <div data-onboarding={dataOnboarding}>
+    <label htmlFor={id} className="block text-sm font-semibold text-purple-800 mb-1.5">{label}</label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Icon className="w-4 h-4 text-purple-400" />
+      </div>
+      <input id={id} type={type} value={value} onChange={onChange} placeholder={placeholder} required={required} step={step} min={min}
+        className="w-full pl-10 pr-3 py-2.5 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" />
+    </div>
+  </div>
+);
+
 const PayslipSetup = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
 
   const [grossSalary, setGrossSalary] = useState("");
-  const [categories, setCategories] = useState<Category[]>([
-    { name: "", amount: "" },
-  ]);
+  const [categories, setCategories] = useState<Category[]>([{ name: "", amount: "" }]);
   const [jobTitle, setJobTitle] = useState("");
   const [location, setLocation] = useState("");
   const [jobOptions, setJobOptions] = useState<JobOption[]>([]);
@@ -60,38 +78,19 @@ const PayslipSetup = () => {
   const [result, setResult] = useState<PayslipResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isFetchingPayslip, setIsFetchingPayslip] = useState(true);
-  const {
-    isOpen: isOnboardingOpen,
-    activeStepNumber,
-    steps: onboardingSteps,
-    closeGuide,
-    completeGuide,
-    goToStep,
-  } = usePageOnboarding("/payslip");
+  const { isOpen: isOnboardingOpen, activeStepNumber, steps: onboardingSteps, closeGuide, completeGuide, goToStep } = usePageOnboarding("/payslip");
 
-  // Load existing payslip on mount
   useEffect(() => {
     const loadExistingPayslip = async () => {
       if (!token) return;
-
       try {
-        const response = await axios.get<PayslipResponse>(
-          `${API_URL}/api/v1/payslip`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
+        const response = await axios.get<PayslipResponse>(`${API_URL}/api/v1/payslip`, { headers: { Authorization: `Bearer ${token}` } });
         if (response.data) {
           setGrossSalary(response.data.grossSalary.toString());
           setIsEditing(true);
           setResult(response.data);
-
           if (response.data.categories && response.data.categories.length > 0) {
-            setCategories(
-              response.data.categories.map((cat) => ({
-                name: cat.name,
-                amount: cat.budget.toString(),
-              })),
-            );
+            setCategories(response.data.categories.map((cat) => ({ name: cat.name, amount: cat.budget.toString() })));
           }
         }
       } catch (error) {
@@ -102,21 +101,15 @@ const PayslipSetup = () => {
         setIsFetchingPayslip(false);
       }
     };
-
     loadExistingPayslip();
   }, [token]);
 
-  // Fetch job titles from Adzuna when query changes
   useEffect(() => {
     if (!showJobDropdown || !token) return;
-
     const searchJobs = async () => {
       setJobSearchLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/api/v1/user/job-search`, {
-          params: { query: jobSearchQuery },
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(`${API_URL}/api/v1/user/job-search`, { params: { query: jobSearchQuery }, headers: { Authorization: `Bearer ${token}` } });
         setJobOptions(res.data.jobs || []);
       } catch (err) {
         console.error("Error searching jobs:", err);
@@ -124,23 +117,16 @@ const PayslipSetup = () => {
         setJobSearchLoading(false);
       }
     };
-
-    // Debounce the search
     const timer = setTimeout(searchJobs, 300);
     return () => clearTimeout(timer);
   }, [jobSearchQuery, showJobDropdown, token]);
 
-  // Fetch locations from Adzuna when query changes
   useEffect(() => {
     if (!showLocationDropdown || !token) return;
-
     const searchLocations = async () => {
       setLocationSearchLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/api/v1/user/location-search`, {
-          params: { query: locationSearchQuery },
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(`${API_URL}/api/v1/user/location-search`, { params: { query: locationSearchQuery }, headers: { Authorization: `Bearer ${token}` } });
         setLocationOptions(res.data.locations || []);
       } catch (err) {
         console.error("Error searching locations:", err);
@@ -148,84 +134,39 @@ const PayslipSetup = () => {
         setLocationSearchLoading(false);
       }
     };
-
-    // Debounce the search
     const timer = setTimeout(searchLocations, 300);
     return () => clearTimeout(timer);
   }, [locationSearchQuery, showLocationDropdown, token]);
 
-  const totalCategoryAmount = useMemo(() => {
-    return categories.reduce((sum, category) => {
-      const value = Number(category.amount);
-      return Number.isFinite(value) ? sum + value : sum;
-    }, 0);
-  }, [categories]);
+  const totalCategoryAmount = useMemo(() =>
+    categories.reduce((sum, category) => { const value = Number(category.amount); return Number.isFinite(value) ? sum + value : sum; }, 0),
+    [categories]);
 
-  const isOverAllocated =
-    grossSalary !== "" &&
-    !Number.isNaN(Number(grossSalary)) &&
-    totalCategoryAmount > Number(grossSalary);
+  const isOverAllocated = grossSalary !== "" && !Number.isNaN(Number(grossSalary)) && totalCategoryAmount > Number(grossSalary);
 
-  const addCategory = () => {
-    setCategories((prev) => [...prev, { name: "", amount: "" }]);
-  };
-
-  const removeCategory = (index: number) => {
-    setCategories((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateCategory = (
-    index: number,
-    field: "name" | "amount",
-    value: string,
-  ) => {
-    setCategories((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
+  const addCategory = () => setCategories((prev) => [...prev, { name: "", amount: "" }]);
+  const removeCategory = (index: number) => setCategories((prev) => prev.filter((_, i) => i !== index));
+  const updateCategory = (index: number, field: "name" | "amount", value: string) => {
+    setCategories((prev) => { const next = [...prev]; next[index] = { ...next[index], [field]: value }; return next; });
   };
 
   const validate = () => {
     const nextErrors: string[] = [];
     const salary = Number(grossSalary);
-    const normalizedCategoryNames = categories
-      .map((category) => category.name.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (!grossSalary || Number.isNaN(salary) || salary <= 0) {
-      nextErrors.push("Gross salary must be greater than 0.");
-    }
-
+    const normalizedCategoryNames = categories.map((c) => c.name.trim().toLowerCase()).filter(Boolean);
+    if (!grossSalary || Number.isNaN(salary) || salary <= 0) nextErrors.push("Gross salary must be greater than 0.");
     categories.forEach((category, index) => {
-      if (!category.name.trim()) {
-        nextErrors.push(`Category ${index + 1} requires a name.`);
-      }
-
+      if (!category.name.trim()) nextErrors.push(`Category ${index + 1} requires a name.`);
       const amount = Number(category.amount);
-      if (!category.amount || Number.isNaN(amount) || amount < 0) {
-        nextErrors.push(`Category ${index + 1} amount must be 0 or more.`);
-      }
+      if (!category.amount || Number.isNaN(amount) || amount < 0) nextErrors.push(`Category ${index + 1} amount must be 0 or more.`);
     });
-
-    if (
-      new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length
-    ) {
-      nextErrors.push("Category names must be unique.");
-    }
-
-    if (!Number.isNaN(salary) && totalCategoryAmount > salary) {
-      nextErrors.push(
-        "Total category amount cannot be more than gross salary.",
-      );
-    }
-
+    if (new Set(normalizedCategoryNames).size !== normalizedCategoryNames.length) nextErrors.push("Category names must be unique.");
+    if (!Number.isNaN(salary) && totalCategoryAmount > salary) nextErrors.push("Total category amount cannot be more than gross salary.");
     setErrors(nextErrors);
     return nextErrors.length === 0;
   };
 
   const handleSubmit = async (event: FormEvent) => {
-    // DEBUGGING
     console.log("SUBMIT ENTERED");
     console.log("TOKEN:", token);
     console.log("VALIDATION RESULT:", validate());
@@ -234,168 +175,73 @@ const PayslipSetup = () => {
     console.log("TOTAL CATEGORY AMOUNT:", totalCategoryAmount);
     event.preventDefault();
     setApiError("");
-
-    if (!validate()) {
-      return;
-    }
-
-    if (!token) {
-      setApiError("You are not authenticated. Please log in again.");
-      return;
-    }
+    if (!validate()) return;
+    if (!token) { setApiError("You are not authenticated. Please log in again."); return; }
 
     try {
       setLoading(true);
-
-      const payload = {
-        grossSalary: Number(grossSalary),
-        // Send `budget` to match the CategorySchema field name
-        categories: categories.map((c) => ({
-          name: c.name.trim(),
-          budget: Number(c.amount),
-        })),
-      };
+      const payload = { grossSalary: Number(grossSalary), categories: categories.map((c) => ({ name: c.name.trim(), budget: Number(c.amount) })) };
 
       if (isEditing) {
-        // Update existing payslip
-        const response = await axios.put<PayslipResponse>(
-          `${API_URL}/api/v1/payslip`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        const response = await axios.put<PayslipResponse>(`${API_URL}/api/v1/payslip`, payload, { headers: { Authorization: `Bearer ${token}` } });
         setResult(response.data);
         setApiError("");
-
-        // Also update user profile with job title and location if provided
         if (jobTitle || location) {
-          await axios.patch(
-            `${API_URL}/api/v1/user/profile`,
-            {
-              payslipData: {
-                grossSalary: Number(grossSalary),
-                jobTitle: jobTitle,
-                location: location,
-              },
-            },
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
+          await axios.patch(`${API_URL}/api/v1/user/profile`, { payslipData: { grossSalary: Number(grossSalary), jobTitle, location } }, { headers: { Authorization: `Bearer ${token}` } });
         }
-
         navigate("/dashboard");
       } else {
-        // Create new payslip
-        const fetchExistingPayslip = async () => {
-          return axios.get<PayslipResponse>(`${API_URL}/api/v1/payslip`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        };
-
-        // Avoid creating duplicates when a payslip already exists.
+        const fetchExistingPayslip = async () => axios.get<PayslipResponse>(`${API_URL}/api/v1/payslip`, { headers: { Authorization: `Bearer ${token}` } });
         try {
           const existing = await fetchExistingPayslip();
           if (existing.data) {
             setResult(existing.data);
             setIsEditing(true);
             setGrossSalary(existing.data.grossSalary.toString());
-            if (existing.data.categories) {
-              setCategories(
-                existing.data.categories.map((cat) => ({
-                  name: cat.name,
-                  amount: cat.budget.toString(),
-                })),
-              );
-            }
+            if (existing.data.categories) setCategories(existing.data.categories.map((cat) => ({ name: cat.name, amount: cat.budget.toString() })));
             setApiError("");
             return;
           }
         } catch (existingError: unknown) {
-          if (
-            !axios.isAxiosError(existingError) ||
-            existingError.response?.status !== 404
-          ) {
-            throw existingError;
-          }
+          if (!axios.isAxiosError(existingError) || existingError.response?.status !== 404) throw existingError;
         }
 
-        const submitPayslip = () =>
-          axios.post<PayslipResponse>(`${API_URL}/api/v1/payslip`, payload, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
+        const submitPayslip = () => axios.post<PayslipResponse>(`${API_URL}/api/v1/payslip`, payload, { headers: { Authorization: `Bearer ${token}` } });
         try {
           const response = await submitPayslip();
           setResult(response.data);
           setIsEditing(true);
-
-          // Also update user profile with job title and location if provided
           if (jobTitle || location) {
-            await axios.patch(
-              `${API_URL}/api/v1/user/profile`,
-              {
-                payslipData: {
-                  grossSalary: Number(grossSalary),
-                  jobTitle: jobTitle,
-                  location: location,
-                },
-              },
-              { headers: { Authorization: `Bearer ${token}` } },
-            );
+            await axios.patch(`${API_URL}/api/v1/user/profile`, { payslipData: { grossSalary: Number(grossSalary), jobTitle, location } }, { headers: { Authorization: `Bearer ${token}` } });
           }
-
           navigate("/dashboard");
         } catch (firstError: unknown) {
-          if (!axios.isAxiosError(firstError)) {
-            throw firstError;
-          }
-
-          // Client-side fallback only: ensure a User document exists, then retry once.
+          if (!axios.isAxiosError(firstError)) throw firstError;
           if (firstError.response?.status === 500) {
-            // If backend saved payslip but failed after write, recover via GET.
             try {
-              // Also update user profile with job title and location if provided
               if (jobTitle || location) {
-                await axios.patch(
-                  `${API_URL}/api/v1/user/profile`,
-                  {
-                    payslipData: {
-                      grossSalary: Number(grossSalary),
-                      jobTitle: jobTitle,
-                      location: location,
-                    },
-                  },
-                  { headers: { Authorization: `Bearer ${token}` } },
-                );
+                await axios.patch(`${API_URL}/api/v1/user/profile`, { payslipData: { grossSalary: Number(grossSalary), jobTitle, location } }, { headers: { Authorization: `Bearer ${token}` } });
               }
               const existingAfterFailure = await fetchExistingPayslip();
               if (existingAfterFailure.data) {
                 setResult(existingAfterFailure.data);
                 setIsEditing(true);
-                setApiError(
-                  "Payslip appears saved. Refresh or continue to dashboard.",
-                );
+                setApiError("Payslip appears saved. Refresh or continue to dashboard.");
                 return;
               }
-            } catch {
-              // Ignore and continue fallback path.
-            }
-
+            } catch { /* ignore */ }
             await registerUser(token);
             const retryResponse = await submitPayslip();
             setResult(retryResponse.data);
             setIsEditing(true);
             return;
           }
-
           throw firstError;
         }
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setApiError(
-          error.response?.data?.error ||
-            error.response?.data?.message ||
-            "Unable to save payslip setup.",
-        );
+        setApiError(error.response?.data?.error || error.response?.data?.message || "Unable to save payslip setup.");
       } else {
         setApiError("Unable to save payslip setup.");
       }
@@ -406,360 +252,158 @@ const PayslipSetup = () => {
 
   if (isFetchingPayslip) {
     return (
-      <div className="container py-4 py-md-5">
-        <TopNav />
-        <div className="row justify-content-center">
-          <div className="col-12 col-lg-9">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-4 p-md-5">
-                <p className="text-muted">Loading payslip...</p>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-purple-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-purple-300 border-t-purple-600 animate-spin" />
+          <p className="text-purple-500 text-sm font-medium">Loading payslip...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-4 py-md-5">
+    <div className="min-h-screen bg-purple-50" style={{ fontFamily: "Manrope, Segoe UI, Arial, sans-serif" }}>
       <TopNav />
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <h1 className="text-2xl font-bold text-purple-900">{isEditing ? "Update Payslip" : "Payslip Setup"}</h1>
+          <p className="text-sm text-purple-500 mt-1">
+            {isEditing ? "Update your gross salary and category allocations." : "Add your gross salary and category allocations to build your monthly breakdown."}
+          </p>
+        </motion.div>
 
-      <div className="row justify-content-center">
-        <div className="col-12 col-lg-9">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4 p-md-5">
-              <h1 className="h3 mb-2">
-                Payslip {isEditing ? "Details" : "Setup"}
-              </h1>
-              <p className="text-muted mb-4">
-                {isEditing
-                  ? "Update your gross salary and category allocations."
-                  : "Add your gross salary and category allocations to build your monthly breakdown."}
-              </p>
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {/* Gross salary */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className="bg-white rounded-xl border border-purple-200 shadow-sm p-5">
+            <FieldInput label="Gross Salary (annual)" id="grossSalary" type="number" value={grossSalary} onChange={(e) => setGrossSalary(e.target.value)}
+              placeholder="e.g. 36000" icon={PoundSterling} step="0.01" min="0" data-onboarding="payslip-gross" />
+          </motion.div>
 
-              <form onSubmit={handleSubmit} noValidate>
-                <div className="mb-3" data-onboarding="payslip-gross">
-                  <label htmlFor="grossSalary" className="form-label">
-                    Gross Salary (annual)
-                  </label>
-                  <input
-                    id="grossSalary"
-                    type="number"
-                    className="form-control"
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g. 36000"
-                    value={grossSalary}
-                    onChange={(e) => setGrossSalary(e.target.value)}
-                  />
-                </div>
-
-                {/* Tips Box for Job Title & Location */}
-                <div
-                  data-onboarding="payslip-profile-tip"
-                  style={{
-                    marginBottom: "20px",
-                    padding: "16px",
-                    backgroundColor: "#f4f1fb",
-                    border: "1px solid #c9bde8",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div style={{ fontSize: "24px", minWidth: "30px" }}>💡</div>
-                    <div>
-                      <h4
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: "#1a1040",
-                        }}
-                      >
-                        Add Job Title & Location for Tips
-                      </h4>
-                      <p
-                        style={{
-                          margin: "0",
-                          fontSize: "13px",
-                          color: "#4a3f6b",
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        Providing your job title and location unlocks
-                        personalized financial insights, salary comparisons with
-                        market data, and tailored tips on your dashboard.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Job Title Dropdown */}
-                <div className="mb-3" style={{ position: "relative" }}>
-                  <label htmlFor="jobTitle" className="form-label">
-                    Job Title (Optional)
-                  </label>
-                  <input
-                    id="jobTitle"
-                    type="text"
-                    className="form-control"
-                    placeholder="Search or type job title..."
-                    value={jobSearchQuery}
-                    onChange={(e) => {
-                      setJobSearchQuery(e.target.value);
-                      setShowJobDropdown(true);
-                    }}
-                    onFocus={() => setShowJobDropdown(true)}
-                  />
-
-                  {/* Job options dropdown */}
-                  {showJobDropdown && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        backgroundColor: "#fff",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                        zIndex: 10,
-                        marginTop: "2px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      {jobSearchLoading ? (
-                        <div
-                          style={{
-                            padding: "10px",
-                            color: "#999",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Loading jobs...
-                        </div>
-                      ) : jobOptions.length > 0 ? (
-                        jobOptions.map((job, index) => (
-                          <div
-                            key={index}
-                            onClick={() => {
-                              setJobTitle(job.title);
-                              setJobSearchQuery(job.label);
-                              setShowJobDropdown(false);
-                            }}
-                            style={{
-                              padding: "10px 12px",
-                              borderBottom: "1px solid #ede8f8",
-                              cursor: "pointer",
-                              backgroundColor: "transparent",
-                              transition: "background-color 0.2s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f4f1fb";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                "transparent";
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: "14px",
-                                color: "#1a1040",
-                                fontWeight: "500",
-                              }}
-                            >
-                              {job.label}
-                            </div>
-                            {job.count && (
-                              <div style={{ fontSize: "12px", color: "#999" }}>
-                                {job.count} jobs available
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div
-                          style={{
-                            padding: "10px",
-                            color: "#999",
-                            fontSize: "12px",
-                          }}
-                        >
-                          No jobs found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Location Dropdown */}
-                <div className="mb-3" style={{ position: "relative" }}>
-                  <label htmlFor="location" className="form-label">
-                    Location (Optional)
-                  </label>
-                  <input
-                    id="location"
-                    type="text"
-                    className="form-control"
-                    placeholder="Search or type location..."
-                    value={locationSearchQuery}
-                    onChange={(e) => {
-                      setLocationSearchQuery(e.target.value);
-                      setShowLocationDropdown(true);
-                    }}
-                    onFocus={() => setShowLocationDropdown(true)}
-                  />
-
-                  {/* Location options dropdown */}
-                  {showLocationDropdown && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        backgroundColor: "#fff",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                        zIndex: 10,
-                        marginTop: "2px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      {locationSearchLoading ? (
-                        <div
-                          style={{
-                            padding: "10px",
-                            color: "#999",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Loading locations...
-                        </div>
-                      ) : locationOptions.length > 0 ? (
-                        locationOptions.map((loc, index) => (
-                          <div
-                            key={index}
-                            onClick={() => {
-                              setLocation(loc.title);
-                              setLocationSearchQuery(loc.label);
-                              setShowLocationDropdown(false);
-                            }}
-                            style={{
-                              padding: "10px 12px",
-                              borderBottom: "1px solid #ede8f8",
-                              cursor: "pointer",
-                              backgroundColor: "transparent",
-                              transition: "background-color 0.2s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f4f1fb";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                "transparent";
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: "14px",
-                                color: "#1a1040",
-                                fontWeight: "500",
-                              }}
-                            >
-                              {loc.label}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div
-                          style={{
-                            padding: "10px",
-                            color: "#999",
-                            fontSize: "12px",
-                          }}
-                        >
-                          No locations found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div data-onboarding="payslip-categories">
-                  <CategoryBuilder
-                    categories={categories}
-                    onAddCategory={addCategory}
-                    onRemoveCategory={removeCategory}
-                    onUpdateCategory={updateCategory}
-                    totalCategoryAmount={totalCategoryAmount}
-                    isOverAllocated={isOverAllocated}
-                    disabled={loading}
-                  />
-                </div>
-
-                {errors.length > 0 && (
-                  <div className="app-note payslip-note" role="alert">
-                    <ul className="mb-0">
-                      {errors.map((error, index) => (
-                        <li key={`error-${index}`}>{error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {apiError && (
-                  <div className="app-note payslip-note app-status-error">{apiError}</div>
-                )}
-
-                <div className="d-flex gap-2">
-                  <button
-                    type="submit"
-                    className="gecko-pill-btn payslip-primary-btn payslip-submit-btn"
-                    disabled={loading}
-                  >
-                    {loading
-                      ? isEditing
-                        ? "Updating..."
-                        : "Saving..."
-                      : isEditing
-                        ? "Update Payslip Details"
-                        : "Save Payslip Details"}
-                  </button>
-                </div>
-              </form>
+          {/* Job title + location */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="bg-white rounded-xl border border-purple-200 shadow-sm p-5 space-y-5">
+            {/* Tip banner */}
+            <div data-onboarding="payslip-profile-tip" className="flex gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <Lightbulb className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-purple-800 mb-0.5">Add Job Title & Location for Tips</p>
+                <p className="text-xs text-purple-600">Unlocks personalized financial insights, salary comparisons, and tailored tips on your dashboard.</p>
+              </div>
             </div>
-          </div>
 
-          <PayslipBreakdown
-            result={result}
-            onContinue={() => navigate("/dashboard")}
-          />
-        </div>
-      </div>
-      <TooltipGuide
-        isOpen={isOnboardingOpen}
-        activeStepNumber={activeStepNumber}
-        steps={onboardingSteps}
-        onClose={closeGuide}
-        onComplete={completeGuide}
-        onGoToStep={goToStep}
-      />
+            {/* Job title with autocomplete */}
+            <div className="relative">
+              <label htmlFor="jobTitle" className="block text-sm font-semibold text-purple-800 mb-1.5">Job Title <span className="text-purple-400 font-normal">(optional)</span></label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Briefcase className="w-4 h-4 text-purple-400" />
+                </div>
+                <input id="jobTitle" type="text" placeholder="Search or type job title..." value={jobSearchQuery}
+                  onChange={(e) => { setJobSearchQuery(e.target.value); setShowJobDropdown(true); }} onFocus={() => setShowJobDropdown(true)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" />
+              </div>
+              <AnimatePresence>
+                {showJobDropdown && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white border border-purple-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                    {jobSearchLoading ? (
+                      <p className="px-3 py-2.5 text-xs text-purple-400">Loading jobs...</p>
+                    ) : jobOptions.length > 0 ? jobOptions.map((job, index) => (
+                      <button key={index} type="button" onClick={() => { setJobTitle(job.title); setJobSearchQuery(job.label); setShowJobDropdown(false); }}
+                        className="w-full text-left px-3 py-2.5 hover:bg-purple-50 transition-colors border-b border-purple-50 last:border-0">
+                        <div className="text-sm font-medium text-purple-900">{job.label}</div>
+                        {job.count && <div className="text-xs text-purple-400">{job.count} jobs available</div>}
+                      </button>
+                    )) : <p className="px-3 py-2.5 text-xs text-purple-400">No jobs found</p>}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Location with autocomplete */}
+            <div className="relative">
+              <label htmlFor="location" className="block text-sm font-semibold text-purple-800 mb-1.5">Location <span className="text-purple-400 font-normal">(optional)</span></label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="w-4 h-4 text-purple-400" />
+                </div>
+                <input id="location" type="text" placeholder="Search or type location..." value={locationSearchQuery}
+                  onChange={(e) => { setLocationSearchQuery(e.target.value); setShowLocationDropdown(true); }} onFocus={() => setShowLocationDropdown(true)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" />
+              </div>
+              <AnimatePresence>
+                {showLocationDropdown && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white border border-purple-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                    {locationSearchLoading ? (
+                      <p className="px-3 py-2.5 text-xs text-purple-400">Loading locations...</p>
+                    ) : locationOptions.length > 0 ? locationOptions.map((loc, index) => (
+                      <button key={index} type="button" onClick={() => { setLocation(loc.title); setLocationSearchQuery(loc.label); setShowLocationDropdown(false); }}
+                        className="w-full text-left px-3 py-2.5 hover:bg-purple-50 transition-colors border-b border-purple-50 last:border-0">
+                        <div className="text-sm font-medium text-purple-900">{loc.label}</div>
+                      </button>
+                    )) : <p className="px-3 py-2.5 text-xs text-purple-400">No locations found</p>}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
+          {/* Category builder */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl border border-purple-200 shadow-sm p-5" data-onboarding="payslip-categories">
+            <CategoryBuilder
+              categories={categories}
+              onAddCategory={addCategory}
+              onRemoveCategory={removeCategory}
+              onUpdateCategory={updateCategory}
+              totalCategoryAmount={totalCategoryAmount}
+              isOverAllocated={isOverAllocated}
+              disabled={loading}
+            />
+          </motion.div>
+
+          {/* Validation errors */}
+          <AnimatePresence>
+            {errors.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <ul className="text-sm text-red-700 space-y-0.5 list-none m-0 p-0">
+                  {errors.map((error, index) => <li key={`error-${index}`}>{error}</li>)}
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {apiError && (
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                <AlertCircle className="w-4 h-4 shrink-0" />{apiError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Submit */}
+          <div className="flex gap-3">
+            <Button type="submit" variant="primary" loading={loading} className="flex-1 sm:flex-none">
+              {loading ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Payslip Details" : "Save Payslip Details")}
+            </Button>
+            {isEditing && (
+              <Button type="button" variant="ghost" onClick={() => navigate("/dashboard")}>Cancel</Button>
+            )}
+          </div>
+        </form>
+
+        <PayslipBreakdown result={result} onContinue={() => navigate("/dashboard")} />
+      </main>
+
+      <TooltipGuide isOpen={isOnboardingOpen} activeStepNumber={activeStepNumber} steps={onboardingSteps} onClose={closeGuide} onComplete={completeGuide} onGoToStep={goToStep} />
     </div>
   );
 };
 
 export default PayslipSetup;
-

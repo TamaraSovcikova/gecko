@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { useNavigate, useLocation } from "react-router-dom";
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from "recharts";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  TrendingUp, TrendingDown, DollarSign, Heart, PiggyBank,
+  AlertTriangle, ChevronDown, ChevronUp, BarChart2, Edit2, Eye, EyeOff,
+} from "lucide-react";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
 import TopNav from "../../components/TopNav";
@@ -13,15 +21,18 @@ import ForecastWarningPopup from "../../components/ForecastWarningPopup";
 import { ForecastPayload } from "../../types/forecast";
 import { dismissForecastWarning, getForecast } from "../../api/forecastApi";
 import SnapshotNavigator from "../../components/SnapshotNavigator";
-import MonthlySnapshot, {
-  type MonthlySnapshotData,
-} from "../../components/MonthlySnapshot";
+import MonthlySnapshot, { type MonthlySnapshotData } from "../../components/MonthlySnapshot";
 import GroqChat from "./groqChat.tsx";
 import { useStreakWarning } from "../../hooks/useStreakWarning";
 import ExpenseBreakdown from "../../components/ExpenseBreakdown";
 import Modal from "../../components/Modal";
 import { attachDashboardDebug } from "../../dev/dashboardDebug";
 import { COLORS } from "../../constants/theme";
+import { SkeletonDashboard } from "../../components/ui/skeleton";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Progress } from "../../components/ui/progress";
+import { cn } from "../../lib/utils";
 import "./dashboard.css";
 
 const CATEGORY_COLOR_OVERRIDES: Record<string, string> = {
@@ -36,706 +47,311 @@ const CATEGORY_COLOR_OVERRIDES: Record<string, string> = {
   entertainment: COLORS.gold,
 };
 
-const normalizeCategoryKey = (value: string) => String(value || "").trim().toLowerCase();
+const normalizeCategoryKey = (value: string) =>
+  String(value || "").trim().toLowerCase();
 
 const getCategoryColor = (categoryName: string) => {
   const key = normalizeCategoryKey(categoryName);
-
   if (!key) return COLORS.chart[0];
-
-  if (CATEGORY_COLOR_OVERRIDES[key]) {
-    return CATEGORY_COLOR_OVERRIDES[key];
-  }
-
+  if (CATEGORY_COLOR_OVERRIDES[key]) return CATEGORY_COLOR_OVERRIDES[key];
   let hash = 0;
-  for (let i = 0; i < key.length; i += 1) {
+  for (let i = 0; i < key.length; i++) {
     hash = (hash << 5) - hash + key.charCodeAt(i);
     hash |= 0;
   }
-
   return COLORS.chart[Math.abs(hash) % COLORS.chart.length];
 };
 
-/* Full Real-time Update Flow
-1. Frontend loads
-2. useSocket connects
-3. emits a join event
-4. Backend joins room
-5. User submits a new expense
-6. Backend emits 'budget:update'
-7. Frontend recieves the event
-8. New dashboard data is set
-9. React automatically re-renders the UI
-*/
+const formatGBP = (v: number | undefined) =>
+  typeof v === "number"
+    ? "\xA3" + v.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "\xA30.00";
 
-// Type for individual tips
 type AdzunaTip = {
-  type: string;
-  title: string;
-  description: string;
-  priority: "high" | "medium" | "low";
+  type: string; title: string; description: string; priority: "high" | "medium" | "low";
 };
-
 type HealthFactor = {
-  key: string;
-  title: string;
-  weight: number;
-  score: number;
-  contribution: number;
-  impact: "helping" | "lowering" | "neutral";
-  valueLabel: string;
-  explanation: string;
+  key: string; title: string; weight: number; score: number; contribution: number;
+  impact: "helping" | "lowering" | "neutral"; valueLabel: string; explanation: string;
 };
-
 type HealthBreakdown = {
-  healthScore: number;
-  hasEnoughData: boolean;
-  summary: string;
-  factors: HealthFactor[];
+  healthScore: number; hasEnoughData: boolean; summary: string; factors: HealthFactor[];
 };
-
 type ExpenseItem = {
-  _id: string;
-  category: string;
-  amount: number;
-  day: number;
-  month: number;
-  year: number;
-  date: string;
-  note?: string;
-  createdAt: string;
+  _id: string; category: string; amount: number; day: number; month: number;
+  year: number; date: string; note?: string; createdAt: string;
 };
-
-//defined exact data as expected from backend endpoint...
 type DashboardData = {
-  healthScore: number;
-  takeHome: number;
-  budgetLeft: number;
-  totalBudget: number;
+  healthScore: number; takeHome: number; budgetLeft: number; totalBudget: number;
   actualSpending: { name: string; value: number }[];
   budgetAllocation: { name: string; value: number }[];
-  averageSalary?: number;
-  adzunaTips?: AdzunaTip[];
-  healthBreakdown?: HealthBreakdown;
-  expenses?: ExpenseItem[];
-  // gamification: TODO tasks
-  // xpEarned: number;
-  // quizzesCompleted: number;
-  // createdAt: string;
+  averageSalary?: number; adzunaTips?: AdzunaTip[];
+  healthBreakdown?: HealthBreakdown; expenses?: ExpenseItem[];
 };
 
-const DASHBOARD_SYNC_CHANNEL = "zoar-dashboard-sync";
-const DASHBOARD_SYNC_STORAGE_KEY = "zoar:dashboard:sync";
+type KpiCardProps = {
+  label: string; value: string; meta?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  highlight?: boolean; accentColor?: string;
+  onClick?: () => void; dataOnboarding?: string;
+};
+
+const KpiCard = ({ label, value, meta, icon: Icon, highlight, accentColor, onClick, dataOnboarding }: KpiCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(92,63,163,0.16)" }}
+    onClick={onClick}
+    data-onboarding={dataOnboarding}
+    className={cn(
+      "relative bg-white border border-purple-300 rounded-lg p-5 overflow-hidden transition-shadow",
+      onClick && "cursor-pointer",
+      highlight && "border-purple-400",
+    )}
+  >
+    {highlight && (
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-gold" />
+    )}
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gecko-muted uppercase tracking-wider mb-1">{label}</p>
+        <p className={cn("text-2xl font-bold truncate", accentColor || "text-purple-600")}>{value}</p>
+        {meta && <p className="text-xs text-gecko-muted mt-1 truncate">{meta}</p>}
+      </div>
+      {Icon && (
+        <div className="shrink-0 p-2 rounded-md bg-purple-100">
+          <Icon className="h-5 w-5 text-purple-600" />
+        </div>
+      )}
+    </div>
+    {onClick && (
+      <p className="mt-2 text-xs font-semibold text-purple-500">See breakdown &rarr;</p>
+    )}
+  </motion.div>
+);
 
 const Dashboard = () => {
-  // monthly snapshot popup states
-  const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
-  const [snapshots, setSnapshots] = useState<MonthlySnapshotData[]>([]);
-  const [popupSnapshot, setPopupSnapshot] =
-    useState<MonthlySnapshotData | null>(null);
-  const [activeSnapshotPopupKey, setActiveSnapshotPopupKey] = useState<string | null>(null);
-  // dashboard states
+  const { token, currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { token, loading, currentUser, profile } = useAuth();
-  const socket = useSocket(currentUser?.uid);
-  const { showStreakWarning } = useStreakWarning();
-  //react state which stores dashboard data, initially null
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [forecast, setForecast] = useState<ForecastPayload | null>(null);
+
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [displayedData, setDisplayedData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  // expense breakdown toggle
+  const [showExpenses, setShowExpenses] = useState(false);
   const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
+  const [forecast, setForecast] = useState<ForecastPayload | null>(null);
   const [showAllTips, setShowAllTips] = useState(false);
-  const [snapshotExpenses, setSnapshotExpenses] = useState<ExpenseItem[]>([]);
-  const [snapshotViewData, setSnapshotViewData] = useState<DashboardData | null>(null);
-  const [snapshotExpensesLoaded, setSnapshotExpensesLoaded] = useState(false);
-  const isRefreshingRef = useRef(false);
-  const pendingRefreshRef = useRef(false);
-  const snapshotViewRequestIdRef = useRef(0);
+  const [profile, setProfile] = useState<any>(null);
+  const [snapshots, setSnapshots] = useState<MonthlySnapshotData[]>([]);
+  const [snapshotIndex, setSnapshotIndex] = useState(-1);
+  const [isSnapshotMode, setIsSnapshotMode] = useState(false);
+  const [selectedSnapshot, setSelectedSnapshot] = useState<MonthlySnapshotData | null>(null);
+  const [showSnapshotPopup, setShowSnapshotPopup] = useState(false);
+  const [popupSnapshot, setPopupSnapshot] = useState<MonthlySnapshotData | null>(null);
+  const [activeSnapshotPopupKey, setActiveSnapshotPopupKey] = useState<string | null>(null);
+  const [chartView, setChartView] = useState<"pie" | "bar">("pie");
+  const hasFetchedRef = useRef(false);
 
-  const broadcastDashboardSync = useCallback(
-    (eventType: "expense:create" | "expense:update" | "expense:delete") => {
-      const payload = {
-        type: eventType,
-        userId: currentUser?.uid,
-        timestamp: Date.now(),
-      };
+  const { showStreakWarning } = useStreakWarning();
+  const { isOnboardingOpen, activeStepNumber, onboardingSteps, closeGuide, completeGuide, goToStep } =
+    usePageOnboarding("dashboard");
 
-      try {
-        if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-          const channel = new BroadcastChannel(DASHBOARD_SYNC_CHANNEL);
-          channel.postMessage(payload);
-          channel.close();
-        }
-      } catch (err) {
-        console.warn("[Dashboard] BroadcastChannel sync failed:", err);
-      }
+  const monthlyTakeHome = dashboardData?.takeHome ?? 0;
+  const incomeBudgetLeft =
+    (dashboardData?.takeHome ?? 0) -
+    (displayedData?.totalBudget ?? 0) +
+    (displayedData?.budgetLeft ?? 0);
+  const visibleTips = showAllTips
+    ? (displayedData?.adzunaTips ?? [])
+    : (displayedData?.adzunaTips ?? []).slice(0, 3);
+  const hasMoreTips = (displayedData?.adzunaTips?.length ?? 0) > 3;
 
-      try {
-        localStorage.setItem(DASHBOARD_SYNC_STORAGE_KEY, JSON.stringify(payload));
-        // Removing allows repeated events with the same type to keep firing storage listeners.
-        localStorage.removeItem(DASHBOARD_SYNC_STORAGE_KEY);
-      } catch (err) {
-        console.warn("[Dashboard] localStorage sync fallback failed:", err);
-      }
-    },
-    [currentUser?.uid],
-  );
+  const mergeDashboardData = useCallback((newData: DashboardData) => {
+    setDashboardData(newData);
+    if (!isSnapshotMode) setDisplayedData(newData);
+  }, [isSnapshotMode]);
 
-  const {
-    isOpen: isOnboardingOpen,
-    activeStepNumber,
-    steps: onboardingSteps,
-    closeGuide,
-    completeGuide,
-    goToStep,
-  } = usePageOnboarding("/dashboard");
+  const broadcastDashboardSync = useCallback((eventType: string) => {
+    window.dispatchEvent(new CustomEvent("dashboard:sync", { detail: { type: eventType } }));
+  }, []);
 
-  // const for monthly snapshot
-  const [snapshotIndex, setSnapshotIndex] = useState<number | null>(null);
-
-  const refreshDashboardAndForecast = useCallback(async () => {
-    if (loading || !token) return;
-
-    if (isRefreshingRef.current) {
-      pendingRefreshRef.current = true;
-      return;
-    }
-
-    isRefreshingRef.current = true;
-
-    try {
-      const [dashboardRes, forecastRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/api/v1/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        getForecast(token)
-          .then((result) => ({ ok: true as const, value: result }))
-          .catch((err) => {
-            console.error("[Dashboard] Failed to fetch forecast:", err);
-            return { ok: false as const, value: null };
-          }),
-      ]);
-
-      setError(null);
-      setData(dashboardRes.data);
-
-      if (forecastRes.ok && forecastRes.value) {
-        setForecast(forecastRes.value);
-      }
-    } catch (err) {
-      console.error(err);
-      setError("error fetching dashboard data, using fallback");
-      setData({
-        healthScore: 100,
-        takeHome: 100,
-        budgetLeft: 100,
-        totalBudget: 100,
-        actualSpending: [{ name: "Fallback", value: 100 }],
-        budgetAllocation: [{ name: "Fallback", value: 100 }],
-      });
-    } finally {
-      isRefreshingRef.current = false;
-
-      if (pendingRefreshRef.current) {
-        pendingRefreshRef.current = false;
-        void refreshDashboardAndForecast();
-      }
-    }
-  }, [loading, token]);
-
-  //useEffect runs on every navigation to /dashboard (location.key changes on each visit)
-  useEffect(() => {
-    if (loading || !token) return; //wait for auth to finish and token to be available before fetching data
-    void refreshDashboardAndForecast();
-  }, [token, loading, location.key, refreshDashboardAndForecast]); //location.key changes on every navigation, ensuring a re-fetch when returning from payslip edit
-
-  // useEffect() for real-time updates to the dashboard
-  // Runs when the socket is available
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleConnect = () => {
-      void refreshDashboardAndForecast();
-    };
-
-    const handleBudgetUpdate = () => {
-      void refreshDashboardAndForecast();
-    };
-
-    socket.on("connect", handleConnect);
-    socket.on("budget:update", handleBudgetUpdate);
-
-    return () => {
-      socket.off("connect", handleConnect);
-      socket.off("budget:update", handleBudgetUpdate);
-    };
-  }, [socket, refreshDashboardAndForecast]);
-
-  useEffect(() => {
-    const currentUid = currentUser?.uid;
-
-    if (!currentUid) return;
-
-    const handleSyncPayload = (payload?: { userId?: string }) => {
-      if (payload?.userId && payload.userId !== currentUid) return;
-      void refreshDashboardAndForecast();
-    };
-
-    let channel: BroadcastChannel | null = null;
-
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-      channel = new BroadcastChannel(DASHBOARD_SYNC_CHANNEL);
-      channel.onmessage = (event) => {
-        handleSyncPayload(event.data);
-      };
-    }
-
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== DASHBOARD_SYNC_STORAGE_KEY || !event.newValue) return;
-
-      try {
-        const parsed = JSON.parse(event.newValue);
-        handleSyncPayload(parsed);
-      } catch (err) {
-        console.warn("[Dashboard] Failed to parse cross-tab sync payload:", err);
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      channel?.close();
-    };
-  }, [currentUser?.uid, refreshDashboardAndForecast]);
-
-  // useEffects for monthly snapshot
-  useEffect(() => {
-    if (loading || !token || !currentUser) return;
-
-    const fetchSnapshots = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/snapshots/${currentUser.uid}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        setSnapshots(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchSnapshots();
-  }, [token, loading, currentUser]);
-
-  useEffect(() => {
-    attachDashboardDebug({
-      snapshots,
-      setPopupSnapshot,
-      setShowSnapshotPopup,
-    });
-  }, [snapshots]);
-
-  const isSnapshotMode = snapshotIndex !== null;
-  const showExpenses = !isSnapshotMode;
-
-  const selectedSnapshot =
-    snapshotIndex !== null ? snapshots[snapshotIndex] : null;
   const refreshSnapshotViewData = useCallback(async () => {
-    if (!isSnapshotMode || !selectedSnapshot || loading || !token) {
-      setSnapshotViewData(null);
-      return;
-    }
-
-    const targetMonth = Number(selectedSnapshot.month);
-    const targetYear = Number(selectedSnapshot.year);
-    const requestId = ++snapshotViewRequestIdRef.current;
-
+    if (!token) return;
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/dashboard`,
-        {
-          params: {
-            month: targetMonth,
-            year: targetYear,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        `${import.meta.env.VITE_API_URL}/api/v1/snapshots`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      if (snapshotViewRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      const monthData: DashboardData = res.data;
-      setSnapshotViewData(monthData);
-
-      const apiExpenses = Array.isArray(monthData.expenses) ? monthData.expenses : [];
-      setSnapshotExpenses(apiExpenses);
-      setSnapshotExpensesLoaded(true);
-    } catch (err) {
-      console.error("[Dashboard] Failed to fetch snapshot dashboard:", err);
-
-      if (snapshotViewRequestIdRef.current === requestId) {
-        setSnapshotViewData(null);
-      }
-    }
-  }, [isSnapshotMode, selectedSnapshot, loading, token]);
+      if (Array.isArray(res.data)) setSnapshots(res.data);
+    } catch (_) {}
+  }, [token]);
 
   useEffect(() => {
-    if (!isSnapshotMode || !selectedSnapshot) {
-      setSnapshotExpenses([]);
-      setSnapshotExpensesLoaded(false);
-      setSnapshotViewData(null);
-      return;
-    }
-
-    setSnapshotExpenses([]);
-    setSnapshotExpensesLoaded(false);
-    void refreshSnapshotViewData();
-  }, [isSnapshotMode, selectedSnapshot, refreshSnapshotViewData]);
-
-  const mergeDashboardData = (incoming?: DashboardData | null) => {
-    if (!incoming) return;
-
-    setData((prev) => {
-      if (!prev) return incoming;
-
-      return {
-        ...prev,
-        ...incoming,
-        // Some endpoints return partial dashboard payloads after expense actions.
-        adzunaTips: incoming.adzunaTips ?? prev.adzunaTips,
-        averageSalary: incoming.averageSalary ?? prev.averageSalary,
-        healthBreakdown: incoming.healthBreakdown ?? prev.healthBreakdown,
-      };
-    });
-  };
-
-  const formatCurrency = (amount: number) => `£${amount.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-  const snapshotActualSpendingFromExpenses = selectedSnapshot
-    ? (() => {
-        if (snapshotViewData?.actualSpending) {
-          return snapshotViewData.actualSpending;
-        }
-
-        if (!snapshotExpensesLoaded) {
-          return selectedSnapshot.categories.map((c) => ({
-            name: c.name,
-            value: c.actual,
-          }));
-        }
-
-        const totals = new Map<string, number>();
-
-        snapshotExpenses.forEach((expense) => {
-          totals.set(
-            expense.category,
-            (totals.get(expense.category) || 0) + Number(expense.amount || 0),
-          );
+    if (snapshotIndex === -1) {
+      setIsSnapshotMode(false);
+      setSelectedSnapshot(null);
+      if (dashboardData) setDisplayedData(dashboardData);
+    } else {
+      const snap = snapshots[snapshotIndex];
+      if (snap) {
+        setIsSnapshotMode(true);
+        setSelectedSnapshot(snap);
+        setDisplayedData({
+          healthScore: snap.healthScore ?? 0,
+          takeHome: snap.takeHome ?? 0,
+          budgetLeft: snap.budgetLeft ?? 0,
+          totalBudget: snap.totalBudget ?? 0,
+          actualSpending: snap.actualSpending ?? [],
+          budgetAllocation: snap.budgetAllocation ?? [],
+          expenses: snap.expenses ?? [],
         });
-
-        return Array.from(totals.entries()).map(([name, value]) => ({ name, value }));
-      })()
-    : [];
-
-  const snapshotTotalExpenses = snapshotActualSpendingFromExpenses.reduce(
-    (sum, item) => sum + item.value,
-    0,
-  );
-
-  const displayedData: DashboardData | null = selectedSnapshot
-    ? {
-        healthScore: snapshotViewData?.healthScore ?? selectedSnapshot.healthScore,
-        takeHome: snapshotViewData?.takeHome ?? selectedSnapshot.takeHomePay,
-        totalBudget: snapshotViewData?.totalBudget ?? selectedSnapshot.categories.reduce(
-          (sum, c) => sum + c.budget,
-          0,
-        ),
-        budgetLeft: snapshotViewData?.budgetLeft ?? (
-          selectedSnapshot.categories.reduce((sum, c) => sum + c.budget, 0) -
-          snapshotTotalExpenses
-        ),
-        budgetAllocation: snapshotViewData?.budgetAllocation ?? selectedSnapshot.categories.map((c) => ({
-          name: c.name,
-          value: c.budget,
-        })),
-        actualSpending: snapshotActualSpendingFromExpenses,
-        expenses: snapshotViewData?.expenses ?? snapshotExpenses,
       }
-    : data;
+    }
+  }, [snapshotIndex, snapshots, dashboardData]);
 
-  const monthlyTakeHome = displayedData
-    ? displayedData.takeHome / 12
-    : 0;
+  useEffect(() => {
+    if (!token || hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    const fetchAll = async () => {
+      try {
+        const [dashRes, profileRes, snapshotRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/v1/snapshots`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        mergeDashboardData(dashRes.data);
+        setProfile(profileRes.data);
+        if (Array.isArray(snapshotRes.data)) setSnapshots(snapshotRes.data);
+        setLoading(false);
+        try {
+          const forecastData = await getForecast(token);
+          setForecast(forecastData);
+        } catch (_) {}
+      } catch (err) {
+        setError("Failed to load dashboard. Please refresh.");
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, [token, mergeDashboardData]);
 
-  const incomeBudgetLeft = displayedData?.budgetLeft ?? 0;
+  useEffect(() => {
+    if (token && currentUser) {
+      return attachDashboardDebug({ token, userId: currentUser.uid, onDashboardData: mergeDashboardData });
+    }
+  }, [token, currentUser, mergeDashboardData]);
 
-  const visibleTips = displayedData?.adzunaTips
-    ? showAllTips
-      ? displayedData.adzunaTips
-      : displayedData.adzunaTips.slice(0, 3)
-    : [];
+  useSocket(token, (event: any) => {
+    if (event?.type === "budget:update" && event?.dashboard) mergeDashboardData(event.dashboard);
+  });
 
-  const hasMoreTips = (displayedData?.adzunaTips?.length || 0) > 3;
-
-  // delete expense
   const deleteExpense = async (expenseId: string) => {
+    if (!token) return;
     try {
       const res = await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       if (res.data?.dashboard) {
         mergeDashboardData(res.data.dashboard);
-      }
-
-      if (res.data?.forecast) {
-        setForecast(res.data.forecast);
-      }
-
-      if (isSnapshotMode && selectedSnapshot) {
-        setSnapshotExpensesLoaded(true);
-        setSnapshotExpenses((prev) => prev.filter((expense) => expense._id !== expenseId));
-        void refreshSnapshotViewData();
-      }
-
-      broadcastDashboardSync("expense:delete");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  type ExpenseForm = {
-    category: string;
-    amount: number;
-    date: string;
-    note: string;
-  };
-
-  const updateExpense = async (expenseId: string, editForm: ExpenseForm) => {
-    try {
-      const res = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
-        {
-          category: editForm.category,
-          amount: editForm.amount,
-          date: editForm.date,
-          note: editForm.note,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (res.data?.dashboard) {
-        mergeDashboardData(res.data.dashboard);
+        if (res.data?.forecast) setForecast(res.data.forecast);
       } else {
-        setData((prev) => {
-          if (!prev) return prev;
-
-          return {
-            ...prev,
-            expenses: prev.expenses?.map((exp) =>
-              exp._id === expenseId
-                ? {
-                    ...exp,
-                    category: editForm.category,
-                    amount: editForm.amount,
-                    date: editForm.date,
-                    note: editForm.note,
-                    month: new Date(editForm.date).getMonth() + 1,
-                    year: new Date(editForm.date).getFullYear(),
-                  }
-                : exp,
-            ),
-          };
-        });
-      }
-
-      if (res.data?.forecast) {
-        setForecast(res.data.forecast);
-      }
-
-      if (isSnapshotMode && selectedSnapshot) {
-        const selectedMonth = Number(selectedSnapshot.month);
-        const selectedYear = Number(selectedSnapshot.year);
-
-        setSnapshotExpensesLoaded(true);
-        setSnapshotExpenses((prev) =>
-          prev.flatMap((expense) => {
-            if (expense._id !== expenseId) return [expense];
-
-            const editedDate = new Date(editForm.date);
-            const editedMonth = editedDate.getMonth() + 1;
-            const editedYear = editedDate.getFullYear();
-
-            if (editedMonth !== selectedMonth || editedYear !== selectedYear) {
-              return [];
-            }
-
-            return [{
-              ...expense,
-              category: editForm.category,
-              amount: editForm.amount,
-              date: editForm.date,
-              note: editForm.note,
-              month: editedMonth,
-              year: editedYear,
-            }];
-          }),
+        setDisplayedData(prev =>
+          prev ? { ...prev, expenses: (prev.expenses || []).filter(e => e._id !== expenseId) } : prev,
         );
-        void refreshSnapshotViewData();
       }
+      broadcastDashboardSync("expense:delete");
+      void refreshSnapshotViewData();
+    } catch (err) { console.error(err); }
+  };
 
+  const updateExpense = async (expenseId: string, editForm: any) => {
+    if (!token) return;
+    try {
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/v1/expenses/${expenseId}`,
+        editForm,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (res.data?.dashboard) {
+        mergeDashboardData(res.data.dashboard);
+        if (res.data?.forecast) setForecast(res.data.forecast);
+      }
+      const d = new Date(editForm.date + "T00:00:00");
+      const editedMonth = d.getMonth() + 1;
+      const editedYear = d.getFullYear();
+      setDisplayedData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          expenses: (prev.expenses || []).map(e =>
+            e._id !== expenseId ? e : {
+              ...e, category: editForm.category, amount: editForm.amount,
+              date: editForm.date, note: editForm.note, month: editedMonth, year: editedYear,
+            },
+          ),
+        };
+      });
+      void refreshSnapshotViewData();
       broadcastDashboardSync("expense:update");
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handleDismissForecastWarning = async (warningId: string) => {
     try {
-      setForecast((prev) => {
-        if (!prev) return prev;
-
-        return {
-          ...prev,
-          warnings: prev.warnings.filter((warning) => warning.id !== warningId),
-        };
-      });
-
+      setForecast(prev => prev
+        ? { ...prev, warnings: prev.warnings.filter(w => w.id !== warningId) }
+        : prev);
       await dismissForecastWarning(warningId, token);
-    } catch (err) {
-      console.error("[Dashboard] Failed to dismiss forecast warning:", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-
-
-  // useEffect for pop-up on first log-in of the month
   useEffect(() => {
     if (!currentUser || snapshots.length === 0) return;
-
     const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-
-    // snapshot is always previous month
-    const snapshotMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-    const snapshotYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-
-    const latestSnapshot = snapshots.find(
-      (s) => s.month === snapshotMonth && s.year === snapshotYear,
-    );
-
-    if (!latestSnapshot) return;
-
-    const snapshotCreatedAt = Date.parse(latestSnapshot.createdAt || "");
-    const isFreshReseedSnapshot =
-      Number.isFinite(snapshotCreatedAt) &&
-      now.getTime() - snapshotCreatedAt <= 24 * 60 * 60 * 1000;
-    const isFirstDayOfMonth = now.getDate() === 1;
-
-    // Normal behavior: only show on day 1.
-    // Reseed behavior: allow once if previous-month snapshot was freshly regenerated.
-    if (!isFirstDayOfMonth && !isFreshReseedSnapshot) {
-      return;
-    }
-
-    const popupSeenKey = `snapshotSeen_${currentUser.uid}_${snapshotMonth}_${snapshotYear}_${Number.isFinite(snapshotCreatedAt) ? snapshotCreatedAt : "na"}`;
-    const alreadySeenLocally = localStorage.getItem(popupSeenKey);
-    const alreadySeenOnServer = Boolean(profile?.seenSnapshotPopupKeys?.includes(popupSeenKey));
-
-    if (alreadySeenLocally || alreadySeenOnServer) {
-      return;
-    }
-
-    setPopupSnapshot(latestSnapshot);
-    setActiveSnapshotPopupKey(popupSeenKey);
+    const cm = now.getMonth() + 1;
+    const cy = now.getFullYear();
+    const sm = cm === 1 ? 12 : cm - 1;
+    const sy = cm === 1 ? cy - 1 : cy;
+    const latest = snapshots.find(s => s.month === sm && s.year === sy);
+    if (!latest) return;
+    const cat = Date.parse(latest.createdAt || "");
+    const fresh = Number.isFinite(cat) && now.getTime() - cat <= 86400000;
+    if (!fresh && now.getDate() !== 1) return;
+    const key = `snapshotSeen_${currentUser.uid}_${sm}_${sy}_${Number.isFinite(cat) ? cat : "na"}`;
+    if (localStorage.getItem(key) || profile?.seenSnapshotPopupKeys?.includes(key)) return;
+    setPopupSnapshot(latest);
+    setActiveSnapshotPopupKey(key);
     setShowSnapshotPopup(true);
   }, [snapshots, currentUser, profile?.seenSnapshotPopupKeys]);
 
   const handleCloseSnapshotPopup = async () => {
-    const popupSeenKey = activeSnapshotPopupKey;
-
-    if (popupSeenKey && token) {
-      localStorage.setItem(popupSeenKey, "true");
-
+    if (activeSnapshotPopupKey && token) {
+      localStorage.setItem(activeSnapshotPopupKey, "true");
       try {
         await axios.post(
           `${import.meta.env.VITE_API_URL}/api/v1/snapshots/popup-seen`,
-          { popupKey: popupSeenKey },
+          { popupKey: activeSnapshotPopupKey },
           { headers: { Authorization: `Bearer ${token}` } },
         );
-      } catch (err) {
-        console.error("[Dashboard] Failed to persist snapshot popup state:", err);
-      }
+      } catch (_) {}
     }
-
     setShowSnapshotPopup(false);
     setActiveSnapshotPopupKey(null);
   };
 
-  const getTipColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "#f4effd";
-      case "medium":
-        return "#ede8f8";
-      case "low":
-        return COLORS.purple200;
-      default:
-        return COLORS.purple100;
-    }
-  };
-
-  const getTipBorderColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return COLORS.gold;
-      case "medium":
-        return COLORS.purple500;
-      case "low":
-        return COLORS.purple600;
-      default:
-        return COLORS.textMuted;
-    }
-  };
+  const healthScore = displayedData?.healthScore ?? 0;
+  const healthColor = healthScore < 40 ? "text-red-500" : healthScore < 70 ? "text-amber-500" : "text-emerald-500";
+  const healthVariant = (healthScore < 40 ? "danger" : healthScore < 70 ? "warning" : "success") as "danger" | "warning" | "success";
 
   if (error) {
     return (
       <div className="app-page">
         <TopNav />
-        <div className="dashboard-shell">
-          <div className="dashboard-streak-warning">{error}</div>
-        </div>
-        <GroqChat />
-      </div>
-    );
-  }
-
-  if (!displayedData) {
-    return (
-      <div className="app-page">
-        <TopNav />
-        <div className="dashboard-shell">
-          <div className="dashboard-snapshot-banner">
-            <p className="dashboard-snapshot-copy">Loading dashboard...</p>
-          </div>
+        <div className="max-w-screen-lg mx-auto px-4 mt-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 font-semibold">{error}</div>
         </div>
         <GroqChat />
       </div>
@@ -746,317 +362,308 @@ const Dashboard = () => {
     <div className="app-page">
       <TopNav />
       {!isSnapshotMode && (
-        <ForecastWarningPopup
-          warnings={forecast?.warnings || []}
-          onDismiss={handleDismissForecastWarning}
-        />
+        <ForecastWarningPopup warnings={forecast?.warnings || []} onDismiss={handleDismissForecastWarning} />
       )}
-      <div className="dashboard-shell">
-        {showStreakWarning && (
-          <div className="dashboard-streak-warning">
-            ⚠️ Complete a quiz this week to keep your streak alive
-          </div>
-        )}
 
-        {isSnapshotMode && selectedSnapshot && (
-          <div
-            className="dashboard-snapshot-banner"
-            data-onboarding="dashboard-takehome"
-          >
-            <h3 className="dashboard-snapshot-title">
-              Snapshot of {snapshots[snapshotIndex].month}/
-              {snapshots[snapshotIndex].year}
-            </h3>
-            <p className="dashboard-snapshot-copy">
-              Viewing archived values for this month.
-            </p>
-          </div>
-        )}
-
-        <div className="dashboard-hero" data-onboarding="dashboard-takehome">
-          <div>
-            <p className="dashboard-hero-eyebrow">Monthly snapshot</p>
-            <h2 className="dashboard-hero-title">Your money at a glance</h2>
-          </div>
-          <div className="dashboard-hero-pill-wrap">
-            <span className="dashboard-hero-pill">
-              Take-home: {formatCurrency(monthlyTakeHome)}
-            </span>
-            <span className="dashboard-hero-pill">
-              Budget: {formatCurrency(displayedData.totalBudget)}
-            </span>
-          </div>
-        </div>
-
-        <section className="dashboard-kpi-grid">
-          <div className="dashboard-kpi-card" data-onboarding="dashboard-health-score">
-            <p className="dashboard-kpi-label">Health score</p>
-            <p
-              className="dashboard-kpi-value"
-              style={{
-                color:
-                  displayedData.healthScore < 40
-                    ? COLORS.error
-                    : displayedData.healthScore < 70
-                      ? COLORS.gold
-                      : COLORS.purple500,
-              }}
-            >
-              {displayedData.healthScore}
-            </p>
-
-            {!isSnapshotMode && (
-              <button
-                type="button"
-                onClick={() => setShowBreakdown(true)}
-                data-onboarding="dashboard-health-breakdown-trigger"
-                className="dashboard-link-button"
-              >
-                See breakdown
-              </button>
-            )}
-          </div>
-
-          <div className="dashboard-kpi-card">
-            <p className="dashboard-kpi-label">Monthly take-home</p>
-            <p className="dashboard-kpi-value">{formatCurrency(monthlyTakeHome)}</p>
-          </div>
-
-          <div className="dashboard-kpi-card">
-            <p className="dashboard-kpi-label">Budget left</p>
-            <p className="dashboard-kpi-value">{formatCurrency(incomeBudgetLeft)}</p>
-          </div>
-
-          <div className="dashboard-kpi-card" data-onboarding="dashboard-budget-vs-actual">
-            <p className="dashboard-kpi-label">Budget status</p>
-            <p className="dashboard-kpi-value dashboard-kpi-status">
-              {incomeBudgetLeft >= 0
-                ? `Under budget by ${formatCurrency(incomeBudgetLeft)}`
-                : `Over budget by ${formatCurrency(Math.abs(incomeBudgetLeft))}`}
-            </p>
-          </div>
-
-          {displayedData.averageSalary && (
-            <div className="dashboard-kpi-card">
-              <p className="dashboard-kpi-label">Market salary</p>
-              <p className="dashboard-kpi-value">
-                £{displayedData.averageSalary.toLocaleString()}
-              </p>
-              <p className="dashboard-kpi-meta">Average for your role</p>
-            </div>
-          )}
-        </section>
-
-        <section className="dashboard-main-grid">
-          <div className="dashboard-chart-card" data-onboarding="dashboard-allocation">
-            <div className="dashboard-card-header">
-              <h4 className="dashboard-card-title">Budget Allocation</h4>
-              {/*disable if snapshot mode*/}
-              {!isSnapshotMode && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate("/payslip?mode=edit", {
-                      state: {
-                        prefillJobTitle:
-                          typeof profile?.payslipData?.jobTitle === "string"
-                            ? profile.payslipData.jobTitle
-                            : "",
-                        prefillLocation:
-                          typeof profile?.payslipData?.location === "string"
-                            ? profile.payslipData.location
-                            : "",
-                      },
-                    })
-                  }
-                  className="dashboard-chip-button"
-                >
-                  Edit Payslip/Budget
-                </button>
-              )}
-              {/*disable if snapshot mode*/}
-            </div>
-            <div className="dashboard-chart-wrap">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                  <Pie
-                    data={displayedData.budgetAllocation || []}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={92}
-                  >
-                    {(displayedData.budgetAllocation || []).map((entry, index) => (
-                      <Cell
-                        key={`${entry.name || "category"}-${index}`}
-                        fill={getCategoryColor(entry.name)}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={28} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="dashboard-chart-card" data-onboarding="dashboard-actual-spending">
-            <div className="dashboard-card-header">
-              <h4 className="dashboard-card-title">Actual Spending</h4>
-            </div>
-            <div className="dashboard-chart-wrap">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                  <Pie
-                    data={displayedData.actualSpending || []}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={92}
-                  >
-                    {(displayedData.actualSpending || []).map((entry, index) => (
-                      <Cell
-                        key={`${entry.name || "category"}-${index}`}
-                        fill={getCategoryColor(entry.name)}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={28} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Embed the Expenses form, using the budgetAllocation categories from Dashboard */}
-          {showExpenses && (
-            <div
-              className="dashboard-expenses-panel"
-              data-onboarding="dashboard-embedded-expenses"
-            >
-              <div className="dashboard-card-header">
-                <h4 className="dashboard-card-title">Quick expense log</h4>
-              </div>
-              <Expenses
-                categories={displayedData.budgetAllocation}
-                onExpenseCreated={(dashboard, forecastPayload) => {
-                  if (dashboard) {
-                    mergeDashboardData(dashboard);
-                  }
-
-                  if (forecastPayload) {
-                    setForecast(forecastPayload);
-                  }
-
-                  broadcastDashboardSync("expense:create");
-                }}
-              />
-            </div>
-          )}
-        </section>
-
-        {/* expense breakdown toggle / snapshot behaviour */}
-        {isSnapshotMode ? (
-          <ExpenseBreakdown
-            expenses={displayedData.expenses || []}
-            budgetAllocation={displayedData.budgetAllocation || []}
-            onDelete={deleteExpense}
-            onUpdate={updateExpense}
-          />
+      <div className="max-w-screen-xl mx-auto px-4 pb-16">
+        {loading ? (
+          <div className="mt-4"><SkeletonDashboard /></div>
         ) : (
-          <div className="dashboard-expense-breakdown-area">
-            <button
-              type="button"
-              onClick={() => setShowExpenseBreakdown((prev) => !prev)}
-              className="dashboard-primary-button"
-            >
-              {showExpenseBreakdown
-                ? "Hide expense breakdown"
-                : "See expense breakdown"}
-            </button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-6">
 
-            {showExpenseBreakdown && (
-              <ExpenseBreakdown
-                expenses={displayedData.expenses || []}
-                budgetAllocation={displayedData.budgetAllocation || []}
-                onDelete={deleteExpense}
-                onUpdate={updateExpense}
-              />
+            {/* Streak warning */}
+            {showStreakWarning && (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 font-medium">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                Complete a quiz this week to keep your streak alive
+              </div>
             )}
-          </div>
-        )}
 
-        <div className="dashboard-snapshot-nav-wrap">
-          <SnapshotNavigator
-            snapshots={snapshots}
-            snapshotIndex={snapshotIndex}
-            setSnapshotIndex={setSnapshotIndex}
-          />
-        </div>
+            {/* Snapshot banner */}
+            {isSnapshotMode && selectedSnapshot && (
+              <div className="bg-purple-100 border border-purple-300 rounded-lg px-5 py-4" data-onboarding="dashboard-takehome">
+                <h3 className="text-purple-700 font-semibold">
+                  Snapshot: {snapshots[snapshotIndex].month}/{snapshots[snapshotIndex].year}
+                </h3>
+                <p className="text-purple-500 text-sm mt-0.5">Viewing archived values for this month.</p>
+              </div>
+            )}
 
-        {/* Adzuna Tips Section */}
-        {displayedData.adzunaTips && displayedData.adzunaTips.length > 0 && (
-          <div
-            className="dashboard-tips"
-            data-onboarding="dashboard-adzuna-tips"
-          >
-            <div className="dashboard-tips-header">
-              <h3 className="dashboard-tips-title">
-                Financial Tips Based on Market Data
-              </h3>
-              <div className="dashboard-tips-controls">
-                <span className="dashboard-tips-count">
-                  {displayedData.adzunaTips.length} tip
-                  {displayedData.adzunaTips.length === 1 ? "" : "s"}
-                </span>
-                {hasMoreTips && (
-                  <button
-                    type="button"
-                    className="dashboard-secondary-button"
-                    onClick={() => setShowAllTips((prev) => !prev)}
-                  >
-                    {showAllTips ? "Show fewer" : "Show all"}
-                  </button>
+            {/* Hero banner */}
+            <div className="relative overflow-hidden rounded-xl border border-purple-300 bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-white shadow-lg" data-onboarding="dashboard-takehome">
+              <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/10" />
+              <div className="absolute -bottom-6 -left-4 h-32 w-32 rounded-full bg-yellow-400/20" />
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-purple-200 text-sm font-semibold uppercase tracking-wider mb-1">Monthly overview</p>
+                  <h2 className="text-2xl font-bold">Your money at a glance</h2>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <span className="inline-flex items-center gap-2 bg-white/20 rounded-pill px-4 py-2 text-sm font-semibold">
+                    <DollarSign className="h-4 w-4" />
+                    Take-home: {formatGBP(monthlyTakeHome)}
+                  </span>
+                  <span className="inline-flex items-center gap-2 bg-white/20 rounded-pill px-4 py-2 text-sm font-semibold">
+                    Budget: {formatGBP(displayedData?.totalBudget)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <KpiCard
+                label="Health score"
+                value={String(healthScore)}
+                meta={healthScore < 40 ? "Needs attention" : healthScore < 70 ? "Room to improve" : "Looking great"}
+                icon={Heart}
+                accentColor={healthColor}
+                highlight
+                onClick={!isSnapshotMode ? () => setShowBreakdown(true) : undefined}
+                dataOnboarding="dashboard-health-score"
+              />
+              <KpiCard
+                label="Take-home"
+                value={formatGBP(monthlyTakeHome)}
+                icon={DollarSign}
+                dataOnboarding="dashboard-takehome"
+              />
+              <KpiCard
+                label="Budget remaining"
+                value={formatGBP(incomeBudgetLeft)}
+                icon={PiggyBank}
+                accentColor={incomeBudgetLeft < 0 ? "text-red-500" : "text-emerald-600"}
+              />
+              <KpiCard
+                label="Budget status"
+                value={incomeBudgetLeft >= 0 ? "Under budget" : "Over budget"}
+                meta={incomeBudgetLeft >= 0
+                  ? `${formatGBP(incomeBudgetLeft)} remaining`
+                  : `${formatGBP(Math.abs(incomeBudgetLeft))} over`}
+                icon={incomeBudgetLeft >= 0 ? TrendingDown : TrendingUp}
+                accentColor={incomeBudgetLeft >= 0 ? "text-emerald-600" : "text-red-500"}
+                dataOnboarding="dashboard-budget-vs-actual"
+              />
+              {displayedData?.averageSalary && (
+                <KpiCard
+                  label="Market salary"
+                  value={"\xA3" + displayedData.averageSalary.toLocaleString()}
+                  meta="Average for your role"
+                  icon={BarChart2}
+                />
+              )}
+            </div>
+
+            {/* Health progress bar */}
+            <div className="bg-white border border-purple-200 rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold text-purple-700">Financial Health Score</h4>
+                <Badge variant={healthVariant}>{healthScore}/100</Badge>
+              </div>
+              <Progress value={healthScore} variant={healthVariant} size="lg" showLabel />
+            </div>
+
+            {/* Chart view toggle + charts */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-purple-700">Budget Analysis</h3>
+              <div className="flex items-center gap-1 bg-purple-100 rounded-md p-1">
+                <button
+                  onClick={() => setChartView("pie")}
+                  className={cn("px-3 py-1 rounded text-xs font-semibold transition-colors", chartView === "pie" ? "bg-white text-purple-700 shadow-sm" : "text-gecko-muted hover:text-purple-600")}
+                >
+                  Pie
+                </button>
+                <button
+                  onClick={() => setChartView("bar")}
+                  className={cn("px-3 py-1 rounded text-xs font-semibold transition-colors", chartView === "bar" ? "bg-white text-purple-700 shadow-sm" : "text-gecko-muted hover:text-purple-600")}
+                >
+                  Bar
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Budget Allocation */}
+              <div className="bg-white border border-purple-200 rounded-lg p-5" data-onboarding="dashboard-allocation">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-semibold text-purple-700">Budget Allocation</h4>
+                  {!isSnapshotMode && (
+                    <Button variant="ghost" size="sm" onClick={() => navigate("/payslip?mode=edit", { state: { prefillJobTitle: profile?.payslipData?.jobTitle ?? "", prefillLocation: profile?.payslipData?.location ?? "" } })}>
+                      <Edit2 className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                  )}
+                </div>
+                {chartView === "pie" ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie data={displayedData?.budgetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
+                        {(displayedData?.budgetAllocation || []).map((entry, i) => (
+                          <Cell key={`alloc-${i}`} fill={getCategoryColor(entry.name)} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
+                      <Legend verticalAlign="bottom" height={24} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={displayedData?.budgetAllocation || []} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ede8f8" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {(displayedData?.budgetAllocation || []).map((entry, i) => (
+                          <Cell key={`alloc-bar-${i}`} fill={getCategoryColor(entry.name)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              {/* Actual Spending */}
+              <div className="bg-white border border-purple-200 rounded-lg p-5" data-onboarding="dashboard-actual-spending">
+                <h4 className="text-sm font-semibold text-purple-700 mb-4">Actual Spending</h4>
+                {chartView === "pie" ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie data={displayedData?.actualSpending || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
+                        {(displayedData?.actualSpending || []).map((entry, i) => (
+                          <Cell key={`spend-${i}`} fill={getCategoryColor(entry.name)} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
+                      <Legend verticalAlign="bottom" height={24} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={displayedData?.actualSpending || []} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ede8f8" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(v: any) => ["\xA3" + Number(v).toFixed(2)]} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {(displayedData?.actualSpending || []).map((entry, i) => (
+                          <Cell key={`spend-bar-${i}`} fill={getCategoryColor(entry.name)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
               </div>
             </div>
-            <div className="dashboard-tips-list">
-              {visibleTips.map((tip, index) => (
-                <div
-                  key={`tip-${index}`}
-                  className="dashboard-tip-card"
-                  style={{
-                    backgroundColor: getTipColor(tip.priority),
-                    borderLeft: `4px solid ${getTipBorderColor(tip.priority)}`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateX(4px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateX(0)";
-                  }}
-                >
-                  <h5
-                    className="dashboard-tip-title"
-                  >
-                    {tip.title}
-                  </h5>
-                  <p className="dashboard-tip-description">
-                    {tip.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-            {hasMoreTips && !showAllTips && (
-              <p className="dashboard-tips-footnote">
-                Showing 3 most relevant tips. Use "Show all" to view the rest.
-              </p>
+
+            {/* Quick expense log */}
+            {!isSnapshotMode && (
+              <div>
+                <Button variant="secondary" size="md" onClick={() => setShowExpenses(v => !v)} className="mb-3">
+                  {showExpenses ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                  {showExpenses ? "Hide expense form" : "Log new expense"}
+                </Button>
+                <AnimatePresence>
+                  {showExpenses && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                      data-onboarding="dashboard-embedded-expenses"
+                    >
+                      <Expenses
+                        categories={displayedData?.budgetAllocation}
+                        onExpenseCreated={(dashboard, forecastPayload) => {
+                          if (dashboard) mergeDashboardData(dashboard);
+                          if (forecastPayload) setForecast(forecastPayload);
+                          broadcastDashboardSync("expense:create");
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
-          </div>
+
+            {/* Expense breakdown */}
+            {isSnapshotMode ? (
+              <ExpenseBreakdown
+                expenses={displayedData?.expenses || []}
+                budgetAllocation={displayedData?.budgetAllocation || []}
+                onDelete={deleteExpense}
+                onUpdate={updateExpense}
+              />
+            ) : (
+              <div>
+                <Button variant="outline" size="md" onClick={() => setShowExpenseBreakdown(v => !v)} className="mb-3">
+                  {showExpenseBreakdown ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                  {showExpenseBreakdown ? "Hide expenses" : "View all expenses"}
+                </Button>
+                <AnimatePresence>
+                  {showExpenseBreakdown && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <ExpenseBreakdown
+                        expenses={displayedData?.expenses || []}
+                        budgetAllocation={displayedData?.budgetAllocation || []}
+                        onDelete={deleteExpense}
+                        onUpdate={updateExpense}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            <SnapshotNavigator snapshots={snapshots} snapshotIndex={snapshotIndex} setSnapshotIndex={setSnapshotIndex} />
+
+            {/* Market tips */}
+            {(displayedData?.adzunaTips?.length ?? 0) > 0 && (
+              <div className="space-y-4" data-onboarding="dashboard-adzuna-tips">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-purple-700">Market-based Financial Tips</h3>
+                  <Badge variant="outline">{displayedData!.adzunaTips!.length} tips</Badge>
+                </div>
+                <div className="space-y-3">
+                  {visibleTips.map((tip, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={cn(
+                        "rounded-lg border-l-4 p-4",
+                        tip.priority === "high"
+                          ? "bg-amber-50 border-yellow-400"
+                          : tip.priority === "medium"
+                            ? "bg-purple-50 border-purple-400"
+                            : "bg-purple-100/60 border-purple-300",
+                      )}
+                    >
+                      <p className="text-sm font-semibold text-purple-700 mb-1">{tip.title}</p>
+                      <p className="text-sm text-gecko-muted">{tip.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
+                {hasMoreTips && (
+                  <Button variant="ghost" size="sm" onClick={() => setShowAllTips(v => !v)}>
+                    {showAllTips ? "Show fewer" : `Show all ${displayedData!.adzunaTips!.length} tips`}
+                    {showAllTips ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                )}
+              </div>
+            )}
+
+          </motion.div>
         )}
       </div>
+
       <GroqChat />
       <TooltipGuide
         isOpen={isOnboardingOpen}
@@ -1066,17 +673,9 @@ const Dashboard = () => {
         onComplete={completeGuide}
         onGoToStep={goToStep}
       />
-      {/*breakdown disable for snapshot test*/}
       {!isSnapshotMode && (
-        <BreakdownPanel
-          isOpen={showBreakdown}
-          onClose={() => setShowBreakdown(false)}
-          breakdown={displayedData.healthBreakdown || null}
-        />
+        <BreakdownPanel isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} breakdown={displayedData?.healthBreakdown || null} />
       )}
-      {/*breakdown disable for snapshot test*/}
-
-      {/* snapshot popup for first login of month */}
       {showSnapshotPopup && popupSnapshot && (
         <Modal onClose={handleCloseSnapshotPopup}>
           <MonthlySnapshot snapshot={popupSnapshot} />

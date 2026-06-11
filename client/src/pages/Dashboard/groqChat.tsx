@@ -1,206 +1,194 @@
-//could be moved to components if resued elsewher to dashboard?
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { MessageCircle, X, Send, Trash2, Bot, User, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { BsChatDots, BsSend } from "react-icons/bs";
-import { BiX } from "react-icons/bi";
-import ReactMarkdown from "react-markdown";
-import { COLORS } from "../../constants/theme";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../../lib/utils";
 
 type Message = {
-  role: "user" | "bot";
+  role: "user" | "assistant";
   content: string;
+  streaming?: boolean;
+};
+
+const WELCOME: Message = {
+  role: "assistant",
+  content: "Hi! I'm your Gecko AI finance assistant. I can answer questions about your spending, budgeting, and savings goals. What would you like to know?",
 };
 
 const GroqChat = () => {
   const { token } = useAuth();
-
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const Markdown = ReactMarkdown as any;
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<(() => void) | null>(null);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+
+  // Load history when chat opens for the first time
+  useEffect(() => {
+    if (!isOpen || historyLoaded || !token) return;
+    const loadHistory = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/chat/history`, { headers: { Authorization: `Bearer ${token}` } });
+        const msgs: Message[] = res.data.messages || [];
+        if (msgs.length > 0) {
+          setMessages(msgs.map((m) => ({ role: m.role, content: m.content })));
+        }
+        setHistoryLoaded(true);
+      } catch { /* ignore - use in-memory state */ }
+    };
+    loadHistory();
+  }, [isOpen, historyLoaded, token]);
+
+  const clearHistory = async () => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/chat/history`, { headers: { Authorization: `Bearer ${token}` } });
+    } catch { /* ignore */ }
+    setMessages([WELCOME]);
+  };
 
   const sendMessage = async () => {
-    if (!input.trim()) return; //no blank mesages allowed!
-    const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]); //adds to previous messages mmediately
-    setInput(""); //clear nput
-    setIsTyping(true);
+    const text = input.trim();
+    if (!text || isStreaming) return;
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+
+    // Add placeholder assistant message for streaming
+    setMessages((prev) => [...prev, { role: "assistant", content: "", streaming: true }]);
+    setIsStreaming(true);
+
+    const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/chat/stream`;
 
     try {
-      const res = await axios.post(
-        //as requested in 'tehcnical notes' on JIRA
-        `${import.meta.env.VITE_API_URL}/api/v1/chat`,
-        { message: userMessage.content },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      const aiMessage: Message = {
-        role: "bot",
-        content: res.data.reply,
-      };
-      setMessages((prev) => [...prev, aiMessage]); //adds to message history
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!res.ok || !res.body) throw new Error("Stream failed");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let cancelled = false;
+
+      abortRef.current = () => { cancelled = true; reader.cancel(); };
+
+      while (!cancelled) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const raw = decoder.decode(value, { stream: true });
+        const lines = raw.split("\n").filter((l) => l.startsWith("data: "));
+        for (const line of lines) {
+          try {
+            const payload = JSON.parse(line.slice(6));
+            if (payload.done) { cancelled = true; break; }
+            if (payload.error) {
+              setMessages((prev) => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: "Sorry, something went wrong.", streaming: false } : m));
+              cancelled = true;
+              break;
+            }
+            if (payload.token) {
+              setMessages((prev) => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: m.content + payload.token } : m));
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+
+      // Mark streaming done
+      setMessages((prev) => prev.map((m, i) => i === prev.length - 1 ? { ...m, streaming: false } : m));
     } catch (err) {
-      //fallback
-      console.error(err);
-      setMessages((prev) => [
-        ...prev,
-        { role: "bot", content: "Error getting response." },
-      ]); //adds 'error getting response' to previous messages
+      // Fallback to non-streaming
+      try {
+        const fallback = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/chat`, { message: text }, { headers: { Authorization: `Bearer ${token}` } });
+        setMessages((prev) => prev.map((m, i) => i === prev.length - 1 ? { role: "assistant", content: fallback.data.reply, streaming: false } : m));
+      } catch {
+        setMessages((prev) => prev.map((m, i) => i === prev.length - 1 ? { role: "assistant", content: "Sorry, I couldn't connect to the AI service right now.", streaming: false } : m));
+      }
     } finally {
-      setIsTyping(false); //'is typing...' mst stop regarldess of success or fail
+      setIsStreaming(false);
+      abortRef.current = null;
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   return (
     <>
-      {/*This is chat button*/}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Open Groq chat assistant"
-        title="Ask Gecko AI"
-        style={{
-          position: "fixed",
-          bottom: 18,
-          right: 16,
-          width: 60,
-          height: 60,
-          borderRadius: "50%",
-          background: COLORS.purple500,
-          color: COLORS.textInverse,
-          border: "none",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 8px 20px rgba(92, 63, 163, 0.35)",
-          zIndex: 2600,
-        }}
-      >
-        {/*imported react icons, it looks awesome so hope thats allowed...*/}
-        <BsChatDots size={26} />
-      </button>
+      {/* FAB */}
+      <motion.button whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen((v) => !v)} aria-label="Open AI chat assistant"
+        className="fixed bottom-5 right-4 w-14 h-14 rounded-full bg-purple-700 text-white border-none cursor-pointer flex items-center justify-center shadow-pop z-[2600]">
+        <AnimatePresence mode="wait">
+          {isOpen
+            ? <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}><X className="w-6 h-6" /></motion.span>
+            : <motion.span key="chat" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}><MessageCircle className="w-6 h-6" /></motion.span>
+          }
+        </AnimatePresence>
+      </motion.button>
 
-      {isOpen && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 92,
-            right: 16,
-            width: "min(320px, calc(100vw - 24px))",
-            height: "min(420px, calc(100vh - 128px))",
-            maxHeight: "calc(100vh - 128px)",
-            background: COLORS.purple100,
-            borderRadius: 12,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            boxShadow: "0 12px 28px rgba(26, 16, 64, 0.25)",
-            zIndex: 2600,
-          }}
-        >
-          {/*Title updated to match Groq branding*/}
-          <div
-            style={{
-              padding: 10,
-              background: COLORS.purple600,
-              color: COLORS.textInverse,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <strong>Groq API Assistant</strong>
-            <button
-              onClick={() => setIsOpen(false)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: COLORS.textInverse,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {/*imported cross icon*/}
-              <BiX size={20} />
-            </button>
-          </div>
-
-          {/*message styling to get that response colours and typing...*/}
-          <div style={{ flex: 1, padding: 10, overflowY: "auto" }}>
-            {" "}
-            {/*overflow allows scrolling!*/}
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    msg.role === "user" ? "flex-end" : "flex-start",
-                  marginBottom: 10,
-                }}
-              >
-                {/*user aligns right, 'bot' left*/}
-                <span
-                  style={{
-                    padding: "10px",
-                    borderRadius: 16,
-                    maxWidth: "80%",
-                    background:
-                      msg.role === "user" ? COLORS.purple500 : COLORS.purple50,
-                    color:
-                      msg.role === "user"
-                        ? COLORS.textInverse
-                        : COLORS.textPrimary,
-                  }}
-                >
-                  <Markdown>{msg.content}</Markdown>
-                </span>
+      {/* Chat panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ opacity: 0, y: 16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 16, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-24 right-4 z-[2600] flex flex-col rounded-2xl overflow-hidden shadow-pop border border-purple-200"
+            style={{ width: "min(340px, calc(100vw - 24px))", height: "min(480px, calc(100vh - 136px))", fontFamily: "Manrope, Segoe UI, Arial, sans-serif" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-purple-700 text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Bot className="w-5 h-5 text-purple-200" />
+                <div>
+                  <p className="text-sm font-bold leading-none">Gecko AI</p>
+                  <p className="text-[10px] text-purple-300 mt-0.5">Finance assistant</p>
+                </div>
               </div>
-            ))}
-            {isTyping && (
-              <div style={{ fontSize: 15, color: COLORS.textMuted }}>Typing...</div>
-            )}
-          </div>
+              <button type="button" onClick={clearHistory} title="Clear history" className="p-1.5 rounded-lg text-purple-300 hover:text-white hover:bg-purple-600 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
 
-          {/*user inputting*/}
-          <div style={{ display: "flex", padding: 10 }}>
-            <input
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Type message..."
-              style={{
-                flex: 1,
-                padding: 10,
-                borderRadius: 20,
-                border: `1px solid ${COLORS.purple300}`,
-                background: COLORS.purple50,
-              }}
-              onKeyDown={(event) => event.key === "Enter" && sendMessage()}
-            />
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto bg-purple-50 p-3 space-y-3">
+              {messages.map((msg, i) => (
+                <div key={i} className={cn("flex gap-2 items-end", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
+                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-0.5",
+                    msg.role === "user" ? "bg-purple-600" : "bg-white border border-purple-200")}>
+                    {msg.role === "user" ? <User className="w-3.5 h-3.5 text-white" /> : <Bot className="w-3.5 h-3.5 text-purple-600" />}
+                  </div>
+                  <div className={cn("max-w-[76%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed",
+                    msg.role === "user" ? "bg-purple-700 text-white rounded-br-sm" : "bg-white border border-purple-100 text-purple-900 rounded-bl-sm shadow-sm")}>
+                    {msg.content || (msg.streaming && <span className="inline-flex gap-0.5"><span className="animate-bounce">.</span><span className="animate-bounce [animation-delay:0.15s]">.</span><span className="animate-bounce [animation-delay:0.3s]">.</span></span>)}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
 
-            <button
-              onClick={sendMessage}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: COLORS.purple600,
-                color: COLORS.textInverse,
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <BsSend size={18} />
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Input */}
+            <div className="flex items-end gap-2 px-3 py-3 bg-white border-t border-purple-100 shrink-0">
+              <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+                placeholder="Ask about your finances..." rows={1} disabled={isStreaming}
+                className="flex-1 resize-none bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 text-sm text-purple-900 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all max-h-24 overflow-y-auto disabled:opacity-60"
+                style={{ minHeight: "38px" }} />
+              <button type="button" onClick={sendMessage} disabled={!input.trim() || isStreaming}
+                className="w-9 h-9 rounded-xl bg-purple-700 text-white flex items-center justify-center hover:bg-purple-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
