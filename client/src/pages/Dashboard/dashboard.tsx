@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
@@ -18,6 +18,8 @@ import {
   CalendarClock,
   Zap,
   Info,
+  Sparkles,
+  GraduationCap,
 } from "lucide-react";
 import { useSocket } from "../../hooks/useSocket";
 import Expenses from "../Expenses/Expenses";
@@ -42,6 +44,8 @@ import { buildHealthNarrative } from "../../lib/healthNarrative";
 import { evaluateCallouts } from "../../data/calloutConditions";
 import { getBenchmarkBand, benchmarkPosition } from "../../data/benchmarks";
 import { FinanceCalloutList } from "../../components/FinanceCallout";
+import { monthlyRepayment } from "../../lib/studentLoan";
+import { fmt } from "../../lib/ukTaxCalc";
 import "./dashboard.css";
 
 const formatGBP = (v: number | undefined) =>
@@ -539,6 +543,75 @@ const Dashboard = () => {
                       </div>
                     )}
                     <FinanceCalloutList callouts={callouts} />
+                  </div>
+                );
+              })()}
+
+            {/* Financial journey strip */}
+            {!isSnapshotMode &&
+              (() => {
+                const loan = profile?.studentLoan;
+                const pension = profile?.pensionSettings;
+                const readiness = profile?.readinessCheck;
+                const gross = profile?.payslipData?.grossSalary ?? 0;
+                const checkDone = !!readiness?.completedAt;
+                const hasLoan = loan?.plan && loan.plan !== "none";
+                const hasPensionGap =
+                  pension?.employerMatchPct != null &&
+                  pension?.employeeContributionPct != null &&
+                  pension.employeeContributionPct < pension.employerMatchPct;
+                const showStrip = !checkDone || hasLoan || hasPensionGap;
+                if (!showStrip) return null;
+                return (
+                  <div className="mb-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                      Your financial picture
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {!checkDone && (
+                        <Link
+                          to="/check"
+                          className="flex items-center gap-3 bg-purple-600 hover:bg-purple-700 rounded-xl px-4 py-3.5 no-underline transition-colors group"
+                        >
+                          <Sparkles className="w-4 h-4 text-purple-200 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white">Financial readiness check</p>
+                            <p className="text-[11px] text-purple-200">5 questions, personalized priorities</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-purple-300 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                      )}
+                      {hasLoan && gross > 0 && (
+                        <Link
+                          to="/loans"
+                          className="flex items-center gap-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-xl px-4 py-3.5 no-underline transition-colors group"
+                        >
+                          <GraduationCap className="w-4 h-4 text-blue-500 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-gray-900">Student loan</p>
+                            <p className="text-[11px] text-gray-400">
+                              {fmt(monthlyRepayment(gross, loan.plan))}/mo repayment
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-300 shrink-0 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                      )}
+                      {hasPensionGap && gross > 0 && (
+                        <Link
+                          to="/pension"
+                          className="flex items-center gap-3 bg-white border border-red-200 hover:bg-red-50 rounded-xl px-4 py-3.5 no-underline transition-colors group"
+                        >
+                          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-gray-900">Pension gap</p>
+                            <p className="text-[11px] text-gray-400">
+                              Contributing {pension.employeeContributionPct}% vs {pension.employerMatchPct}% max
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-300 shrink-0 group-hover:text-red-400 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 );
               })()}

@@ -14,6 +14,8 @@ import {
   Settings,
   LogOut,
   FlaskConical,
+  GraduationCap,
+  CalendarRange,
   Menu,
   X,
 } from "lucide-react";
@@ -26,6 +28,12 @@ const NAV_LINKS = [
   { to: "/forecast", icon: TrendingUp, label: "Forecast" },
   { to: "/learn", icon: BookOpen, label: "Learn" },
   { to: "/scenarios", icon: FlaskConical, label: "Scenarios" },
+];
+
+const PLANNING_LINKS = [
+  { to: "/loans", icon: GraduationCap, label: "Student Loan" },
+  { to: "/pension", icon: TrendingUp, label: "Pension" },
+  { to: "/year-review", icon: CalendarRange, label: "Year Review" },
 ];
 
 function SidebarContents({ onNavClick }: { onNavClick?: () => void }) {
@@ -85,6 +93,29 @@ function SidebarContents({ onNavClick }: { onNavClick?: () => void }) {
             </li>
           ))}
         </ul>
+
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Planning</p>
+          <ul className="space-y-0.5 list-none p-0 m-0">
+            {PLANNING_LINKS.map(({ to, icon: Icon, label }) => (
+              <li key={to}>
+                <Link
+                  to={to}
+                  onClick={onNavClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium no-underline transition-all",
+                    isActive(to)
+                      ? "bg-purple-600 text-white"
+                      : "text-gray-400 hover:text-gray-100 hover:bg-white/[0.06]"
+                  )}
+                >
+                  <Icon className="w-[17px] h-[17px] shrink-0" />
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="mt-4 pt-4 border-t border-white/10">
           <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Account</p>

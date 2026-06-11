@@ -28,6 +28,10 @@ import DataPolicyPage from "./pages/DataPolicy";
 import SavingsPage from "./pages/Savings/index.tsx";
 import ForecastPage from "./pages/Forecasting/Forecast.tsx";
 import BillsPage from "./pages/Bills/index.tsx";
+import LoansPage from "./pages/Loans/index.tsx";
+import PensionPage from "./pages/Pension/index.tsx";
+import ReadinessCheckPage from "./pages/ReadinessCheck/index.tsx";
+import YearReviewPage from "./pages/YearReview/index.tsx";
 import MainLayout from "./MainLayout";
 
 function App() {
@@ -61,6 +65,10 @@ function App() {
         <Route path="/savings" element={<SavingsPage />} />
         <Route path="/forecast" element={<ForecastPage />} />
         <Route path="/bills" element={<BillsPage />} />
+        <Route path="/loans" element={<LoansPage />} />
+        <Route path="/pension" element={<PensionPage />} />
+        <Route path="/check" element={<ReadinessCheckPage />} />
+        <Route path="/year-review" element={<YearReviewPage />} />
       </Route>
 
       {/* NON-LAYOUT PROTECTED ROUTES */}
