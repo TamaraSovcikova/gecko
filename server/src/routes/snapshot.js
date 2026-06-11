@@ -42,24 +42,13 @@ const ensureHistoricalSnapshots = async (userId) => {
 
     const dashboardData = await computeDashboard(userId, month, year);
 
-    const actualSpending = Array.isArray(dashboardData.actualSpending)
-      ? dashboardData.actualSpending
-      : [];
-    const budgetAllocation = Array.isArray(dashboardData.budgetAllocation)
-      ? dashboardData.budgetAllocation
-      : [];
+    const actualSpending = Array.isArray(dashboardData.actualSpending) ? dashboardData.actualSpending : [];
+    const budgetAllocation = Array.isArray(dashboardData.budgetAllocation) ? dashboardData.budgetAllocation : [];
 
-    const budgetMap = new Map(
-      budgetAllocation.map((item) => [String(item.name || ""), Number(item.value || 0)]),
-    );
-    const actualMap = new Map(
-      actualSpending.map((item) => [String(item.name || ""), Number(item.value || 0)]),
-    );
+    const budgetMap = new Map(budgetAllocation.map((item) => [String(item.name || ""), Number(item.value || 0)]));
+    const actualMap = new Map(actualSpending.map((item) => [String(item.name || ""), Number(item.value || 0)]));
 
-    const categoryNames = Array.from(new Set([
-      ...budgetMap.keys(),
-      ...actualMap.keys(),
-    ])).filter(Boolean);
+    const categoryNames = Array.from(new Set([...budgetMap.keys(), ...actualMap.keys()])).filter(Boolean);
 
     const categories = categoryNames.map((name) => ({
       name,
@@ -67,10 +56,7 @@ const ensureHistoricalSnapshots = async (userId) => {
       actual: actualMap.get(name) || 0,
     }));
 
-    const totalExpenses = actualSpending.reduce(
-      (sum, item) => sum + Number(item.value || 0),
-      0,
-    );
+    const totalExpenses = actualSpending.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
     await MonthlySnapshot.findOneAndUpdate(
       { userId, month, year },
@@ -106,15 +92,32 @@ router.post("/popup-seen", async (req, res) => {
       return res.status(400).json({ error: "popupKey is required" });
     }
 
-    await User.updateOne(
-      { _id: userId },
-      { $addToSet: { seenSnapshotPopupKeys: popupKey } },
-    );
+    await User.updateOne({ _id: userId }, { $addToSet: { seenSnapshotPopupKeys: popupKey } });
 
     return res.json({ ok: true });
   } catch (err) {
     console.error("Failed to persist snapshot popup state:", err);
     return res.status(500).json({ error: "Failed to persist popup state" });
+  }
+});
+
+// GET /api/snapshots  (uses authenticated user from token)
+router.get("/", async (req, res) => {
+  const userId = req.user?.uid;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    await ensureHistoricalSnapshots(userId);
+    const snapshots = await MonthlySnapshot.find({
+      userId,
+      $nor: [{ month: currentMonth, year: currentYear }],
+    }).sort({ year: -1, month: -1 });
+    return res.json(snapshots);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch snapshots" });
   }
 });
 
