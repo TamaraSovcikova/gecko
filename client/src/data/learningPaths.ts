@@ -397,12 +397,31 @@ export function getCompletedModules(userId: string, pathSlug: string): Set<strin
   }
 }
 
-export function markModuleComplete(userId: string, pathSlug: string, moduleId: string): Set<string> {
+export function markModuleComplete(
+  userId: string,
+  pathSlug: string,
+  moduleId: string,
+  authToken?: string
+): Set<string> {
   const current = getCompletedModules(userId, pathSlug);
   current.add(moduleId);
+  const arr = [...current];
   try {
-    localStorage.setItem(storageKey(userId, pathSlug), JSON.stringify([...current]));
+    localStorage.setItem(storageKey(userId, pathSlug), JSON.stringify(arr));
   } catch {}
+  // Fire-and-forget server sync; localStorage is source of truth on the client
+  if (userId && userId !== "anon" && authToken) {
+    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/user/path-progress`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ pathSlug, completedModules: arr }),
+    }).catch(() => {
+      /* offline — localStorage already updated */
+    });
+  }
   return current;
 }
 

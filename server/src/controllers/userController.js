@@ -39,7 +39,9 @@ const getUserProfile = async (req, res) => {
     let user = await User.findById(userId);
 
     // Some Google-auth users may exist in Firebase before a Mongo user is created.
-    if (!user) {return res.status(404).json({ error: "User not found" })} //this also had automatic user create so removed
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    } //this also had automatic user create so removed
 
     const [expenses, budgets] = await Promise.all([
       Expense.find({ userId }).sort({ date: -1, createdAt: -1 }),
@@ -65,14 +67,7 @@ const exportUserData = async (req, res) => {
     const userId = req.user.uid;
 
     // Fetch all user data
-    const [
-      user,
-      expenses,
-      budgets,
-      snapshots,
-      newsletterSnapshots,
-      firebaseUser,
-    ] = await Promise.all([
+    const [user, expenses, budgets, snapshots, newsletterSnapshots, firebaseUser] = await Promise.all([
       User.findById(userId),
       Expense.find({ userId }).sort({ date: 1 }),
       MonthlyBudget.find({ userId }).sort({ createdAt: 1 }),
@@ -176,7 +171,9 @@ const exportUserData = async (req, res) => {
           doc.text(`  NI: £${(budget.niPaid || 0).toFixed(2)}`);
           doc.text(`  Take-Home: £${(budget.takeHomePay || 0).toFixed(2)}`);
           if (budget.categories && budget.categories.length > 0) {
-            doc.text(`  Categories: ${budget.categories.map(c => `${c.name} (£${(c.budget || 0).toFixed(2)})`).join(", ")}`);
+            doc.text(
+              `  Categories: ${budget.categories.map((c) => `${c.name} (£${(c.budget || 0).toFixed(2)})`).join(", ")}`
+            );
           }
         });
         doc.moveDown();
@@ -261,7 +258,9 @@ const exportUserData = async (req, res) => {
       doc.text(`Auth Email: ${firebaseUser.email || "N/A"}`);
       doc.text(`Email Verified: ${firebaseUser.emailVerified ? "Yes" : "No"}`);
       doc.text(`Auth Disabled: ${firebaseUser.disabled ? "Yes" : "No"}`);
-      doc.text(`Providers: ${(firebaseUser.providerData || []).map((provider) => provider.providerId).join(", ") || "N/A"}`);
+      doc.text(
+        `Providers: ${(firebaseUser.providerData || []).map((provider) => provider.providerId).join(", ") || "N/A"}`
+      );
       doc.moveDown();
     }
 
@@ -279,9 +278,12 @@ const exportUserData = async (req, res) => {
     doc.addPage();
     doc.fontSize(14).font("Helvetica-Bold").text("Complete Data Export (JSON)");
     doc.moveDown(0.5);
-    doc.fontSize(8).font("Courier").text(JSON.stringify(fullExport, null, 2), {
-      align: "left",
-    });
+    doc
+      .fontSize(8)
+      .font("Courier")
+      .text(JSON.stringify(fullExport, null, 2), {
+        align: "left",
+      });
 
     // Footer
     doc.fontSize(9).font("Helvetica").text("This is your personal data export from Gecko.", { align: "center" });
@@ -300,19 +302,14 @@ const deleteUserProfile = async (req, res) => {
     const userId = req.user.uid;
 
     // Delete database data first
-    const [
-      deletedExpenses,
-      deletedBudgets,
-      deletedSnapshots,
-      deletedNewsletterSnapshots,
-      deletedUser,
-    ] = await Promise.all([
-      Expense.deleteMany({ userId }),
-      MonthlyBudget.deleteMany({ userId }),
-      MonthlySnapshot.deleteMany({ userId }),
-      NewsletterSnapshot.deleteMany({ userId }),
-      User.findByIdAndDelete(userId),
-    ]);
+    const [deletedExpenses, deletedBudgets, deletedSnapshots, deletedNewsletterSnapshots, deletedUser] =
+      await Promise.all([
+        Expense.deleteMany({ userId }),
+        MonthlyBudget.deleteMany({ userId }),
+        MonthlySnapshot.deleteMany({ userId }),
+        NewsletterSnapshot.deleteMany({ userId }),
+        User.findByIdAndDelete(userId),
+      ]);
 
     // Delete Firebase auth account last
     try {
@@ -345,14 +342,7 @@ const updateUserProfile = async (req, res) => {
   try {
     const authenticatedUserId = req.user.uid;
     const requestedUserId = req.params.userId || authenticatedUserId;
-    const {
-      payslipData,
-      displayName,
-      auditEvent,
-      onboarding,
-      newsletterOptIn,
-      avatarChoice,
-    } = req.body;
+    const { payslipData, displayName, auditEvent, onboarding, newsletterOptIn, avatarChoice } = req.body;
 
     if (requestedUserId !== authenticatedUserId) {
       return res.status(403).json({ error: "You can only update your own profile" });
@@ -451,11 +441,7 @@ const updateUserProfile = async (req, res) => {
       return res.status(400).json({ error: "No valid profile fields provided" });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      authenticatedUserId,
-      updateDoc,
-      { new: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(authenticatedUserId, updateDoc, { new: true });
 
     res.json(updatedUser);
   } catch (err) {
@@ -538,7 +524,6 @@ const sendTestNewsletter = async (req, res) => {
   }
 };
 
-
 // GET /v1/user/job-search
 // Searches for job titles from Adzuna
 const getJobTitleOptions = async (req, res) => {
@@ -565,6 +550,26 @@ const getLocationOptions = async (req, res) => {
   }
 };
 
+// PATCH /v1/user/path-progress
+// Body: { pathSlug: string, completedModules: string[] }
+const syncPathProgress = async (req, res) => {
+  const userId = req.user?.uid;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  const { pathSlug, completedModules } = req.body;
+  if (!pathSlug || !Array.isArray(completedModules)) {
+    return res.status(400).json({ error: "pathSlug and completedModules required" });
+  }
+  try {
+    await User.findByIdAndUpdate(userId, {
+      $set: { [`pathProgress.${pathSlug}`]: completedModules },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("syncPathProgress error:", err);
+    res.status(500).json({ error: "Failed to sync path progress" });
+  }
+};
+
 module.exports = {
   getUserProfile,
   exportUserData,
@@ -574,4 +579,5 @@ module.exports = {
   getLocationOptions,
   unsubscribeFromNewsletter,
   sendTestNewsletter,
+  syncPathProgress,
 };

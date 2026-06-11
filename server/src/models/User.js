@@ -1,6 +1,6 @@
 // models/User.js - Mongoose schema for the User document.
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const ForecastWarningStateSchema = new mongoose.Schema(
   {
@@ -152,8 +152,15 @@ const UserSchema = new mongoose.Schema(
       type: ForecastWarningStateSchema,
       default: () => ({
         monthKey: "",
-        dismissedWarningIds: []
+        dismissedWarningIds: [],
       }),
+    },
+
+    // Learning path progress: { "payslip-basics": ["mod-1", "mod-2"], ... }
+    pathProgress: {
+      type: Map,
+      of: [String],
+      default: {},
     },
 
     accountChangeLog: [
@@ -168,11 +175,10 @@ const UserSchema = new mongoose.Schema(
         },
       },
     ],
-
   },
   {
     // createdAt and updatedAt timestamps added automatically by Mongoose
-    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
+    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
   }
 );
 
@@ -180,13 +186,13 @@ const UserSchema = new mongoose.Schema(
 // Formula: every 100 XP = 1 level, starting at level 1.
 // e.g. 0 XP = level 1, 100 XP = level 2, 250 XP = level 3
 // virtuals are included when calling user.toJSON() or user.toObject()
-UserSchema.virtual('xpLevel').get(function () {
+UserSchema.virtual("xpLevel").get(function () {
   return Math.floor(this.xp / 100) + 1;
 });
 
 // Ensure virtuals like xpLevel are included when the document is
 // converted to JSON (e.g. when sending it in an API response)
-UserSchema.set('toJSON', { virtuals: true });
-UserSchema.set('toObject', { virtuals: true });
+UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model("User", UserSchema);

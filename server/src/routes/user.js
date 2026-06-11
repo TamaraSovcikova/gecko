@@ -10,6 +10,7 @@ const {
   getJobTitleOptions,
   getLocationOptions,
   sendTestNewsletter,
+  syncPathProgress,
 } = require("../controllers/userController");
 
 // GET /v1/user/profile
@@ -30,6 +31,9 @@ router.delete("/profile", deleteUserProfile);
 // PATCH /v1/user/profile
 router.patch("/profile", updateUserProfile);
 router.patch("/:userId/profile", updateUserProfile);
+
+// PATCH /v1/user/path-progress  — sync learning path completions
+router.patch("/path-progress", syncPathProgress);
 
 // POST /v1/user/newsletter/send-test
 router.post("/newsletter/send-test", sendTestNewsletter);

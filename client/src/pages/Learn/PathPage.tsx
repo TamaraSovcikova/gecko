@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Circle, ChevronDown, ExternalLink, BookOpen, Lock } from "lucide-react";
@@ -16,6 +16,14 @@ export default function PathPage() {
   const path = slug ? getPathBySlug(slug) : undefined;
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | undefined>();
+
+  useEffect(() => {
+    currentUser
+      ?.getIdToken()
+      .then(setAuthToken)
+      .catch(() => {});
+  }, [currentUser]);
 
   useEffect(() => {
     if (!slug) return;
@@ -48,7 +56,7 @@ export default function PathPage() {
 
   const handleMarkComplete = (moduleId: string) => {
     if (!slug) return;
-    const next = markModuleComplete(userId, slug, moduleId);
+    const next = markModuleComplete(userId, slug, moduleId, authToken);
     setCompleted(new Set(next));
     // open the next module
     const currentIndex = path.modules.findIndex((m) => m.id === moduleId);
