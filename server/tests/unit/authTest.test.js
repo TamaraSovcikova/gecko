@@ -17,7 +17,10 @@ What it Prevents:
 
 const mockVerifyIdToken = jest.fn();
 
-jest.mock("firebase-admin", () => ({
+// Mock config/firebase (the module auth.js actually imports) to return a
+// truthy admin object. Mocking firebase-admin alone does not work because
+// config/firebase.js short-circuits to null when env vars are absent.
+jest.mock("../../src/config/firebase", () => ({
   auth: jest.fn(() => ({
     verifyIdToken: mockVerifyIdToken,
   })),
