@@ -4,7 +4,7 @@ import { useGamification } from "../context/GamificationContext";
 import { signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
 import ProfileAvatar from "./ProfileAvatar";
-import { LayoutDashboard, Target, Calendar, TrendingUp, BookOpen, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Target, Calendar, TrendingUp, BookOpen, Settings, LogOut, FlaskConical } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const NAV_LINKS = [
@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { to: "/bills", icon: Calendar, label: "Bills" },
   { to: "/forecast", icon: TrendingUp, label: "Forecast" },
   { to: "/learn", icon: BookOpen, label: "Learn" },
+  { to: "/scenarios", icon: FlaskConical, label: "Scenarios" },
 ];
 
 export default function Sidebar() {
