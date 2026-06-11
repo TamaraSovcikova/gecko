@@ -5,10 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 import { registerUser } from "../../api/authApi";
 import CategoryBuilder from "../../components/CategoryBuilder";
 import PayslipBreakdown from "../../components/PayslipBreakdown";
+import TaxBandVisualiser from "../Learn/TaxBandVisualiser";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
 import { motion, AnimatePresence } from "framer-motion";
-import { PoundSterling, Briefcase, MapPin, Info, AlertCircle, Sparkles } from "lucide-react";
+import { PoundSterling, Briefcase, MapPin, Info, AlertCircle, Sparkles, ChevronDown, BookOpen } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 
@@ -159,6 +160,167 @@ const FieldInput = ({
     </div>
   </div>
 );
+
+// ---- Teaching card: appears below the gross salary input ----
+function PayslipTeachingCard({
+  estimate,
+  grossAnnual,
+}: {
+  estimate: NonNullable<ReturnType<typeof estimateUKTakeHome>>;
+  grossAnnual: number;
+}) {
+  const [showWhy, setShowWhy] = useState(false);
+  const inBasicBand = grossAnnual <= 50270;
+  const inHigherBand = grossAnnual > 50270 && grossAnnual <= 125140;
+  const bandLabel = inBasicBand ? "basic rate (20%)" : inHigherBand ? "higher rate (40%)" : "additional rate (45%)";
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+      {/* Numbers row */}
+      <div className="px-3 pt-3 pb-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500 font-medium">Estimated monthly take-home</span>
+          <span className="text-sm font-bold text-gray-900">
+            ~£{Math.round(estimate.monthly).toLocaleString("en-GB")}
+          </span>
+        </div>
+        <div className="space-y-1 text-[11px] text-gray-500">
+          <div className="flex justify-between">
+            <span>Income tax</span>
+            <span className="font-medium text-gray-700">
+              -£{Math.round(estimate.tax / 12).toLocaleString("en-GB")}/mo
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>National Insurance</span>
+            <span className="font-medium text-gray-700">
+              -£{Math.round(estimate.ni / 12).toLocaleString("en-GB")}/mo
+            </span>
+          </div>
+        </div>
+        <p className="mt-1.5 text-[10px] text-gray-400">
+          Effective rate {estimate.effectiveRate.toFixed(1)}% · 2024/25 estimate only
+        </p>
+      </div>
+
+      {/* Expand toggle */}
+      <button
+        type="button"
+        onClick={() => setShowWhy((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-semibold text-purple-600 hover:bg-purple-50/60 transition-colors border-t border-gray-200"
+      >
+        Why is this different from my gross?
+        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showWhy && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {showWhy && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            className="overflow-hidden border-t border-gray-100"
+          >
+            <div className="px-3 py-3 space-y-3">
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold text-gray-700">Income tax</p>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  Tax is calculated in bands on earnings above your personal allowance (£12,570). You pay 0% on the
+                  first £12,570, then 20% on earnings up to £50,270.{" "}
+                  {!inBasicBand && "You're in the higher rate band - earnings above £50,270 are taxed at 40%."}
+                  {inBasicBand && grossAnnual > 12570 && ` You're in the ${bandLabel} band.`}
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold text-gray-700">National Insurance</p>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  NI is a separate deduction (not income tax). You pay 8% on earnings between £12,570-£50,270 and 2%
+                  above that. NI contributions build your State Pension entitlement - you need 35 qualifying years for a
+                  full pension - and fund NHS access.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold text-gray-700">Tax code</p>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  Most people have tax code 1257L. The number (1257) × 10 = your personal allowance (£12,570). The "L"
+                  means you get the standard allowance. If your payslip shows a different code, it may affect how much
+                  tax is deducted.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---- Right-column explainer panel (shown before first save) ----
+function PayslipExplainerPanel({ grossAnnual }: { grossAnnual: number }) {
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <div className="p-1.5 bg-purple-50 rounded-md">
+          <BookOpen className="w-3.5 h-3.5 text-purple-600" />
+        </div>
+        <p className="text-sm font-bold text-gray-900">Understanding your payslip</p>
+      </div>
+
+      {/* Tax band visualiser */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        <p className="text-xs font-semibold text-gray-700 mb-3">How UK income tax bands work</p>
+        <TaxBandVisualiser />
+        <p className="mt-3 text-[11px] text-gray-400 leading-relaxed">
+          Each band only applies to the earnings <em>within</em> that range - not your whole salary. That's why a pay
+          rise doesn't mean you lose money.
+        </p>
+      </div>
+
+      {/* Key concepts */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+        <p className="text-xs font-semibold text-gray-700">Key terms</p>
+        {[
+          {
+            term: "Gross salary",
+            def: "What your employer pays you before any deductions. This is the number on your contract.",
+          },
+          {
+            term: "Net pay (take-home)",
+            def: "What actually lands in your bank account after income tax and NI are deducted.",
+          },
+          {
+            term: "Personal allowance",
+            def: "The first £12,570 of your income is tax-free (2024/25). You only pay tax on earnings above this.",
+          },
+          {
+            term: "PAYE",
+            def: "Pay As You Earn - your employer deducts tax automatically before paying you. You don't need to file a tax return if PAYE is your only income.",
+          },
+        ].map(({ term, def }) => (
+          <div key={term}>
+            <p className="text-[11px] font-bold text-gray-800">{term}</p>
+            <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">{def}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* What NI pays for */}
+      <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-4">
+        <p className="text-[11px] font-bold text-indigo-800 mb-1.5">What National Insurance pays for</p>
+        <ul className="text-[11px] text-indigo-700 space-y-1 list-none m-0 p-0">
+          <li>- State Pension entitlement (need 35 years for full pension)</li>
+          <li>- NHS access</li>
+          <li>- Statutory Sick Pay and Maternity/Paternity Pay eligibility</li>
+          <li>- Contribution-based Job Seeker's Allowance</li>
+        </ul>
+        <p className="mt-2 text-[10px] text-indigo-600">
+          Each year you work and pay NI counts as a "qualifying year" toward your State Pension.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 const PayslipSetup = () => {
   const navigate = useNavigate();
@@ -464,27 +626,9 @@ const PayslipSetup = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100 overflow-hidden"
+                    className="mt-3 overflow-hidden"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500">Estimated monthly take-home</span>
-                      <span className="text-sm font-bold text-gray-900">
-                        ~£{Math.round(liveEstimate.monthly).toLocaleString("en-GB")}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] text-gray-400">
-                      <div className="flex justify-between">
-                        <span>Income tax</span>
-                        <span>-£{Math.round(liveEstimate.tax / 12).toLocaleString("en-GB")}/mo</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>National Insurance</span>
-                        <span>-£{Math.round(liveEstimate.ni / 12).toLocaleString("en-GB")}/mo</span>
-                      </div>
-                    </div>
-                    <p className="mt-1.5 text-[10px] text-gray-300">
-                      Effective rate {liveEstimate.effectiveRate.toFixed(1)}% · 2024/25 UK estimate only
-                    </p>
+                    <PayslipTeachingCard estimate={liveEstimate} grossAnnual={Number(grossSalary)} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -734,19 +878,8 @@ const PayslipSetup = () => {
                   <PayslipBreakdown result={result} onContinue={() => navigate("/dashboard")} />
                 </motion.div>
               ) : (
-                <motion.div
-                  key="placeholder"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="rounded-xl border border-dashed border-gray-200 p-8 text-center"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                    <PoundSterling className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Breakdown preview</p>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    Save your details to see your tax breakdown, take-home pay, and monthly figures here.
-                  </p>
+                <motion.div key="explainer" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <PayslipExplainerPanel grossAnnual={Number(grossSalary)} />
                 </motion.div>
               )}
             </AnimatePresence>
