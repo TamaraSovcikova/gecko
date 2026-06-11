@@ -8,17 +8,21 @@ const { z } = require("zod");
 router.use(authMiddleware);
 
 const savingsGoalCreateSchema = z.object({
-  name:         z.string().min(1).max(120),
+  name: z.string().min(1).max(120),
   targetAmount: z.number().positive(),
-  targetDate:   z.string().datetime({ offset: true }).nullable().optional(),
-  category:     z.enum(["emergency", "travel", "purchase", "education", "home", "retirement", "other"]).default("other"),
-  emoji:        z.string().max(8).default("🎯"),
-  color:        z.string().max(20).default("#8b6fd4"),
+  targetDate: z
+    .string()
+    .refine((v) => !v || !Number.isNaN(Date.parse(v)), { message: "Invalid date" })
+    .nullable()
+    .optional(),
+  category: z.enum(["emergency", "travel", "purchase", "education", "home", "retirement", "other"]).default("other"),
+  emoji: z.string().max(8).default("🎯"),
+  color: z.string().max(20).default("#8b6fd4"),
 });
 
 const contributionSchema = z.object({
   amount: z.number().positive(),
-  note:   z.string().max(200).default(""),
+  note: z.string().max(200).default(""),
 });
 
 // GET /api/v1/savings - list all goals
@@ -55,7 +59,7 @@ router.patch("/:id", async (req, res) => {
     const goal = await SavingsGoal.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.uid },
       { $set: updates },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!goal) return res.status(404).json({ error: "Goal not found" });
     res.json(goal);

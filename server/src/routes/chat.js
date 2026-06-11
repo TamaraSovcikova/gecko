@@ -11,22 +11,46 @@ const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 const MAX_HISTORY = 20;
 
 function buildSystemPrompt(data) {
-  return `You are a finance-only assistant inside a budgeting app for young adults (ages 20-25).
+  const d = data || {};
+  const takeHome = d.takeHome ? `£${Number(d.takeHome).toFixed(2)}/month` : "unknown";
+  const budgetLeft = d.budgetLeft != null ? `£${Number(d.budgetLeft).toFixed(2)} remaining this month` : null;
+  const healthScore = d.healthScore != null ? `${d.healthScore}/100` : null;
+  const categories =
+    Array.isArray(d.budgetAllocation) && d.budgetAllocation.length
+      ? d.budgetAllocation.map((c) => `${c.name}: £${Number(c.value).toFixed(2)}`).join(", ")
+      : null;
+  const spending =
+    Array.isArray(d.actualSpending) && d.actualSpending.length
+      ? d.actualSpending.map((c) => `${c.name}: £${Number(c.value).toFixed(2)}`).join(", ")
+      : null;
+
+  const userSummary = [
+    `Take-home pay: ${takeHome}`,
+    budgetLeft ? `Budget remaining: ${budgetLeft}` : null,
+    healthScore ? `Financial health score: ${healthScore}` : null,
+    categories ? `Budget categories: ${categories}` : null,
+    spending ? `Actual spending this month: ${spending}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `You are Gecko AI, a personal finance assistant built into a budgeting app for young UK adults (ages 18-28).
+
+Your job is to give short, specific, actionable advice grounded in the user's actual data shown below. Reference their numbers directly — do not give generic advice when you know their real situation.
 
 Rules:
-- Only answer questions about personal finance: budgeting, spending, saving, debt, income, expense tracking.
-- No investment or pension recommendations (regulated advice).
-- No medical, fitness, or general lifestyle advice unless directly tied to spending.
-- Do not give mental health advice. Be supportive and non-judgmental.
-- If a question is ambiguous, interpret it financially.
-- Use GBP (British pounds) as the default currency.
-- Responses should be clear, practical, and appropriate for a young adult.
-- No markdown formatting (no bold, headers, or bullet points).
-- If you cannot answer, apologise briefly and redirect.
-- Encourage using the in-app quiz or learning features when relevant.
+- Only answer personal finance questions: budgeting, spending, saving, debt, income, tax basics, financial habits.
+- No investment or pension recommendations (regulated advice — politely say so if asked).
+- Use GBP as the default currency.
+- Keep responses concise: 3-5 sentences max unless a detailed breakdown is genuinely needed.
+- Use plain markdown: **bold** for key numbers or terms, bullet points where helpful. No headers (#).
+- Be direct and practical. If they are overspending somewhere, say so clearly with the exact figure.
+- If you do not have enough data to answer specifically, say so and suggest what info they should add.
+- Be warm but not sycophantic. Skip filler phrases like "Great question!".
+- Encourage the in-app Learn section or quiz when a topic is educational.
 
-User's current financial data:
-${JSON.stringify(data, null, 2)}`;
+User's financial snapshot:
+${userSummary || "No financial data available yet. The user may not have set up their payslip."}`;
 }
 
 // GET /api/v1/chat/history - load session history
@@ -131,7 +155,10 @@ router.post("/stream", validate({ body: chatMessageSchema }), async (req, res) =
     let fullReply = "";
 
     groqRes.data.on("data", (chunk) => {
-      const lines = chunk.toString().split("\n").filter((l) => l.trim());
+      const lines = chunk
+        .toString()
+        .split("\n")
+        .filter((l) => l.trim());
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
         const payload = line.slice(6).trim();
@@ -146,7 +173,9 @@ router.post("/stream", validate({ body: chatMessageSchema }), async (req, res) =
             fullReply += token;
             send({ token });
           }
-        } catch { /* ignore malformed chunks */ }
+        } catch {
+          /* ignore malformed chunks */
+        }
       }
     });
 
