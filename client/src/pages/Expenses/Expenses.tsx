@@ -448,9 +448,9 @@ const Expenses = ({ categories, onExpenseCreated }: Props) => {
         {/* Receipt scan */}
         <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-3 space-y-2">
           <div className="flex items-center gap-1.5 mb-1">
-            <ScanLine className="h-3.5 w-3.5 text-gray-400" />
-            <span className="text-xs font-semibold text-gray-600">Scan receipt</span>
-            <span className="text-xs text-gray-400">- auto-fills amount</span>
+            <ScanLine className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            <span className="text-xs font-semibold text-gray-600 whitespace-nowrap">Scan receipt</span>
+            <span className="text-xs text-gray-400 whitespace-nowrap">— auto-fills amount</span>
           </div>
           <div className="flex gap-2">
             {/* Camera button */}
