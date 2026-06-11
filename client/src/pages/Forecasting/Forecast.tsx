@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ReferenceLine, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  Cell,
 } from "recharts";
 import { TrendingUp, Info, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getForecast } from "../../api/forecastApi";
 import { ForecastPayload } from "../../types/forecast";
-import TopNav from "../../components/TopNav";
 import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 
@@ -45,7 +51,10 @@ const Forecast = () => {
     }
     setFetching(true);
     getForecast(token)
-      .then(data => { setForecast(data); setError(null); })
+      .then((data) => {
+        setForecast(data);
+        setError(null);
+      })
       .catch(() => setError("Failed to load forecast"))
       .finally(() => setFetching(false));
   }, [token, loading, isForecastDisabled]);
@@ -53,10 +62,9 @@ const Forecast = () => {
   if (loading || fetching) {
     return (
       <div className="app-page">
-        <TopNav />
-        <div className="max-w-screen-lg mx-auto px-4 mt-8 space-y-4">
+        <div className="max-w-screen-lg mx-auto space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 bg-purple-200/60 rounded-lg animate-shimmer" />
+            <div key={i} className="h-20 bg-gray-100 rounded-lg animate-shimmer" />
           ))}
         </div>
       </div>
@@ -81,8 +89,7 @@ const Forecast = () => {
 
   return (
     <div className="app-page">
-      <TopNav />
-      <div className="max-w-screen-lg mx-auto px-4 pb-16">
+      <div className="max-w-screen-lg mx-auto pb-8">
         <div className="mb-6 mt-2">
           <p className="app-section-eyebrow">Forecasting</p>
           <h1 className="app-page-title mt-2">Spending Forecast</h1>
@@ -102,30 +109,31 @@ const Forecast = () => {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-purple-200 rounded-lg p-8 text-center"
+            className="bg-white border border-gray-200 rounded-lg p-8 text-center"
           >
-            <div className="mx-auto w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-              <TrendingUp className="h-6 w-6 text-purple-500" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <TrendingUp className="h-6 w-6 text-gray-400" />
             </div>
-            <h3 className="text-base font-semibold text-purple-700 mb-2">No forecast data yet</h3>
-            <p className="text-sm text-gecko-muted">
-              Start logging expenses to generate spending forecasts.
-            </p>
+            <h3 className="text-base font-semibold text-gray-800 mb-2">No forecast data yet</h3>
+            <p className="text-sm text-gecko-muted">Start logging expenses to generate spending forecasts.</p>
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             {/* Summary cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-white border border-purple-200 rounded-lg p-5">
+              <div className="bg-white border border-gray-200 rounded-lg p-5">
                 <p className="text-xs font-semibold text-gecko-muted uppercase tracking-wider mb-1">Total projected</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {"\xA3"}{totalForecast.toFixed(2)}
+                <p className="text-2xl font-bold text-gray-900">
+                  {"\xA3"}
+                  {totalForecast.toFixed(2)}
                 </p>
                 <p className="text-xs text-gecko-muted mt-1">Next month</p>
               </div>
-              <div className="bg-white border border-purple-200 rounded-lg p-5">
-                <p className="text-xs font-semibold text-gecko-muted uppercase tracking-wider mb-1">Categories tracked</p>
-                <p className="text-2xl font-bold text-purple-600">{entries.length}</p>
+              <div className="bg-white border border-gray-200 rounded-lg p-5">
+                <p className="text-xs font-semibold text-gecko-muted uppercase tracking-wider mb-1">
+                  Categories tracked
+                </p>
+                <p className="text-2xl font-bold text-gray-900">{entries.length}</p>
                 <p className="text-xs text-gecko-muted mt-1">Spend categories</p>
               </div>
               {anomalyCount > 0 && (
@@ -138,9 +146,9 @@ const Forecast = () => {
             </div>
 
             {/* Bar chart */}
-            <div className="bg-white border border-purple-200 rounded-lg p-5">
+            <div className="bg-white border border-gray-200 rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-purple-700">Projected Spend by Category</h4>
+                <h4 className="text-sm font-semibold text-gray-800">Projected Spend by Category</h4>
                 <div className="flex items-center gap-1.5 text-xs text-gecko-muted">
                   <Info className="h-3.5 w-3.5" />
                   Shading shows confidence range
@@ -148,14 +156,14 @@ const Forecast = () => {
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ede8f8" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `\xA3${v}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `\xA3${v}`} />
                   <Tooltip
                     formatter={(v: any, name: string) => [`\xA3${Number(v).toFixed(2)}`, name]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid #c9bde8", fontSize: "12px" }}
+                    contentStyle={{ borderRadius: "8px", border: "1px solid #E5E7EB", fontSize: "12px" }}
                   />
-                  <ReferenceLine y={0} stroke="#c9bde8" />
+                  <ReferenceLine y={0} stroke="#E5E7EB" />
                   <Bar dataKey="forecast" radius={[4, 4, 0, 0]} name="Forecast">
                     {chartData.map((entry, index) => (
                       <Cell
@@ -170,11 +178,11 @@ const Forecast = () => {
             </div>
 
             {/* Detail rows */}
-            <div className="bg-white border border-purple-200 rounded-lg overflow-hidden">
-              <div className="px-5 py-3 border-b border-purple-100">
-                <h4 className="text-sm font-semibold text-purple-700">Category Breakdown</h4>
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-800">Category Breakdown</h4>
               </div>
-              <div className="divide-y divide-purple-100">
+              <div className="divide-y divide-gray-100">
                 {entries.map(([category, data], index) => {
                   const pct = totalForecast > 0 ? (data.finalForecast / totalForecast) * 100 : 0;
                   const confidence = data.confidence ?? 70;
@@ -192,34 +200,44 @@ const Forecast = () => {
                             className="h-3 w-3 rounded-full shrink-0"
                             style={{ background: data.anomaly ? "#f0b429" : COLORS[index % COLORS.length] }}
                           />
-                          <span className="text-sm font-semibold text-purple-700 truncate">{category}</span>
+                          <span className="text-sm font-semibold text-gray-800 truncate">{category}</span>
                           {data.anomaly && (
-                            <Badge variant="warning" className="shrink-0">anomaly</Badge>
+                            <Badge variant="warning" className="shrink-0">
+                              anomaly
+                            </Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
                           <TrendIcon trend={data.trend} />
-                          <span className="text-sm font-bold text-purple-600">
-                            {"\xA3"}{Number(data.finalForecast).toFixed(2)}
+                          <span className="text-sm font-bold text-gray-900">
+                            {"\xA3"}
+                            {Number(data.finalForecast).toFixed(2)}
                           </span>
                         </div>
                       </div>
                       {/* confidence range */}
                       <div className="mt-2 flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-purple-100 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-purple-400 transition-all duration-500"
+                            className="h-full rounded-full bg-purple-600 transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
                         <span className="text-xs text-gecko-muted shrink-0">{pct.toFixed(1)}% of total</span>
-                        <span className={cn("text-xs font-semibold shrink-0", confidence >= 70 ? "text-emerald-600" : "text-amber-600")}>
+                        <span
+                          className={cn(
+                            "text-xs font-semibold shrink-0",
+                            confidence >= 70 ? "text-emerald-600" : "text-amber-600"
+                          )}
+                        >
                           {confidence}% conf.
                         </span>
                       </div>
-                      {(data.lowerBound !== undefined && data.upperBound !== undefined) && (
+                      {data.lowerBound !== undefined && data.upperBound !== undefined && (
                         <p className="mt-1 text-xs text-gecko-muted">
-                          Range: {"\xA3"}{Number(data.lowerBound).toFixed(2)} - {"\xA3"}{Number(data.upperBound).toFixed(2)}
+                          Range: {"\xA3"}
+                          {Number(data.lowerBound).toFixed(2)} - {"\xA3"}
+                          {Number(data.upperBound).toFixed(2)}
                         </p>
                       )}
                     </motion.div>
@@ -229,11 +247,11 @@ const Forecast = () => {
             </div>
 
             {/* Info box */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex gap-3">
-              <CheckCircle2 className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-purple-700">
-                Forecasts use an ensemble model combining linear regression, seasonal patterns, and a 3-month rolling median.
-                Confidence levels indicate how consistent your historical spending has been in each category.
+            <div className="bg-slate-50 border border-gray-200 rounded-lg p-4 flex gap-3">
+              <CheckCircle2 className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-gray-800">
+                Forecasts use an ensemble model combining linear regression, seasonal patterns, and a 3-month rolling
+                median. Confidence levels indicate how consistent your historical spending has been in each category.
               </p>
             </div>
           </motion.div>

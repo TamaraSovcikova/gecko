@@ -1,11 +1,6 @@
 import { useMemo, useState } from "react";
 import axios from "axios";
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from "../../firebase/authClient";
-import TopNav from "../../components/TopNav";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "../../firebase/authClient";
 import { useAuth } from "../../context/AuthContext";
 import TooltipGuide from "../../components/TooltipGuide";
 import { usePageOnboarding } from "../../hooks/usePageOnboarding";
@@ -26,7 +21,10 @@ const strengthLabel = (password: string) => {
   if (checks >= 3) {
     return { text: "Good", color: "#c2872c" };
   }
-  return { text: "Weak: use 8+ chars, uppercase, lowercase, number, and special character (!@#$%^&*)", color: "#e05c5c" };
+  return {
+    text: "Weak: use 8+ chars, uppercase, lowercase, number, and special character (!@#$%^&*)",
+    color: "#e05c5c",
+  };
 };
 
 const ChangePasswordPage = () => {
@@ -45,20 +43,14 @@ const ChangePasswordPage = () => {
     const checks = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
     return checks >= 4;
   }, [newPassword]);
-  const passwordsMatch =
-    newPassword === confirmPassword && confirmPassword.length > 0;
+  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
   const strength = strengthLabel(newPassword);
   const supportsPasswordProvider =
-    currentUser?.providerData?.some(
-      (provider: any) => provider.providerId === "password",
-    ) ?? false;
+    currentUser?.providerData?.some((provider: any) => provider.providerId === "password") ?? false;
   const isGoogleOnlyAccount =
     Boolean(currentUser) &&
     !supportsPasswordProvider &&
-    (currentUser?.providerData?.some(
-      (provider: any) => provider.providerId === "google.com",
-    ) ??
-      false);
+    (currentUser?.providerData?.some((provider: any) => provider.providerId === "google.com") ?? false);
   const {
     isOpen: isOnboardingOpen,
     activeStepNumber,
@@ -82,10 +74,7 @@ const ChangePasswordPage = () => {
     }
 
     try {
-      const credential = EmailAuthProvider.credential(
-        currentUser.email,
-        currentPassword,
-      );
+      const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
       await updatePassword(currentUser, newPassword);
       const freshToken = await currentUser.getIdToken(true);
@@ -93,7 +82,7 @@ const ChangePasswordPage = () => {
       await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/user/${currentUser.uid}/profile`,
         { auditEvent: "password_changed" },
-        { headers: { Authorization: `Bearer ${freshToken || token}` } },
+        { headers: { Authorization: `Bearer ${freshToken || token}` } }
       );
 
       setCurrentPassword("");
@@ -108,10 +97,7 @@ const ChangePasswordPage = () => {
       } else if (error instanceof Error) {
         if (error.message.includes("auth/weak-password")) {
           message = "Use at least 8 characters and one number.";
-        } else if (
-          error.message.includes("auth/wrong-password") ||
-          error.message.includes("auth/invalid-credential")
-        ) {
+        } else if (error.message.includes("auth/wrong-password") || error.message.includes("auth/invalid-credential")) {
           message = "Current password is incorrect.";
         } else if (error.message.includes("auth/requires-recent-login")) {
           message = "Please sign in again and retry this change.";
@@ -124,7 +110,6 @@ const ChangePasswordPage = () => {
 
   return (
     <div className="app-page">
-      <TopNav />
       <div
         className="app-content app-surface"
         style={{
@@ -165,9 +150,8 @@ const ChangePasswordPage = () => {
               color: "#4a3f6b",
             }}
           >
-            Google-only sign-in accounts do not currently manage passwords
-            inside this app. Change your password through your Google account
-            instead.
+            Google-only sign-in accounts do not currently manage passwords inside this app. Change your password through
+            your Google account instead.
           </div>
         )}
 
@@ -257,32 +241,18 @@ const ChangePasswordPage = () => {
             disabled={isGoogleOnlyAccount}
           />
           {confirmPassword && !passwordsMatch && (
-            <p
-              style={{ margin: "10px 0 0", color: "#e05c5c", fontSize: "13px" }}
-            >
+            <p style={{ margin: "10px 0 0", color: "#e05c5c", fontSize: "13px" }}>
               Passwords must match before saving.
             </p>
           )}
-          {state.message && (
-            <p style={{ margin: "14px 0 0", color: "#5bb8c4" }}>
-              {state.message}
-            </p>
-          )}
-          {state.error && (
-            <p style={{ margin: "14px 0 0", color: "#e05c5c" }}>
-              {state.error}
-            </p>
-          )}
+          {state.message && <p style={{ margin: "14px 0 0", color: "#5bb8c4" }}>{state.message}</p>}
+          {state.error && <p style={{ margin: "14px 0 0", color: "#e05c5c" }}>{state.error}</p>}
 
           <button
             type="submit"
             className="gecko-pill-btn"
             disabled={
-              isGoogleOnlyAccount ||
-              !currentPassword ||
-              !passwordStrongEnough ||
-              !passwordsMatch ||
-              state.saving
+              isGoogleOnlyAccount || !currentPassword || !passwordStrongEnough || !passwordsMatch || state.saving
             }
             style={{
               marginTop: "18px",

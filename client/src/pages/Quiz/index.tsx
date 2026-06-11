@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLocation } from "react-router-dom";
-import TopNav from "../../components/TopNav";
 import { useGamification } from "../../context/GamificationContext";
 
 type Answer = {
@@ -115,9 +114,7 @@ export default function QuizPage() {
     if (!token || didFetch.current) return;
     didFetch.current = true;
 
-    const url = topic
-      ? `${API_URL}/api/v1/quiz?topic=${encodeURIComponent(topic)}`
-      : `${API_URL}/api/v1/quiz`;
+    const url = topic ? `${API_URL}/api/v1/quiz?topic=${encodeURIComponent(topic)}` : `${API_URL}/api/v1/quiz`;
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -133,16 +130,12 @@ export default function QuizPage() {
 
   function getAnswerStyle(i: number, a: Answer): React.CSSProperties {
     if (!showResult) {
-      return selected === i
-        ? { ...baseButton, background: "#ede8f8", borderColor: "#8b6fd4" }
-        : baseButton;
+      return selected === i ? { ...baseButton, background: "#ede8f8", borderColor: "#8b6fd4" } : baseButton;
     }
 
-    if (a.correct)
-      return { ...baseButton, background: "#e8e0fa", borderColor: "#8b6fd4" };
+    if (a.correct) return { ...baseButton, background: "#e8e0fa", borderColor: "#8b6fd4" };
 
-    if (selected === i)
-      return { ...baseButton, background: "#fed7d7", borderColor: "#f56565" };
+    if (selected === i) return { ...baseButton, background: "#fed7d7", borderColor: "#f56565" };
 
     return { ...baseButton, opacity: 0.6 };
   }
@@ -173,8 +166,6 @@ export default function QuizPage() {
 
   return (
     <div className="app-page" style={layoutStyle}>
-      <TopNav />
-
       <div style={contentWrapperStyle}>
         <div style={cardStyle}>
           {finished ? (
@@ -185,10 +176,7 @@ export default function QuizPage() {
               </h2>
               <h3>You earned {earnedXp} XP</h3>
 
-              <button
-                onClick={() => navigate("/dashboard")}
-                style={primaryButton}
-              >
+              <button onClick={() => navigate("/dashboard")} style={primaryButton}>
                 Go to Dashboard
               </button>
             </>
@@ -217,9 +205,7 @@ export default function QuizPage() {
 
               {showResult && (
                 <button onClick={handleNext} style={primaryButton}>
-                  {currentIndex + 1 >= questions.length
-                    ? "Finish Quiz"
-                    : "Next Question"}
+                  {currentIndex + 1 >= questions.length ? "Finish Quiz" : "Next Question"}
                 </button>
               )}
             </>
