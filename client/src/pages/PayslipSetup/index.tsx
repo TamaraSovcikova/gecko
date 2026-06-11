@@ -67,31 +67,48 @@ const BUDGET_PRESETS = [
   {
     label: "50/30/20",
     description: "Needs 50%, Wants 30%, Savings 20%",
-    build: (m: number) => [
-      { name: "Needs", amount: Math.round(m * 0.5).toString() },
-      { name: "Wants", amount: Math.round(m * 0.3).toString() },
-      { name: "Savings", amount: Math.round(m * 0.2).toString() },
-    ],
+    build: (m: number) => {
+      const base = Math.floor(m);
+      const needs = Math.floor(base * 0.5);
+      const wants = Math.floor(base * 0.3);
+      return [
+        { name: "Needs", amount: needs.toString() },
+        { name: "Wants", amount: wants.toString() },
+        { name: "Savings", amount: (base - needs - wants).toString() },
+      ];
+    },
   },
   {
     label: "60/20/20",
     description: "Needs 60%, Savings 20%, Wants 20%",
-    build: (m: number) => [
-      { name: "Needs", amount: Math.round(m * 0.6).toString() },
-      { name: "Savings", amount: Math.round(m * 0.2).toString() },
-      { name: "Wants", amount: Math.round(m * 0.2).toString() },
-    ],
+    build: (m: number) => {
+      const base = Math.floor(m);
+      const needs = Math.floor(base * 0.6);
+      const savings = Math.floor(base * 0.2);
+      return [
+        { name: "Needs", amount: needs.toString() },
+        { name: "Savings", amount: savings.toString() },
+        { name: "Wants", amount: (base - needs - savings).toString() },
+      ];
+    },
   },
   {
     label: "Detailed",
     description: "Housing 35%, Food 15%, Transport 10%, Savings 20%, Other 20%",
-    build: (m: number) => [
-      { name: "Housing", amount: Math.round(m * 0.35).toString() },
-      { name: "Food & Groceries", amount: Math.round(m * 0.15).toString() },
-      { name: "Transport", amount: Math.round(m * 0.1).toString() },
-      { name: "Savings", amount: Math.round(m * 0.2).toString() },
-      { name: "Other", amount: Math.round(m * 0.2).toString() },
-    ],
+    build: (m: number) => {
+      const base = Math.floor(m);
+      const housing = Math.floor(base * 0.35);
+      const food = Math.floor(base * 0.15);
+      const transport = Math.floor(base * 0.1);
+      const savings = Math.floor(base * 0.2);
+      return [
+        { name: "Housing", amount: housing.toString() },
+        { name: "Food & Groceries", amount: food.toString() },
+        { name: "Transport", amount: transport.toString() },
+        { name: "Savings", amount: savings.toString() },
+        { name: "Other", amount: (base - housing - food - transport - savings).toString() },
+      ];
+    },
   },
 ];
 
