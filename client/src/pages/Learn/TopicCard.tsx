@@ -1,65 +1,34 @@
-// client/src/pages/Learn/TopicCard.tsx
-// Slim topic card — shows icon, title, and a one-line summary.
-// "Learn more" opens TopicModal for the full explanation + interactive widget.
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CheckCircle2 } from "lucide-react";
 import type { LearningTopic } from "../../constants/learningContent";
 import TopicModal from "./TopicModal";
+import { cn } from "../../lib/utils";
 
-const INTERACTIVE_TOPIC_IDS = new Set([
-  "payslip-gross-net",
-  "budgeting-50-30-20",
-  "tax-codes",
-  "saving-goals",
-]);
+const INTERACTIVE_TOPIC_IDS = new Set(["payslip-gross-net", "budgeting-50-30-20", "tax-codes", "saving-goals"]);
 
-interface CategoryStyle {
-  iconBg: string;
-  iconColor: string;
-  accent: string;
-}
-
-const CATEGORY_STYLES: Record<string, CategoryStyle> = {
-  "Understanding Your Payslip": {
-    iconBg: "#EEF2FF",
-    iconColor: "#6366F1",
-    accent: "#6366F1",
-  },
-  "Budgeting Basics": {
-    iconBg: "#F0FDFA",
-    iconColor: "#0D9488",
-    accent: "#0D9488",
-  },
-  "Tax Fundamentals": {
-    iconBg: "#FFF7ED",
-    iconColor: "#F97316",
-    accent: "#F97316",
-  },
-  "Saving and Financial Goals": {
-    iconBg: "#FFFBEB",
-    iconColor: "#D97706",
-    accent: "#D97706",
-  },
+const CATEGORY_STYLES: Record<string, { iconBg: string; iconColor: string; accent: string; border: string }> = {
+  "Understanding Your Payslip": { iconBg: "#EEF2FF", iconColor: "#6366F1", accent: "#6366F1", border: "#C7D2FE" },
+  "Budgeting Basics": { iconBg: "#F0FDFA", iconColor: "#0D9488", accent: "#0D9488", border: "#99F6E4" },
+  "Tax Fundamentals": { iconBg: "#FFF7ED", iconColor: "#EA580C", accent: "#EA580C", border: "#FED7AA" },
+  "Saving and Financial Goals": { iconBg: "#FFFBEB", iconColor: "#D97706", accent: "#D97706", border: "#FDE68A" },
 };
 
-const FALLBACK: CategoryStyle = {
-  iconBg: "#F3F4F6",
-  iconColor: "#6B7280",
-  accent: "#6B7280",
-};
+const FALLBACK = { iconBg: "#F3F4F6", iconColor: "#6B7280", accent: "#6B7280", border: "#E5E7EB" };
 
 interface TopicCardProps {
   topic: LearningTopic;
   onRead?: (id: string) => void;
+  isRead?: boolean;
 }
 
-export default function TopicCard({ topic, onRead }: TopicCardProps) {
+export default function TopicCard({ topic, onRead, isRead = false }: TopicCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const style = CATEGORY_STYLES[topic.category] ?? FALLBACK;
   const hasWidget = INTERACTIVE_TOPIC_IDS.has(topic.id);
+  const shortSummary = topic.summary.split(". ")[0] + ".";
 
   const openModal = () => {
     setModalOpen(true);
@@ -71,111 +40,72 @@ export default function TopicCard({ topic, onRead }: TopicCardProps) {
     navigate(`/quiz?topic=${quizId}`);
   };
 
-  // First sentence only to keep cards compact
-  const shortSummary = topic.summary.split(". ")[0] + ".";
-
   return (
     <>
       <div
-        style={{
-          background: "#fff",
-          borderRadius: 10,
-          border: "0.5px solid #E5E7EB",
-          padding: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          height: "100%",
-          transition: "box-shadow 0.15s, border-color 0.15s",
-        }}
+        className={cn(
+          "bg-white rounded-xl border p-4 flex flex-col gap-3 h-full transition-all duration-150 cursor-pointer group",
+          "hover:shadow-md hover:-translate-y-px",
+          isRead ? "border-gray-200" : "border-gray-200 hover:border-opacity-80"
+        )}
+        style={isRead ? {} : ({ "--hover-border": style.border } as React.CSSProperties)}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            "0 2px 14px rgba(0,0,0,0.07)";
-          (e.currentTarget as HTMLDivElement).style.borderColor =
-            style.accent + "55";
+          if (!isRead) (e.currentTarget as HTMLDivElement).style.borderColor = style.border;
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-          (e.currentTarget as HTMLDivElement).style.borderColor = "#E5E7EB";
+          (e.currentTarget as HTMLDivElement).style.borderColor = "";
         }}
+        onClick={openModal}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && openModal()}
       >
-        {/* Icon + title */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <div style={{ flex: 1, paddingTop: 1 }}>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#111827",
-                lineHeight: 1.3,
-                marginBottom: hasWidget ? 3 : 0,
-              }}
-            >
-              {topic.title}
-            </div>
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold text-gray-900 leading-snug flex-1">{topic.title}</p>
+          {isRead && <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: style.accent }} />}
+        </div>
+
+        {/* Badges */}
+        {(hasWidget || isRead) && (
+          <div className="flex flex-wrap gap-1.5">
             {hasWidget && (
               <span
-                style={{
-                  fontSize: 10,
-                  padding: "1px 6px",
-                  borderRadius: 99,
-                  background: style.iconBg,
-                  color: style.accent,
-                  fontWeight: 500,
-                  display: "inline-block",
-                }}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
+                style={{ background: style.iconBg, color: style.accent }}
               >
                 ✦ Interactive
               </span>
             )}
+            {isRead && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
+                Read
+              </span>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* One-line summary */}
-        <p
-          style={{
-            fontSize: 12,
-            color: "#6B7280",
-            lineHeight: 1.6,
-            margin: 0,
-            flex: 1,
-          }}
-        >
-          {shortSummary}
-        </p>
+        {/* Summary */}
+        <p className="text-xs text-gray-500 leading-relaxed flex-1">{shortSummary}</p>
 
-        {/* Learn more */}
+        {/* CTA */}
         <button
-          onClick={openModal}
+          onClick={(e) => {
+            e.stopPropagation();
+            openModal();
+          }}
+          className="w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all mt-auto text-center"
           style={{
-            width: "100%",
-            fontSize: 12,
-            padding: "5px 10px",
-            borderRadius: 9,
-            border: `0.5px solid ${style.accent}33`,
             background: style.iconBg,
             color: style.accent,
-            cursor: "pointer",
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 5,
-            marginTop: "auto",
+            borderColor: style.border,
           }}
         >
-          <i className="bi bi-book" style={{ fontSize: 11 }} />
-          Learn more
+          {isRead ? "Review" : "Learn more"}
         </button>
       </div>
 
-      {modalOpen && (
-        <TopicModal
-          topic={topic}
-          onClose={() => setModalOpen(false)}
-          onQuiz={handleQuiz}
-        />
-      )}
+      {modalOpen && <TopicModal topic={topic} onClose={() => setModalOpen(false)} onQuiz={handleQuiz} />}
     </>
   );
 }
