@@ -3,6 +3,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, RefreshCw, CheckCircle2, Clock, AlertTriangle, Info } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import TopNav from "../../components/TopNav";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { SkeletonCard } from "../../components/ui/skeleton";
@@ -122,6 +123,7 @@ const Bills = () => {
 
   return (
     <div className="min-h-screen bg-purple-50" style={{ fontFamily: "Manrope, Segoe UI, Arial, sans-serif" }}>
+      <TopNav />
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">

@@ -57,7 +57,7 @@ const TooltipGuide = ({
   } | null>(null);
 
   const activeIndex = useMemo(
-    () => steps.findIndex((step) => step.number === activeStepNumber),
+    () => (steps ?? []).findIndex((step) => step.number === activeStepNumber),
     [activeStepNumber, steps],
   );
   const activeStep = activeIndex >= 0 ? steps[activeIndex] : null;

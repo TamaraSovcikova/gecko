@@ -155,8 +155,8 @@ const Dashboard = () => {
   const hasFetchedRef = useRef(false);
 
   const { showStreakWarning } = useStreakWarning();
-  const { isOnboardingOpen, activeStepNumber, onboardingSteps, closeGuide, completeGuide, goToStep } =
-    usePageOnboarding("dashboard");
+  const { isOpen: isOnboardingOpen, activeStepNumber, steps: onboardingSteps, closeGuide, completeGuide, goToStep } =
+    usePageOnboarding("/dashboard");
 
   const monthlyTakeHome = dashboardData?.takeHome ?? 0;
   const incomeBudgetLeft =
