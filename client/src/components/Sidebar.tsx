@@ -1,10 +1,22 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useGamification } from "../context/GamificationContext";
 import { signOut } from "../firebase/authClient";
 import { auth } from "../firebase/config";
 import ProfileAvatar from "./ProfileAvatar";
-import { LayoutDashboard, Target, Calendar, TrendingUp, BookOpen, Settings, LogOut, FlaskConical } from "lucide-react";
+import {
+  LayoutDashboard,
+  Target,
+  Calendar,
+  TrendingUp,
+  BookOpen,
+  Settings,
+  LogOut,
+  FlaskConical,
+  Menu,
+  X,
+} from "lucide-react";
 import { cn } from "../lib/utils";
 
 const NAV_LINKS = [
@@ -16,7 +28,7 @@ const NAV_LINKS = [
   { to: "/scenarios", icon: FlaskConical, label: "Scenarios" },
 ];
 
-export default function Sidebar() {
+function SidebarContents({ onNavClick }: { onNavClick?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -34,14 +46,18 @@ export default function Sidebar() {
   const xpNeeded = data?.xpNeeded ?? 100;
   const progress = xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
   const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "User";
-
   const isActive = (to: string) => location.pathname === to || location.pathname.startsWith(to + "/");
 
   return (
-    <aside className="w-60 flex-shrink-0 flex flex-col bg-gray-900 h-screen sticky top-0 z-30">
+    <>
       {/* Logo */}
       <div className="px-5 h-16 flex items-center border-b border-white/10 flex-shrink-0">
-        <Link to="/dashboard" data-onboarding="nav-brand" className="flex items-center gap-2.5 no-underline">
+        <Link
+          to="/dashboard"
+          data-onboarding="nav-brand"
+          className="flex items-center gap-2.5 no-underline"
+          onClick={onNavClick}
+        >
           <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center text-white text-[11px] font-extrabold">
             G
           </div>
@@ -57,6 +73,7 @@ export default function Sidebar() {
             <li key={to}>
               <Link
                 to={to}
+                onClick={onNavClick}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium no-underline transition-all",
                   isActive(to) ? "bg-purple-600 text-white" : "text-gray-400 hover:text-gray-100 hover:bg-white/[0.06]"
@@ -74,6 +91,7 @@ export default function Sidebar() {
           <Link
             to="/profile"
             data-onboarding="nav-account-menu"
+            onClick={onNavClick}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium no-underline transition-all",
               isActive("/profile") || isActive("/settings") || isActive("/change-password")
@@ -124,6 +142,71 @@ export default function Sidebar() {
           <LogOut className="w-4 h-4" />
         </button>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function MobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-gray-900 text-white"
+      aria-label="Open menu"
+    >
+      <Menu className="w-5 h-5" />
+    </button>
+  );
+}
+
+export default function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible on lg+ */}
+      <aside className="hidden lg:flex w-60 flex-shrink-0 flex-col bg-gray-900 h-screen sticky top-0 z-30">
+        <SidebarContents />
+      </aside>
+
+      {/* Mobile hamburger button — rendered into the page header via portal-like approach;
+          MainLayout renders this button in the top bar on small screens */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 gap-3 bg-gray-900">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <Link to="/dashboard" className="flex items-center gap-2 no-underline">
+          <div className="w-6 h-6 rounded-md bg-purple-600 flex items-center justify-center text-white text-[10px] font-extrabold">
+            G
+          </div>
+          <span className="text-white font-bold text-sm tracking-tight">Gecko</span>
+        </Link>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileOpen(false)} />
+          {/* Drawer */}
+          <aside className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-64 flex flex-col bg-gray-900">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded text-gray-400 hover:text-white"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <SidebarContents onNavClick={() => setMobileOpen(false)} />
+          </aside>
+        </>
+      )}
+    </>
   );
 }

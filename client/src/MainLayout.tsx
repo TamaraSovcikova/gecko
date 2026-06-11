@@ -63,7 +63,7 @@ export default function MainLayout() {
     <div className="flex h-screen overflow-hidden" style={{ background: "#F7F8FA" }}>
       {popupBadge && <BadgePopup badge={popupBadge} onClose={handleCloseBadgePopup} />}
       <Sidebar />
-      <main className="flex-1 overflow-y-auto min-w-0">
+      <main className="flex-1 overflow-y-auto min-w-0 pt-14 lg:pt-0">
         <Outlet />
       </main>
     </div>
