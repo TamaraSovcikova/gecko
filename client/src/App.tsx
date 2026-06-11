@@ -18,6 +18,7 @@ import PayslipSetup from "./pages/PayslipSetup";
 import Expenses from "./pages/Expenses/Expenses";
 import Learn from "./pages/Learn/index.tsx";
 import ConceptPage from "./pages/Learn/ConceptPage";
+import PathPage from "./pages/Learn/PathPage";
 import Quiz from "./pages/Quiz";
 import Terms from "./pages/Terms";
 import SettingsPage from "./pages/Settings";
@@ -51,6 +52,7 @@ function App() {
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/concepts/:slug" element={<ConceptPage />} />
+        <Route path="/learn/paths/:slug" element={<PathPage />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
