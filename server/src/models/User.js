@@ -163,6 +163,28 @@ const UserSchema = new mongoose.Schema(
       default: {},
     },
 
+    studentLoan: {
+      plan: {
+        type: String,
+        enum: ["plan1", "plan2", "plan4", "plan5", "postgrad", "none"],
+        default: "none",
+      },
+      balance: { type: Number, default: null },
+      startYear: { type: Number, default: null },
+    },
+
+    pensionSettings: {
+      employerMatchPct: { type: Number, default: null },
+      employeeContributionPct: { type: Number, default: null },
+    },
+
+    readinessCheck: {
+      completedAt: { type: Date, default: null },
+      answers: { type: Map, of: String, default: {} },
+      score: { type: Number, default: null },
+      priorities: { type: [String], default: [] },
+    },
+
     accountChangeLog: [
       {
         action: {

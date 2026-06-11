@@ -11,6 +11,7 @@ const {
   getLocationOptions,
   sendTestNewsletter,
   syncPathProgress,
+  saveFinancialProfile,
 } = require("../controllers/userController");
 
 // GET /v1/user/profile
@@ -34,6 +35,9 @@ router.patch("/:userId/profile", updateUserProfile);
 
 // PATCH /v1/user/path-progress  — sync learning path completions
 router.patch("/path-progress", syncPathProgress);
+
+// PATCH /v1/user/financial-profile  — save loan, pension, readiness data
+router.patch("/financial-profile", saveFinancialProfile);
 
 // POST /v1/user/newsletter/send-test
 router.post("/newsletter/send-test", sendTestNewsletter);

@@ -550,6 +550,46 @@ const getLocationOptions = async (req, res) => {
   }
 };
 
+// PATCH /v1/user/financial-profile
+// Accepts: { studentLoan?, pensionSettings?, readinessCheck? }
+const saveFinancialProfile = async (req, res) => {
+  const userId = req.user?.uid;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const { studentLoan, pensionSettings, readinessCheck } = req.body;
+  const updates = {};
+
+  if (studentLoan) {
+    if (studentLoan.plan !== undefined) updates["studentLoan.plan"] = studentLoan.plan;
+    if (studentLoan.balance !== undefined) updates["studentLoan.balance"] = studentLoan.balance;
+    if (studentLoan.startYear !== undefined) updates["studentLoan.startYear"] = studentLoan.startYear;
+  }
+  if (pensionSettings) {
+    if (pensionSettings.employerMatchPct !== undefined)
+      updates["pensionSettings.employerMatchPct"] = pensionSettings.employerMatchPct;
+    if (pensionSettings.employeeContributionPct !== undefined)
+      updates["pensionSettings.employeeContributionPct"] = pensionSettings.employeeContributionPct;
+  }
+  if (readinessCheck) {
+    if (readinessCheck.completedAt !== undefined) updates["readinessCheck.completedAt"] = readinessCheck.completedAt;
+    if (readinessCheck.score !== undefined) updates["readinessCheck.score"] = readinessCheck.score;
+    if (readinessCheck.priorities !== undefined) updates["readinessCheck.priorities"] = readinessCheck.priorities;
+    if (readinessCheck.answers) {
+      for (const [k, v] of Object.entries(readinessCheck.answers)) {
+        updates[`readinessCheck.answers.${k}`] = v;
+      }
+    }
+  }
+
+  try {
+    await User.findByIdAndUpdate(userId, { $set: updates });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("saveFinancialProfile error:", err);
+    res.status(500).json({ error: "Failed to save" });
+  }
+};
+
 // PATCH /v1/user/path-progress
 // Body: { pathSlug: string, completedModules: string[] }
 const syncPathProgress = async (req, res) => {
@@ -580,4 +620,5 @@ module.exports = {
   unsubscribeFromNewsletter,
   sendTestNewsletter,
   syncPathProgress,
+  saveFinancialProfile,
 };
