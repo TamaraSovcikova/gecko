@@ -1,5 +1,6 @@
 import React from "react";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, TrendingUp, GraduationCap, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 
 export type PayslipCategory = {
@@ -88,6 +89,28 @@ const PayslipBreakdown: React.FC<Props> = ({ result, onContinue }) => {
           </div>
         </div>
       )}
+
+      {/* What's unlocked */}
+      <div className="border-t border-gray-100 pt-3">
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Now set up</p>
+        <div className="space-y-1.5">
+          {[
+            { to: "/loans", icon: GraduationCap, label: "Student Loan Tracker", color: "text-blue-600" },
+            { to: "/pension", icon: TrendingUp, label: "Pension Optimizer", color: "text-emerald-600" },
+            { to: "/check", icon: ChevronRight, label: "Financial Readiness Check", color: "text-purple-600" },
+          ].map(({ to, icon: Icon, label, color }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+            >
+              <Icon className={`w-3.5 h-3.5 ${color} shrink-0`} />
+              <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{label}</span>
+              <ChevronRight className="w-3 h-3 text-gray-300 ml-auto group-hover:text-gray-400" />
+            </Link>
+          ))}
+        </div>
+      </div>
 
       <Button variant="primary" className="w-full" onClick={onContinue}>
         Continue to dashboard

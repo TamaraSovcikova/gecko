@@ -102,11 +102,6 @@ function computePriorities(answers: Record<string, string>): Priority[] {
 
   const loan = answers["student-loan"];
   if (loan && loan !== "no") {
-    const planMap: Record<string, string> = {
-      plan2: "plan2",
-      plan5: "plan5",
-      "plan1-4": "plan1",
-    };
     priorities.push({
       title: "Understand your student loan repayments",
       body: "Your repayments come out of your payslip automatically. See exactly how much, and whether you'll ever clear the balance.",

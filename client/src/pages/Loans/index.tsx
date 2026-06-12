@@ -101,8 +101,8 @@ export default function LoansPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your student loan</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             Your repayments are collected automatically through{" "}
-            <ConceptLink slug="payslip-basics">the payroll system</ConceptLink>, like tax and NI — you never choose to
-            make a payment. This tool shows you how much is leaving your pay and whether you'll ever clear the balance.
+            <ConceptLink slug="paye">the payroll system</ConceptLink>, like tax and NI — you never choose to make a
+            payment. This tool shows you how much is leaving your pay and whether you'll ever clear the balance.
           </p>
         </motion.div>
 
@@ -319,7 +319,7 @@ export default function LoansPage() {
                     than when you're earning well.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <ConceptLink slug="income-tax" className="text-[11px]" />
+                    <ConceptLink slug="income-tax-bands" className="text-[11px]" />
                     <ConceptLink slug="national-insurance" className="text-[11px]" />
                   </div>
                 </div>

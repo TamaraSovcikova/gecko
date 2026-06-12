@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Shield,
   Award,
+  GraduationCap,
+  Sparkles,
 } from "lucide-react";
 
 const FEATURES = [
@@ -22,7 +24,17 @@ const FEATURES = [
   {
     icon: TrendingUp,
     title: "Spend Forecasting",
-    desc: "Ensemble ML model predicts next month so you can act before you overspend.",
+    desc: "Ensemble model predicts next month so you can act before you overspend.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Student Loan Tracker",
+    desc: "See your exact monthly repayments, when you'll clear the balance, and what gets written off.",
+  },
+  {
+    icon: Sparkles,
+    title: "Pension Optimizer",
+    desc: "Model employer match scenarios and see the 40-year compound difference of contributing more now.",
   },
   {
     icon: PiggyBank,
@@ -237,10 +249,10 @@ const Home = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-3">Features</p>
               <h2 className="text-4xl font-bold text-gray-900 mb-3">Everything you need in one place</h2>
               <p className="text-gray-500 text-lg" style={{ maxWidth: "52ch" }}>
-                Six integrated tools that turn your payslip into a complete financial picture.
+                Integrated tools built for UK graduates - from your first payslip to your first pension contribution.
               </p>
             </FadeUp>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {FEATURES.map(({ icon: Icon, title, desc }, i) => (
                 <FadeUp key={title} delay={i * 0.04}>
                   <div className="bg-white border border-gray-200 rounded-xl p-6 h-full hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
