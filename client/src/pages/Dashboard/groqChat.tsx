@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { MessageCircle, X, Send, Trash2, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Trash2, Bot, User, Loader2, Sparkles, Database } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -10,6 +10,7 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   streaming?: boolean;
+  toolCalls?: string[];
 };
 
 const WELCOME: Message = {
@@ -27,14 +28,42 @@ const SUGGESTED_PROMPTS = [
   "What should I do with leftover budget this month?",
 ];
 
-function AssistantMessage({ content, streaming }: { content: string; streaming?: boolean }) {
+const TOOL_LABELS: Record<string, string> = {
+  get_budget_overview: "budget",
+  get_expense_breakdown: "expenses",
+  get_forecast: "forecast",
+  get_health_score: "health score",
+  get_loan_summary: "loan data",
+  get_savings_goals: "savings goals",
+};
+
+function AssistantMessage({
+  content,
+  streaming,
+  toolCalls,
+}: {
+  content: string;
+  streaming?: boolean;
+  toolCalls?: string[];
+}) {
   if (streaming && !content) {
+    const fetchingLabel = toolCalls?.length
+      ? `Checking your ${toolCalls.map((t) => TOOL_LABELS[t] ?? t).join(", ")}...`
+      : null;
     return (
-      <span className="inline-flex gap-0.5 items-center h-5">
-        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
-        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.15s]" />
-        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.3s]" />
-      </span>
+      <div className="space-y-1.5">
+        {fetchingLabel && (
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-purple-600 font-medium">
+            <Database className="w-3 h-3 animate-pulse" />
+            {fetchingLabel}
+          </span>
+        )}
+        <span className="inline-flex gap-0.5 items-center h-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
+          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.15s]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.3s]" />
+        </span>
+      </div>
     );
   }
   return (
@@ -138,6 +167,13 @@ const GroqChat = () => {
               );
               cancelled = true;
               break;
+            }
+            if (payload.tool) {
+              setMessages((prev) =>
+                prev.map((m, i) =>
+                  i === prev.length - 1 ? { ...m, toolCalls: [...(m.toolCalls ?? []), payload.tool] } : m
+                )
+              );
             }
             if (payload.token) {
               setMessages((prev) =>
@@ -297,7 +333,7 @@ const GroqChat = () => {
                     {msg.role === "user" ? (
                       <p className="leading-relaxed">{msg.content}</p>
                     ) : (
-                      <AssistantMessage content={msg.content} streaming={msg.streaming} />
+                      <AssistantMessage content={msg.content} streaming={msg.streaming} toolCalls={msg.toolCalls} />
                     )}
                   </div>
                 </div>
