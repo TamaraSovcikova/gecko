@@ -1,12 +1,29 @@
-// Cloudflare Pages deployment configuration for gecko client
-// Deploy with: npx wrangler pages deploy client/dist --project-name gecko-client
+// Cloudflare Pages deployment configuration for gecko client.
+//
+// GitHub integration (recommended):
+//   1. Cloudflare Pages dashboard > Create project > Connect Git > gecko repo
+//   2. Framework preset: None
+//   3. Root directory: client
+//   4. Build command: npm ci && npm run build
+//   5. Build output directory: dist
+//   6. Set all VITE_* environment variables in Pages dashboard (see list below)
+//
+// Manual CLI deploy (after building locally with env vars set):
+//   npx wrangler pages deploy client/dist --project-name gecko-client
+//
+// Required environment variables in Cloudflare Pages dashboard:
+//   VITE_API_URL                      = https://gecko-server.onrender.com
+//   VITE_FIREBASE_API_KEY             = <from Firebase console>
+//   VITE_FIREBASE_AUTH_DOMAIN         = <project>.firebaseapp.com
+//   VITE_FIREBASE_PROJECT_ID          = <project-id>
+//   VITE_FIREBASE_STORAGE_BUCKET      = <project>.appspot.com
+//   VITE_FIREBASE_MESSAGING_SENDER_ID = <sender-id>
+//   VITE_FIREBASE_APP_ID              = <app-id>
+//
+// SPA routing handled by client/public/_redirects ("/* /index.html 200"),
+// which Vite copies into client/dist at build time.
 {
   "name": "gecko-client",
   "compatibility_date": "2024-09-23",
-  "pages_build_output_dir": "client/dist",
-  // Set VITE_API_URL in Cloudflare Pages dashboard (Settings > Environment variables)
-  // Example: https://gecko-server.onrender.com
-  "vars": {
-    "NODE_VERSION": "20"
-  }
+  "pages_build_output_dir": "client/dist"
 }
