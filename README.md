@@ -1,48 +1,120 @@
-# Gecko
+# Gecko — Personal Finance App for Young Adults
 
-Gecko is a full-stack personal finance web app aimed at young adults (roughly 20-25). It turns a payslip and day-to-day spending into a clear monthly picture: a budget dashboard, a financial health score, spend forecasting with overspend warnings, receipt scanning, an AI finance assistant, gamified learning (quizzes, XP, levels, streaks, badges), and an opt-in monthly email newsletter.
+**GECKO** (Goals, Earnings, Capital, Knowledge, Outcomes) is a full-stack personal finance web app that turns a payslip and day-to-day spending into a clear, actionable monthly picture.
 
-> **GECKO** stands for **G**oals, **E**arnings, **C**apital, **K**nowledge, **O**utcomes. It was originally built as a university group project by *Team Zoar*; a few internal identifiers (e.g. localStorage key prefixes) still carry the `zoar` namespace.
+Originally built as a 6-person University of Surrey group project (COM2042, 2025–26), the app has since been extended with additional features, a TypeScript migration, and a deployed cloud architecture. I was Scrum Master and Backend/Tech Lead throughout the group phase, and have continued developing the project solo since.
 
-- **Frontend (Vite dev server):** http://localhost:5173
-- **Backend (Express API):** http://localhost:3001
-- **API base path:** `/api/v1/*`
+---
+
+## Screenshots
+
+> Run `node docs/take-screenshots.js` (requires Playwright) to regenerate these locally against a running dev server.
+
+| Home | Dashboard |
+|------|-----------|
+| ![Home page](screenshots/home.png) | ![Dashboard](screenshots/dashboard.png) |
+
+| Financial Health Score | Real-time Expense Logging |
+|------------------------|--------------------------|
+| ![Health score](screenshots/health-score.png) | ![Expenses](screenshots/expenses.png) |
+
+| AI Finance Assistant (tool-calling) | Spend Forecasting |
+|--------------------------------------|-------------------|
+| ![AI chat](screenshots/chat.png) | ![Forecast](screenshots/forecast.png) |
+
+| Learning Hub | Gamified Quizzes |
+|--------------|-----------------|
+| ![Learn](screenshots/learn.png) | ![Quiz](screenshots/quiz.png) |
+
+| Student Loan Tracker | Pension Planner |
+|----------------------|-----------------|
+| ![Loans](screenshots/loans.png) | ![Pension](screenshots/pension.png) |
+
+| Receipt OCR Scanner | Tax Year Review |
+|---------------------|-----------------|
+| ![OCR scanner](screenshots/scanner.png) | ![Year review](screenshots/year-review.png) |
+
+---
+
+## Features
+
+### Core (group project, 2025–26)
+
+| Feature | What it does |
+|---------|-------------|
+| **Payslip setup + HMRC calculator** | Gross annual salary → income tax, NI, and take-home pay using 2024/25 HMRC thresholds. Budget categories allocated here. |
+| **Dashboard** | Live pie charts comparing budget vs. actual spend. Financial health score (0–100) weighted across spending-vs-income (40%), budget adherence (35%), and plan alignment (25%). Updates in real time via Socket.io — no page refresh. |
+| **Real-time expense logging** | Log expenses by category; dashboard reflects the change instantly via Socket.io. |
+| **Spend forecasting** | Ensemble model (linear 30%, seasonal 20%, rolling median 30%, trend 20%) projects month-end spend and raises dismissable per-month warnings. |
+| **Receipt OCR scanner** | Upload a photo of a receipt; OCR.space extracts the total and pre-fills the expense form. |
+| **AI finance assistant** | Groq-powered chat agent with 6 real-data tool calls (health score, expenses, budget, forecast, salary benchmark, savings). Runs a multi-round agentic loop before streaming the response. |
+| **Financial literacy quizzes** | Fetches questions from QuizAPI.io (built-in custom fallback). Awards XP on completion. |
+| **Gamification** | XP system, levels, weekly streaks, and badges to increase engagement with financial education. |
+| **Profile + salary benchmark** | Adzuna API lookup shows average salary for your job title and UK location as a comparison point. |
+| **Learning hub** | Concept articles (payslips, pensions, tax, budgeting), learning paths with sequential unlock, and inline `ConceptLink` tooltips throughout the app. |
+| **Monthly newsletter** | Opt-in personalised spending summary delivered via SMTP (nodemailer) on the 1st of each month. The unsubscribe route is the only public endpoint. |
+| **Monthly snapshots** | Automatic end-of-month budget snapshot; used by the year-review and history timeline. |
+| **Onboarding flow** | Step-by-step `TooltipGuide` for new users, anchored to `data-onboarding` attributes on stable DOM elements. |
+| **Account settings + GDPR** | Change password, export data (GDPR Art. 20), delete account (GDPR Art. 17). Terms & Data Policy pages. |
+
+### Extended (added post-group-project)
+
+| Feature | What it does |
+|---------|-------------|
+| **Student loan tracker** | Monthly repayment, full payoff projection, and pension gap for Plan 1/2/4/5 and postgrad loans. Uses 2024/25 HMRC thresholds. |
+| **Pension optimizer** | Projects retirement pot, identifies monthly contribution gap to target, shows compound growth curve. |
+| **Financial readiness check** | 5-question diagnostic (score 0–100) with a prioritised action list; persisted to user profile. |
+| **Tax year review** | Annual summary across the UK tax year (Apr 6 – Apr 5) with year-offset navigation. |
+| **What-if scenario modeller** | Shows how a pay rise, expense cut, or lump-sum saving would shift your health score. |
+| **Savings goals** | Create goals with target amounts and dates; tracks progress and projects months to target with virtual fields. |
+| **Bills tracker** | Recurring bill management with due-date alerts. |
+| **Planning sidebar** | Surfaces loan tracker, pension gap, and readiness check status without leaving the dashboard. |
+| **MCP server** | `server/mcp/gecko-mcp.js` exposes Gecko data as an MCP tool server (stdio transport). |
 
 ---
 
 ## Tech stack
 
-**Frontend**
-- React 18 + TypeScript
-- Vite 5 (dev server + build)
-- React Router 6
-- Bootstrap 5, `react-icons`
-- Recharts (charts), `react-markdown`
-- Firebase JS SDK (client-side auth)
-- `socket.io-client` (real-time updates)
-- Vitest + Testing Library (tests)
+### Frontend
+- **React 18 + TypeScript** — migrated from JavaScript during development
+- **Vite 5** — dev server on `:5173`, proxies `/api` → backend in development
+- **React Router 6** — protected routes via `ProtectedRoute` wrapper
+- **Tailwind CSS v3** — custom design tokens (`purple-*`, `gold`, `shadow-nav/button/pop`)
+- **Recharts** — pie charts, area charts, budget vs. spend comparisons
+- **Framer Motion** — page and component transitions
+- **Radix UI + CVA** — accessible primitives; Button, Card, Input, Badge, Progress, Alert
+- **Socket.io-client** — real-time dashboard updates
+- **Firebase JS SDK** — client-side auth + Google OAuth
 
-**Backend**
-- Node.js + Express 4
-- MongoDB via Mongoose 8 (MongoDB Atlas)
-- Firebase Admin SDK (server-side ID-token verification)
-- Socket.io (real-time expense events)
-- `node-cron` (scheduled newsletter + monthly snapshot jobs)
-- `nodemailer` (newsletter email)
-- `multer` (receipt image upload)
-- `ml-regression-simple-linear` (spend forecasting)
-- `pdfkit` (PDF generation)
-- `helmet`, `cors`, `express-validator` (security/validation)
-- Jest + Supertest + `mongodb-memory-server` (tests)
+### Backend
+- **Node.js + Express 4** on port `:3001`
+- **MongoDB Atlas** via **Mongoose 8** — Firebase UID is `_id` on `User` documents
+- **Firebase Admin SDK** — verifies every incoming ID token; all `/api/v1/*` routes protected
+- **Socket.io** — shares HTTP server port; expense controllers emit update events
+- **node-cron** — newsletter and snapshot jobs start at server boot
+- **nodemailer** — SMTP newsletter delivery
+- **multer** — receipt image upload
+- **tsx** — TypeScript server entry point
 
-**Third-party services / APIs**
-- **Firebase Authentication** - user sign-in/sign-up and ID tokens
-- **MongoDB Atlas** - primary datastore
-- **Groq API** (`openai/gpt-oss-120b`) - in-app AI finance assistant
-- **Adzuna Jobs API** - average-salary lookups by job title + location
-- **OCR.space API** - receipt scanning / total extraction
-- **QuizAPI.io** - dynamic quiz questions (with built-in custom quizzes as fallback)
-- **SMTP server** (via nodemailer) - monthly newsletter delivery
+### External APIs
+| Service | Purpose |
+|---------|---------|
+| Firebase Authentication | User sign-in, Google OAuth, ID token verification |
+| MongoDB Atlas | Primary datastore |
+| Groq (`llama-3.3-70b-versatile`) | Tool-calling AI finance agent |
+| Adzuna Jobs API | Average salary lookups by job title + UK location |
+| OCR.space | Receipt total extraction |
+| QuizAPI.io | Dynamic financial literacy questions |
+| SMTP | Monthly newsletter |
+
+### Testing
+- **Jest + Supertest + `mongodb-memory-server`** — server unit and integration tests
+- **Vitest + Testing Library** — client unit tests
+
+### Deployment
+- **Cloudflare Pages** — client (auto-deploy from `main`)
+- **Render** — server (Free tier; `render.yaml` committed to repo)
+- **Docker** — `Dockerfile` at repo root for self-hosted / local prod testing
 
 ---
 
@@ -50,84 +122,63 @@ Gecko is a full-stack personal finance web app aimed at young adults (roughly 20
 
 ```
 gecko/
-├── package.json            # Root scripts: run both apps, seed, verify
-├── requirements.txt        # Human-readable pinned dependency list (source of truth = lockfiles)
-├── .gitlab-ci.yml          # CI: lint + build stages
-│
-├── client/                 # React + TypeScript frontend (Vite)
-│   ├── vite.config.ts      # Dev server on :5173, proxies /api -> :3001
+├── client/                     # React + TypeScript frontend (Vite)
+│   ├── public/_redirects       # SPA routing for Cloudflare Pages
 │   └── src/
-│       ├── App.tsx         # Route table (public + protected routes)
-│       ├── MainLayout.tsx  # Shared layout (XP bar, nav)
-│       ├── pages/          # Home, Login, Register, Dashboard, Expenses,
-│       │                   #   Forecasting, Learn, Quiz, Profile, Settings, etc.
-│       ├── components/     # Reusable UI (badges, modals, breakdown panels…)
-│       ├── context/        # AuthContext, GamificationContext
-│       ├── hooks/          # useSocket, usePageOnboarding, useStreakWarning
-│       ├── api/            # API client helpers (auth, forecast, onboarding)
-│       └── firebase/       # Client Firebase init + auth helpers
+│       ├── App.tsx             # Route table (20 routes)
+│       ├── MainLayout.tsx      # Shared layout — XP bar, sidebar
+│       ├── pages/              # Dashboard, Expenses, Forecast, Learn,
+│       │                       #   Quiz, Profile, Loans, Pension, Savings,
+│       │                       #   Bills, Scenarios, ReadinessCheck, YearReview…
+│       ├── components/         # Button, Card, ConceptLink, TooltipGuide…
+│       ├── context/            # AuthContext, GamificationContext
+│       ├── hooks/              # useSocket, usePageOnboarding, useStreakWarning
+│       ├── api/                # Typed fetch helpers
+│       ├── lib/                # ukTaxCalc.ts, studentLoan.ts, utils.ts
+│       └── types/api.ts        # Canonical API response interfaces
 │
-└── server/                 # Node + Express backend
-    ├── server.js           # Entry point: DB connect, HTTP + Socket.io, cron jobs
-    ├── scripts/            # seedData, verifySeedData, clearExpenses, etc.
+└── server/
+    ├── server.js               # Entry: DB connect, HTTP + Socket.io, cron
+    ├── mcp/gecko-mcp.js        # MCP tool server (stdio)
+    ├── scripts/                # seedData, previewNewsletter, clearExpenses…
     └── src/
-        ├── app.js          # Express app, middleware, route mounting
-        ├── config/         # db (Mongoose), firebase (Admin SDK), multer
-        ├── middleware/     # auth (verifies Firebase ID token)
-        ├── routes/         # auth, dashboard, expense, payslip, user,
-        │                   #   quiz, forecast, snapshot, chat
-        ├── controllers/    # expense, payslip, quiz, user
-        ├── services/       # forecast, healthScore, dashboardAggregate,
-        │                   #   adzunaCalculator, hmrcCalculator, ocr,
-        │                   #   newsletter, quiz
-        ├── models/         # User, Expense, MonthlyBudget,
-        │                   #   MonthlySnapshot, NewsletterSnapshot
-        ├── jobs/           # newsletterJob, monthlySnapshotJob (node-cron)
-        ├── socket/         # socketHandlers (real-time expense updates)
-        └── data/           # customQuizzes (offline quiz content)
+        ├── app.js              # Express, middleware, route mounting
+        ├── routes/             # auth, dashboard, expense, payslip, user,
+        │                       #   quiz, forecast, snapshot, chat
+        ├── controllers/        # expense, payslip, quiz, user
+        ├── services/           # forecast, healthScore, dashboardAggregate,
+        │                       #   adzunaCalculator, hmrcCalculator, ocr,
+        │                       #   newsletter, quiz
+        ├── models/             # User, Expense, MonthlyBudget,
+        │                       #   MonthlySnapshot, NewsletterSnapshot
+        ├── jobs/               # newsletterJob, monthlySnapshotJob
+        ├── middleware/auth.js  # Firebase ID token verification
+        └── config/             # db, firebase, multer
 ```
 
 ---
 
-## Architecture overview
+## Key architectural decisions
 
-- **Auth.** Firebase handles sign-in/sign-up in the browser. The frontend sends the Firebase ID token in the `Authorization` header on every request. The backend `auth` middleware verifies it with the Firebase Admin SDK and attaches the user. The **Firebase UID is used as the MongoDB `_id`** on the `User` document.
-- **API.** All feature routes are mounted under `/api/v1/*` in `server/src/app.js` and are protected by the auth middleware (except `/api/v1/auth/...` register and the public newsletter unsubscribe link). In development, Vite proxies `/api` to the backend on port 3001.
-- **Real-time.** Socket.io shares the HTTP server port. Creating/updating/deleting expenses emits events so the dashboard updates live.
-- **Scheduled jobs.** On startup the server starts cron jobs for the monthly newsletter and monthly snapshot rollups.
-- **Forecasting.** `forecastService` uses simple linear regression over spending to project month-end totals and raise overspend warnings (which users can dismiss per month).
-- **Health score.** `healthScoreService` produces a 0-100 score weighted across spending-vs-income (40%), budget adherence (35%), and plan alignment (25%).
-
-### Main API routes
-
-| Area | Mount | Notable endpoints |
-|------|-------|-------------------|
-| Auth | `/api/v1/auth` | `POST /register` |
-| Dashboard | `/api/v1/dashboard` | aggregated budget, health score, tips |
-| Expenses | `/api/v1/expenses` | `GET /`, `POST /`, `PATCH /:id`, `DELETE /:id`, `POST /scan` (receipt OCR) |
-| Payslip | `/api/v1/payslip` | `POST /`, `GET /`, `PUT /` |
-| User | `/api/v1/user` | `/profile`, `/export-data`, `/job-search`, `/location-search`, `/newsletter/*` |
-| Quiz | `/api/v1/quiz` | `GET /`, `GET /test`, `POST /complete`, `GET /gamification`, `POST /badge/seen` |
-| Forecast | `/api/v1/forecast` | `GET /`, `POST /dismiss` |
-| Snapshots | `/api/v1/snapshots` | monthly snapshot history |
-| Chat | `/api/v1/chat` | `POST /` (Groq AI finance assistant) |
+- **Firebase UID = MongoDB `_id`** — single identity across both systems; no join table needed.
+- **Single port for HTTP + Socket.io** — `io` attached to the Express server; controllers reach it via `app.get('io')`.
+- **Ensemble forecasting** — four models with renormalized weights; null months excluded so sparse data degrades gracefully.
+- **Shared UK tax calculator** — `client/src/lib/ukTaxCalc.ts` is the sole source of HMRC logic; the server CJS mirror (`server/src/lib/studentLoan.js`) stays in sync manually.
+- **Agentic chat loop** — chat route runs up to 3 tool-call rounds before streaming so the model can chain lookups without client round-trips.
+- **`data-onboarding` anchors** — onboarding steps target elements via CSS attribute selectors on always-present DOM nodes; `TooltipGuide` tracks position via `getBoundingClientRect` + rAF.
 
 ---
 
-## Prerequisites
+## Running locally
 
-- **Node.js 20+** (CI uses `node:20`)
-- A **MongoDB** connection string (MongoDB Atlas or local)
-- A **Firebase** project (Authentication enabled) with a service-account credential
-- API keys for the optional integrations you want to enable (Groq, Adzuna, OCR.space, QuizAPI, SMTP)
+### Prerequisites
 
-> The backend will start without MongoDB, but database-backed features won't work (`db.js` logs a warning and continues so Firebase auth and non-DB routes still respond).
+- Node.js 20+
+- MongoDB connection string (Atlas or local)
+- Firebase project with Authentication enabled + service account
+- API keys for optional integrations (Groq, Adzuna, OCR.space, QuizAPI, SMTP)
 
----
-
-## Setup
-
-Clone the repo, then install dependencies for all three packages (root, server, client):
+### Install
 
 ```bash
 npm install
@@ -137,184 +188,87 @@ npm install --prefix client
 
 ### Environment variables
 
-Create the following `.env` files (all are git-ignored).
-
 **`server/.env`**
-
 ```bash
-# Core
 PORT=3001
 CLIENT_URL=http://localhost:5173
-MONGODB_URI=<your MongoDB connection string>
+MONGODB_URI=<atlas-connection-string>
 
-# Firebase Admin SDK (service account)
 FIREBASE_PROJECT_ID=<project-id>
 FIREBASE_CLIENT_EMAIL=<service-account-email>
-# Single-line string; literal \n are converted to newlines at runtime
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# AI assistant (Groq)
 GROQ_API_KEY=<groq-key>
+ADZUNA_APP_ID=<id>
+ADZUNA_APP_KEY=<key>
+OCR_SPACE_API_KEY=<key>
+QUIZ_API_KEY=<key>
 
-# Salary lookups (Adzuna)
-ADZUNA_APP_ID=<adzuna-app-id>
-ADZUNA_APP_KEY=<adzuna-app-key>
-
-# Receipt scanning (OCR.space)
-OCR_SPACE_API_KEY=<ocr-space-key>
-
-# Quizzes (QuizAPI.io) - falls back to built-in quizzes if unset
-QUIZ_API_KEY=<quizapi-key>
-
-# Newsletter email (nodemailer / SMTP)
-SMTP_HOST=<smtp-host>
+SMTP_HOST=<host>
 SMTP_PORT=587
-SMTP_USER=<smtp-user>
-SMTP_PASS=<smtp-pass>
-NEWSLETTER_FROM_EMAIL=<from-address>          # defaults to SMTP_USER
-API_URL=http://localhost:3001                  # used to build unsubscribe links
-
-# Newsletter scheduler (optional)
-NEWSLETTER_SCHEDULER_ENABLED=true
-NEWSLETTER_CRON=<cron expression>
-NEWSLETTER_TIMEZONE=Europe/London
+SMTP_USER=<user>
+SMTP_PASS=<pass>
+NEWSLETTER_FROM_EMAIL=<from>
 ```
 
 **`client/.env`**
-
 ```bash
-# Backend base URL used by the frontend
 VITE_API_URL=http://localhost:3001
-
-# Firebase client config
-VITE_FIREBASE_API_KEY=<api-key>
+VITE_FIREBASE_API_KEY=<key>
 VITE_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=<project-id>
 VITE_FIREBASE_STORAGE_BUCKET=<project>.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=<sender-id>
+VITE_FIREBASE_MESSAGING_SENDER_ID=<id>
 VITE_FIREBASE_APP_ID=<app-id>
-
-# Optional flags
-# VITE_DISABLE_FORECAST=true
 ```
 
----
-
-## Running the app
-
-From the repository root, run both the backend and frontend together:
+### Run
 
 ```bash
-npm run dev
-```
-
-This uses `concurrently` to start:
-- the backend (`nodemon server.js`) on **http://localhost:3001**
-- the frontend (Vite) on **http://localhost:5173**
-
-To run them individually:
-
-```bash
+npm run dev      # starts both frontend (:5173) and backend (:3001)
 npm run server   # backend only
 npm run client   # frontend only
 ```
 
-Open **http://localhost:5173** in your browser. New users are routed through payslip setup / onboarding; returning users land on the dashboard.
+### Seed data
+
+```bash
+npm run seed:data     # 3 users, budgets, expenses, snapshots
+npm run verify:seed   # smoke-test the seed data
+```
 
 ---
 
-## Seed data
-
-Seed data makes it easy to test the dashboard, budget, expense, and snapshot flows locally. Ensure `MONGODB_URI` is set, then from the repository root:
+## Testing
 
 ```bash
-npm run seed:data       # seeds users, budgets, expenses, snapshots
-npm run verify:seed     # smoke-test that the seed data is present
-```
-
-The seed script (`server/scripts/seedData.js`) writes (by default): 3 users, 3 monthly budgets, 24 expenses (8 per user), 3 monthly snapshots, and 3 newsletter snapshots. Re-running for the same user is idempotent (data is replaced, not duplicated).
-
-Optional overrides (bash):
-
-```bash
-SEED_USER_ID=seed-user-002 SEED_USER_EMAIL=demo@example.com \
-SEED_USER_NAME="Demo User" SEED_MONTH=4 SEED_YEAR=2026 npm run seed:data
-```
-
-PowerShell:
-
-```powershell
-$env:SEED_USER_ID="seed-user-002"; $env:SEED_USER_EMAIL="demo@example.com"; `
-$env:SEED_USER_NAME="Demo User"; $env:SEED_MONTH="4"; $env:SEED_YEAR="2026"; npm run seed:data
-```
-
-> To see seeded records in the UI, log in with a Firebase account whose UID matches the seeded `SEED_USER_ID`.
-
-Other helper scripts in `server/scripts/`: `clearExpenses.js`, `clearSnapshots.js`, `getUser.js`, `previewNewsletter.js`.
-
----
-
-## Testing & linting
-
-**Backend (Jest + Supertest, `mongodb-memory-server`):**
-
-```bash
-npm run test --prefix server
+npm run test --prefix server   # Jest unit + integration
+npm run test --prefix client   # Vitest unit
 npm run lint --prefix server
-```
-
-**Frontend (Vitest + Testing Library):**
-
-```bash
-npm run test --prefix client          # single run
-npm run test:watch --prefix client    # watch mode
 npm run lint --prefix client
 ```
 
 ---
 
-## Build
+## Deployment
 
-Production build of the frontend:
+### Cloudflare Pages (client)
+1. Connect repo → Pages dashboard
+2. Root dir: `client` | Build: `npm ci && npm run build` | Output: `dist`
+3. Add `VITE_API_URL` (your Render URL) + all `VITE_FIREBASE_*` env vars
 
+### Render (server)
+1. Connect repo — Render reads `render.yaml` automatically
+2. Add all `server/.env` vars in the Render dashboard (Environment tab)
+
+### Docker
 ```bash
-npm run build --prefix client     # outputs to client/dist
-npm run preview --prefix client   # preview the production build
+docker build -t gecko-server .
+docker run -p 3001:3001 --env-file server/.env gecko-server
 ```
 
-The backend runs in production with:
-
-```bash
-npm start --prefix server         # node server.js
-```
-
 ---
 
-## Dependency pinning
+## A note on naming
 
-Exact versions are pinned across the three packages. The authoritative source of truth for reproducible installs is the lockfiles:
-
-- `package-lock.json` (root)
-- `server/package-lock.json`
-- `client/package-lock.json`
-
-`requirements.txt` is a human-readable mirror of those pinned versions.
-
----
-
-## CI/CD
-
-`.gitlab-ci.yml` defines two stages on a `node:20` image:
-
-1. **lint** - installs deps and runs ESLint for both `server` and `client` (`allow_failure: true`)
-2. **build** - builds the client (runs only if lint passes)
-
-There is no deploy stage (the original GitLab environment lacked the runner/SSH permissions for it).
-
----
-
-## Branch strategy
-
-- Branch off `dev` for every change: `feature/<name>` or `bugfix/<name>`
-- Open a PR back into `dev`
-- `dev` merges into `main` at sprint close only
+Internal localStorage/sessionStorage keys use the `zoar.*` / `zoar:*` prefix — carried over from the original team name. These are implementation details only; the `Profile/index.tsx` logout handler clears storage by this prefix.

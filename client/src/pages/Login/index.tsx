@@ -205,7 +205,7 @@ const Login = () => {
         </div>
 
         <div className="relative z-10">
-          <p className="text-xs text-gray-600">University of Surrey &bull; COM2042 &bull; Team Zoar</p>
+          <p className="text-xs text-gray-600">Originally built for University of Surrey &bull; COM2042</p>
         </div>
       </div>
 

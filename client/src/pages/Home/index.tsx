@@ -404,7 +404,7 @@ const Home = () => {
             <span className="text-sm font-bold text-gray-500">Gecko</span>
           </div>
           <p className="text-xs text-gray-600 text-center">
-            &copy; 2026 G.E.C.K.O &mdash; Team Zoar, University of Surrey &bull; COM2042 Group Project
+            &copy; 2026 G.E.C.K.O &mdash; Personal project, originally built as part of University of Surrey COM2042
           </p>
           <div className="flex items-center gap-5">
             <Link to="/terms" className="text-xs text-gray-600 hover:text-gray-400 transition-colors no-underline">
