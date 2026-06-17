@@ -7,3 +7,9 @@ client/.env
 dist/
 coverage/
 .DS_Store
+client/.env.development
+
+# University presentation / flyer files (not part of the project)
+GTJ_*.md
+GTJ_*.html
+screenshots/
