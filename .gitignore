@@ -8,6 +8,8 @@ dist/
 coverage/
 .DS_Store
 client/.env.development
+client/.env.production
+client/.env.production.local
 
 # University presentation / flyer files (not part of the project)
 GTJ_*.md
