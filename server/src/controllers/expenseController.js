@@ -6,6 +6,7 @@
 // - DELETE /api/v1/expenses/:expenseId
 // - GET /api/v1/expenses
 
+const PDFDocument = require('pdfkit');
 const Expense = require('../models/Expense');
 const MonthlyBudget = require('../models/MonthlyBudget');
 const extractTotalFromText = require('../utils/extractTotal');
@@ -374,5 +375,90 @@ exports.scanReceipt = async (req, res) => {
       success: false,
       message: 'Receipt scanning failed',
     });
+  }
+};
+
+// GET /api/v1/expenses/export?format=csv|pdf&from=YYYY-MM-DD&to=YYYY-MM-DD
+exports.exportExpenses = async (req, res) => {
+  try {
+    const userId = req.user?.uid;
+    const format = (req.query.format || 'csv').toLowerCase();
+    const filter = { userId };
+    if (req.query.from || req.query.to) {
+      filter.date = {};
+      if (req.query.from) filter.date.$gte = new Date(req.query.from);
+      if (req.query.to) filter.date.$lte = new Date(req.query.to);
+    }
+
+    const expenses = await Expense.find(filter).sort({ date: -1 });
+
+    if (format === 'csv') {
+      const header = 'Date,Category,Amount (GBP),Note\n';
+      const rows = expenses.map((e) => {
+        const date = new Date(e.date).toISOString().slice(0, 10);
+        const note = (e.note || '').replace(/"/g, '""');
+        return `${date},"${e.category}",${e.amount.toFixed(2)},"${note}"`;
+      });
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="gecko-expenses.csv"');
+      return res.send(header + rows.join('\n'));
+    }
+
+    if (format === 'pdf') {
+      const doc = new PDFDocument({ margin: 50 });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="gecko-expenses.pdf"');
+      doc.pipe(res);
+
+      doc.fontSize(20).font('Helvetica-Bold').text('Gecko — Expense Report', { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(10).font('Helvetica').fillColor('#666')
+        .text(`Generated ${new Date().toLocaleDateString('en-GB')} · ${expenses.length} expenses`, { align: 'center' });
+      doc.moveDown(1);
+
+      const total = expenses.reduce((s, e) => s + e.amount, 0);
+      const byCategory = expenses.reduce((acc, e) => {
+        acc[e.category] = (acc[e.category] || 0) + e.amount;
+        return acc;
+      }, {});
+
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#000').text('Summary');
+      doc.moveDown(0.3);
+      doc.fontSize(10).font('Helvetica').text(`Total spent: £${total.toFixed(2)}`);
+      Object.entries(byCategory)
+        .sort(([, a], [, b]) => b - a)
+        .forEach(([cat, amt]) => {
+          doc.text(`  ${cat}: £${amt.toFixed(2)}`);
+        });
+
+      doc.moveDown(1);
+      doc.fontSize(12).font('Helvetica-Bold').text('Transactions');
+      doc.moveDown(0.5);
+
+      const colX = [50, 110, 260, 360];
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#444');
+      ['Date', 'Category', 'Amount', 'Note'].forEach((h, i) => doc.text(h, colX[i], doc.y, { continued: i < 3 }));
+      doc.moveDown(0.3);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ccc').stroke();
+      doc.moveDown(0.3);
+
+      expenses.forEach((e) => {
+        const y = doc.y;
+        doc.fontSize(8).font('Helvetica').fillColor('#000');
+        doc.text(new Date(e.date).toLocaleDateString('en-GB'), colX[0], y, { width: 55 });
+        doc.text(e.category, colX[1], y, { width: 145 });
+        doc.text(`£${e.amount.toFixed(2)}`, colX[2], y, { width: 95 });
+        doc.text(e.note || '', colX[3], y, { width: 190 });
+        doc.moveDown(0.5);
+        if (doc.y > 720) doc.addPage();
+      });
+
+      return doc.end();
+    }
+
+    res.status(400).json({ success: false, error: 'format must be csv or pdf' });
+  } catch (err) {
+    console.error('[expenseController] exportExpenses failed:', err);
+    res.status(500).json({ success: false, error: 'Export failed' });
   }
 };

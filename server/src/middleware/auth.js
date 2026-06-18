@@ -31,6 +31,14 @@ const authMiddleware = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized - token missing user id' });
   }
 
+  // Block unverified email accounts. Firebase sets email_verified in the token.
+  if (decodedToken.email && decodedToken.email_verified === false) {
+    return res.status(403).json({
+      error: 'Email not verified',
+      code: 'EMAIL_NOT_VERIFIED',
+    });
+  }
+
   // Attach the decoded user so route handlers can access req.user.uid, req.user.email, etc.
   req.user = {
     ...decodedToken,

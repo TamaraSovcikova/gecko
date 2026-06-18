@@ -19,7 +19,12 @@ export default defineConfig({
   },
 
  test: {
-   environment: "jsdom",   // fixes document/window errors
-   globals: true,           // allows describe/it/expect without imports
+   environment: "jsdom",
+   globals: true,
+   coverage: {
+     provider: "v8",
+     reporter: ["text-summary", "lcov"],
+     include: ["src/lib/**/*.ts", "src/services/**/*.ts"],
+   },
  },
 });

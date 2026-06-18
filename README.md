@@ -70,6 +70,11 @@ Originally built as a 6-person University of Surrey group project (COM2042, 2025
 | **Bills tracker** | Recurring bill management with due-date alerts. |
 | **Planning sidebar** | Surfaces loan tracker, pension gap, and readiness check status without leaving the dashboard. |
 | **MCP server** | `server/mcp/gecko-mcp.js` exposes Gecko data as an MCP tool server (stdio transport). |
+| **Advanced analytics** | 12-month spend trend (area chart), category breakdown (stacked bar + pie), net savings rate, and statistical anomaly detection (Z-score > 2 SD flags unusual category spikes). |
+| **CSV / PDF export** | `GET /api/v1/expenses/export?format=csv\|pdf` — streaming CSV or pdfkit-rendered report with category summary. Export buttons in the Expense Breakdown panel. |
+| **ML category classifier** | Two-layer classifier: keyword rules (UK merchants, 9 categories) + cosine-similarity over user's own expense history. Powers `POST /api/v1/expenses/classify`. |
+| **Email verification** | Firebase email verification enforced on register; banner + resend button in the layout if unverified. |
+| **OpenAPI 3.0 docs** | swagger-jsdoc annotations on all routes; interactive Swagger UI at `/api/docs`. |
 
 ---
 

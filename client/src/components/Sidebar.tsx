@@ -16,6 +16,7 @@ import {
   FlaskConical,
   GraduationCap,
   CalendarRange,
+  BarChart2,
   Menu,
   X,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const PLANNING_LINKS = [
   { to: "/loans", icon: GraduationCap, label: "Student Loan" },
   { to: "/pension", icon: TrendingUp, label: "Pension" },
   { to: "/year-review", icon: CalendarRange, label: "Year Review" },
+  { to: "/analytics", icon: BarChart2, label: "Analytics" },
 ];
 
 function SidebarContents({ onNavClick }: { onNavClick?: () => void }) {

@@ -32,6 +32,7 @@ import LoansPage from "./pages/Loans/index.tsx";
 import PensionPage from "./pages/Pension/index.tsx";
 import ReadinessCheckPage from "./pages/ReadinessCheck/index.tsx";
 import YearReviewPage from "./pages/YearReview/index.tsx";
+import AnalyticsPage from "./pages/Analytics/index.tsx";
 import MainLayout from "./MainLayout";
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
         <Route path="/pension" element={<PensionPage />} />
         <Route path="/check" element={<ReadinessCheckPage />} />
         <Route path="/year-review" element={<YearReviewPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
       </Route>
 
       {/* NON-LAYOUT PROTECTED ROUTES */}

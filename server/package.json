@@ -12,6 +12,15 @@
     "seed": "tsx scripts/seedData.js",
     "verify:seed": "tsx scripts/verifySeedData.js"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/services/*.js",
+      "src/middleware/*.js",
+      "src/utils/*.js"
+    ]
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "axios": "^1.14.0",
@@ -32,6 +41,8 @@
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

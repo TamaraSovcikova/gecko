@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 type Expense = {
   _id: string;
@@ -30,6 +31,7 @@ const ExpenseBreakdown = ({
   onDelete,
   onUpdate,
 }: Props) => {
+  const { token } = useAuth();
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [expensePage, setExpensePage] = useState(1);
@@ -56,9 +58,45 @@ const ExpenseBreakdown = ({
     expensePage * EXPENSES_PER_PAGE,
   );
 
+  const handleExport = (format: "csv" | "pdf") => {
+    if (!token) return;
+    const url = `${import.meta.env.VITE_API_URL}/api/v1/expenses/export?format=${format}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.setAttribute("download", `gecko-expenses.${format}`);
+    // Pass token via Authorization using fetch + blob download
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.blob())
+      .then((blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        a.href = objectUrl;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objectUrl);
+      })
+      .catch(console.error);
+  };
+
   return (
     <div style={{ marginTop: "30px" }}>
-      <h4 style={{ marginBottom: "10px" }}>Expense Breakdown</h4>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+        <h4>Expense Breakdown</h4>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => handleExport("csv")}
+            style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", cursor: "pointer", color: "#374151" }}
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => handleExport("pdf")}
+            style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", cursor: "pointer", color: "#374151" }}
+          >
+            Export PDF
+          </button>
+        </div>
+      </div>
 
       <div className="gecko-table-wrap">
         <table className="gecko-table">

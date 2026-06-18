@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const pinoHttp = require("pino-http");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 const authMiddleware = require("./middleware/auth");
 const { authLimiter, chatLimiter, apiLimiter } = require("./middleware/rateLimit");
 const logger = require("./utils/logger");
@@ -20,6 +22,7 @@ const snapshotRoutes = require("./routes/snapshot");
 const chatRoutes = require("./routes/chat");
 const savingsRoutes = require("./routes/savings");
 const recurringRoutes = require("./routes/recurring");
+const analyticsRoutes = require("./routes/analytics");
 
 const app = express();
 
@@ -49,6 +52,13 @@ app.get("/healthz", (_req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
 
+// OpenAPI docs — public, no auth required.
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/api/docs.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+
 require("./jobs/monthlySnapshotJob");
 
 app.use("/api/v1/auth", authLimiter, authRouter);
@@ -62,6 +72,7 @@ app.use("/api/v1/forecast", authMiddleware, apiLimiter, forecastRoutes);
 app.use("/api/v1/chat", authMiddleware, chatLimiter, chatRoutes);
 app.use("/api/v1/savings", authMiddleware, apiLimiter, savingsRoutes);
 app.use("/api/v1/recurring", authMiddleware, apiLimiter, recurringRoutes);
+app.use("/api/v1/analytics", authMiddleware, apiLimiter, analyticsRoutes);
 
 app.use("/", router);
 

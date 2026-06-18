@@ -1,5 +1,6 @@
 import Sidebar from "./components/Sidebar";
 import BadgePopup from "./components/BadgePopup";
+import EmailVerificationBanner from "./components/EmailVerificationBanner";
 import { BADGES } from "./components/Badge";
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -63,9 +64,12 @@ export default function MainLayout() {
     <div className="flex h-screen overflow-hidden" style={{ background: "#F7F8FA" }}>
       {popupBadge && <BadgePopup badge={popupBadge} onClose={handleCloseBadgePopup} />}
       <Sidebar />
-      <main className="flex-1 overflow-y-auto min-w-0 pt-14 lg:pt-0">
-        <Outlet />
-      </main>
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+        <EmailVerificationBanner />
+        <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
