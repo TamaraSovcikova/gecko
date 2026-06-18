@@ -18,7 +18,7 @@ export const setAuthToken = (token: string | null) => {
 export const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  timeout: 30_000,
+  timeout: 60_000,
 });
 
 apiClient.interceptors.request.use((config) => {
