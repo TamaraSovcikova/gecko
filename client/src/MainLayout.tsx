@@ -64,7 +64,7 @@ export default function MainLayout() {
     <div className="flex min-h-screen" style={{ background: "#F7F8FA" }}>
       {popupBadge && <BadgePopup badge={popupBadge} onClose={handleCloseBadgePopup} />}
       <Sidebar />
-      <div className="flex flex-col flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-h-screen min-w-0">
         <EmailVerificationBanner />
         <main className="flex-1 pt-14 lg:pt-0">
           <Outlet />
