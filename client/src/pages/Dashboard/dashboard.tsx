@@ -619,7 +619,7 @@ const Dashboard = () => {
             {/* Main two-column grid */}
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
               {/* Left: budget bars + expense list */}
-              <div className="space-y-5">
+              <div className="space-y-5 min-w-0">
                 {/* Budget vs Actual */}
                 <div
                   className="bg-white border border-gray-200 rounded-lg p-5"
@@ -818,7 +818,7 @@ const Dashboard = () => {
               </div>
 
               {/* Right: market tips (if any) + quick-add form */}
-              <div className="space-y-4">
+              <div className="space-y-4 min-w-0">
                 {/* Market insights - always visible, sorted high-priority first */}
                 {(displayedData?.adzunaTips?.length ?? 0) > 0 && !isSnapshotMode && (
                   <div
