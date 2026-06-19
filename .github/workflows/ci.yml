@@ -56,3 +56,11 @@ jobs:
       - name: Build
         working-directory: client
         run: npm run build
+        env:
+          VITE_API_URL: https://gecko-uhqc.onrender.com
+          VITE_FIREBASE_API_KEY: AIzaSyAlTMlBRiH5DvgysviWCYtfcm5KCqX4jyU
+          VITE_FIREBASE_AUTH_DOMAIN: zoar-eed92.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: zoar-eed92
+          VITE_FIREBASE_STORAGE_BUCKET: zoar-eed92.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "812712742589"
+          VITE_FIREBASE_APP_ID: 1:812712742589:web:b7dac925e379ec2630f1d4

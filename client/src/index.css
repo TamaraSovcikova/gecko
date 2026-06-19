@@ -58,28 +58,30 @@
 }
 
 html {
+  height: 100%;
+  overflow: hidden;
   scroll-behavior: smooth;
-  min-height: 100%;
   background: #F7F8FA;
 }
 
 body {
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #111827;
   background-color: #F7F8FA;
   margin: 0;
-  overflow-x: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
   position: relative;
   isolation: isolate;
 }
 
+/* Public pages (Home, Login, Terms, etc.) scroll here.
+   MainLayout pages use h-screen internally and don't need this. */
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100%;
+  overflow-y: auto;
   background: transparent;
   position: relative;
   isolation: isolate;
@@ -104,8 +106,6 @@ body.auth-page-bg {
 }
 
 body.auth-page-bg #root {
-  min-height: 100vh;
-  min-height: 100dvh;
   background: inherit;
 }
 
