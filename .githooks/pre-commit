@@ -1,0 +1,26 @@
+#!/bin/sh
+# Blocks secrets and private data in the lines this commit adds, then runs lint-staged.
+# Enable once per clone: git config core.hooksPath .githooks
+. "$(dirname "$0")/privacy-lib.sh"
+
+added="$GIT_DIR_PATH/privacy-added.tmp"
+git diff --cached -U0 --no-color --diff-filter=ACMR -- . ':(exclude)*package-lock.json' \
+  | grep -E '^\+' | grep -v -E '^\+\+\+ ' > "$added"
+status=0
+check_text "staged changes" "$added" || status=1
+rm -f "$added"
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --redact --no-banner . >/dev/null 2>&1 \
+    || { echo "[privacy] gitleaks flagged the staged changes (run: gitleaks git --pre-commit --staged --redact -v)" >&2; status=1; }
+fi
+
+if [ $status -ne 0 ]; then
+  echo "[privacy] commit blocked. Use made-up examples and @example.com addresses." >&2
+  exit 1
+fi
+
+# Existing formatting step (formerly run through husky). HUSKY=0 still skips it.
+if [ "${HUSKY:-1}" != "0" ] && [ -f .husky/pre-commit ]; then
+  sh .husky/pre-commit || exit 1
+fi

@@ -11,7 +11,7 @@
     "clear:expenses": "node scripts/clearExpenses.js",
     "seed:data": "npm run seed --prefix server",
     "verify:seed": "npm run verify:seed --prefix server",
-    "prepare": "husky"
+    "prepare": "husky && (git config core.hooksPath .githooks || true)"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks attribution trailers, secrets and private data in commit messages.
+. "$(dirname "$0")/privacy-lib.sh"
+msg="$1"
+status=0
+if grep -q -i -E '^(co-authored-by|generated-by):|generated with' "$msg"; then
+  echo "[privacy] commit message: attribution trailer (this repo is single-author)" >&2; status=1
+fi
+grep -v '^#' "$msg" > "$GIT_DIR_PATH/privacy-msg.tmp"
+check_text "commit message" "$GIT_DIR_PATH/privacy-msg.tmp" || status=1
+rm -f "$GIT_DIR_PATH/privacy-msg.tmp"
+exit $status
