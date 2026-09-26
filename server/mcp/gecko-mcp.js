@@ -240,7 +240,7 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // Server runs until the process is killed — do not log to stdout (MCP uses stdio)
+  // Server runs until the process is killed - do not log to stdout (MCP uses stdio)
 }
 
 main().catch((err) => {

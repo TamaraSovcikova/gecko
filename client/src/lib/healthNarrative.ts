@@ -29,7 +29,7 @@ export function buildHealthNarrative(d: NarrativeInput): string | null {
     const worst = overspends[0];
     const annual = Math.round(worst.over * 12);
     sentences.push(
-      `You're £${worst.over.toFixed(0)} over on ${worst.name} — that compounds to £${annual.toLocaleString()} over a year if it continues.`
+      `You're £${worst.over.toFixed(0)} over on ${worst.name} - that compounds to £${annual.toLocaleString()} over a year if it continues.`
     );
   }
 
@@ -42,7 +42,7 @@ export function buildHealthNarrative(d: NarrativeInput): string | null {
   const housingPct = d.takeHome > 0 ? (housingSpend / d.takeHome) * 100 : 0;
   if (housingPct > 33 && !overspends.find((o) => housingKeys.some((h) => o.name.toLowerCase().includes(h)))) {
     sentences.push(
-      `Housing is ${housingPct.toFixed(0)}% of your take-home — above the 30% guideline most advisors recommend.`
+      `Housing is ${housingPct.toFixed(0)}% of your take-home - above the 30% guideline most advisors recommend.`
     );
   }
 
@@ -50,7 +50,7 @@ export function buildHealthNarrative(d: NarrativeInput): string | null {
   const budgetLeftPct = d.takeHome > 0 ? (d.budgetLeft / d.takeHome) * 100 : 0;
   if (budgetLeftPct > 15 && overspends.length === 0) {
     sentences.push(
-      `You have £${d.budgetLeft.toFixed(0)} unspent — worth putting toward savings or your emergency fund.`
+      `You have £${d.budgetLeft.toFixed(0)} unspent - worth putting toward savings or your emergency fund.`
     );
   } else if (d.budgetLeft < -50) {
     sentences.push(`Overall you're £${Math.abs(d.budgetLeft).toFixed(0)} over budget.`);

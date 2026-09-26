@@ -1,10 +1,10 @@
-# Gecko — Feature Master Plan
+# Gecko - Feature Master Plan
 
 Prioritised list of features to implement to maximise CV impact. Ordered by bang-for-buck: how impressive it is on a CV vs. how long it takes to build.
 
 ---
 
-## Tier 1 — High impact, moderate effort (do these first)
+## Tier 1 - High impact, moderate effort (do these first)
 
 ### 1. GitHub Actions CI/CD pipeline
 
@@ -15,7 +15,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - `.github/workflows/deploy.yml`: on merge to `main`, trigger Cloudflare Pages build and Render deploy via their respective deploy hooks
 - Status badge in README
 
-**Effort:** 1–2 days. The hardest part is setting up secrets; the workflow YAML itself is straightforward.
+**Effort:** 1-2 days. The hardest part is setting up secrets; the workflow YAML itself is straightforward.
 
 **CV line:** "Set up GitHub Actions CI/CD pipeline: automated lint, Jest/Vitest test runs on every PR, and deploy-on-merge to Cloudflare Pages and Render."
 
@@ -23,7 +23,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 
 ### 2. Expand test coverage to 80%+
 
-**Why it's impressive:** Almost every job description asks for it. Right now there are 6 unit tests and 4 integration suites — enough to show you know testing exists, but not enough to claim strong coverage.
+**Why it's impressive:** Almost every job description asks for it. Right now there are 6 unit tests and 4 integration suites - enough to show you know testing exists, but not enough to claim strong coverage.
 
 **What to build:**
 - Client: Vitest tests for `ukTaxCalc.ts`, `studentLoan.ts`, `forecastService`, `healthScoreService`
@@ -31,7 +31,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - Integration: one test per new feature (loans, pension, readiness check, savings goals)
 - Add a coverage report step to CI (Jest `--coverage`, Vitest `--coverage`)
 
-**Effort:** 3–5 days.
+**Effort:** 3-5 days.
 
 **CV line:** "Achieved 80%+ test coverage across backend services and client utilities; integrated coverage reporting into CI."
 
@@ -47,7 +47,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - Expose `/api/docs` endpoint (publicly accessible, no auth)
 - Link in README
 
-**Effort:** 2–3 days.
+**Effort:** 2-3 days.
 
 **CV line:** "Documented 30+ REST endpoints with OpenAPI 3.0 annotations; interactive Swagger UI accessible at `/api/docs`."
 
@@ -58,7 +58,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 **Why it's impressive:** Turns the app into something users can install on their phone. Strong for fintech roles where mobile adoption matters.
 
 **What to build:**
-- `vite-plugin-pwa` — generates service worker and web manifest
+- `vite-plugin-pwa` - generates service worker and web manifest
 - Offline fallback page
 - Add `manifest.webmanifest` with icons (reuse existing gecko logo)
 - Install prompt handling
@@ -75,8 +75,8 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 
 **What to build:**
 - `express-rate-limit` on auth routes (5 attempts / 15 min)
-- `helmet` is already included — verify all headers are set correctly
-- Input sanitisation with `express-validator` (already pulled in — check all routes use it)
+- `helmet` is already included - verify all headers are set correctly
+- Input sanitisation with `express-validator` (already pulled in - check all routes use it)
 - CORS whitelist (only allow the CF Pages domain)
 - Add a security section to README
 
@@ -86,7 +86,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 
 ---
 
-## Tier 2 — Significant impact, higher effort (do once Tier 1 is done)
+## Tier 2 - Significant impact, higher effort (do once Tier 1 is done)
 
 ### 6. Data export to CSV/PDF
 
@@ -114,7 +114,7 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - Show a "connected account" indicator on the dashboard
 - Fall back gracefully if not connected
 
-**Effort:** 3–5 days.
+**Effort:** 3-5 days.
 
 **CV line:** "Integrated Plaid/Truelayer sandbox API for automatic transaction import and expense auto-categorisation."
 
@@ -128,10 +128,10 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - Month-over-month spend trend (area chart, 12-month view)
 - Category breakdown over time (stacked bar)
 - Net savings rate chart (income minus spend, monthly)
-- "Spending anomaly" detection — flag months where a category spikes more than 2 standard deviations
+- "Spending anomaly" detection - flag months where a category spikes more than 2 standard deviations
 - D3.js for the anomaly chart (shows JS data viz competency beyond Recharts)
 
-**Effort:** 3–4 days.
+**Effort:** 3-4 days.
 
 **CV line:** "Built an analytics dashboard with month-over-month trend analysis, category breakdown charts, and statistical anomaly detection for unusual spend spikes."
 
@@ -142,12 +142,12 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 **Why it's impressive:** Production-grade auth is expected for any app handling financial data.
 
 **What to build:**
-- Firebase email verification on register (already supported by Firebase SDK — just not enforced)
+- Firebase email verification on register (already supported by Firebase SDK - just not enforced)
 - Block login until email is verified
 - "Resend verification email" button
 - Login activity log (last 5 login timestamps stored on User model)
 
-**Effort:** 1–2 days.
+**Effort:** 1-2 days.
 
 ---
 
@@ -159,14 +159,14 @@ Prioritised list of features to implement to maximise CV impact. Ordered by bang
 - Run `axe-core` against all major pages (can be done via a Vitest/Playwright test)
 - Fix any contrast failures (Tailwind color token audit)
 - Add `aria-label` to icon-only buttons
-- Keyboard-navigable modals and dropdowns (Radix UI handles most of this — verify)
+- Keyboard-navigable modals and dropdowns (Radix UI handles most of this - verify)
 - Document compliance in README
 
 **Effort:** 2 days.
 
 ---
 
-## Tier 3 — Impressive but complex (longer-term)
+## Tier 3 - Impressive but complex (longer-term)
 
 ### 11. WebSocket-backed collaborative budgeting
 
@@ -199,7 +199,7 @@ Support for multiple currencies and non-UK tax systems.
 - Currency conversion via Open Exchange Rates API
 - Alternative tax calculator for Republic of Ireland (similar PAYE system)
 
-**Effort:** 3–5 days for i18n scaffolding; much more for actual translations.
+**Effort:** 3-5 days for i18n scaffolding; much more for actual translations.
 
 ---
 
@@ -221,12 +221,12 @@ At the end of Week 2 you can already add "CI/CD pipeline, OpenAPI docs, PWA, and
 
 ## Features that are already impressive (don't undersell)
 
-These are already in the app and worth highlighting — don't assume they're ordinary:
+These are already in the app and worth highlighting - don't assume they're ordinary:
 
-- **Tool-calling AI agent** — multi-round agentic loop, not just a chatbot
-- **Ensemble forecasting** — four-model weighted average, not naive linear regression
-- **MCP server** — ahead of the curve; most candidates have never built one
-- **HMRC tax calculator** — legally accurate for 2024/25, not an approximation
-- **Student loan projections** — Plan 1/2/4/5/postgrad, compound interest, pension gap
-- **Socket.io real-time dashboard** — sub-5-second latency, room-scoped events
-- **Receipt OCR → expense pre-fill** — end-to-end pipeline, not just an API call
+- **Tool-calling AI agent** - multi-round agentic loop, not just a chatbot
+- **Ensemble forecasting** - four-model weighted average, not naive linear regression
+- **MCP server** - ahead of the curve; most candidates have never built one
+- **HMRC tax calculator** - legally accurate for 2024/25, not an approximation
+- **Student loan projections** - Plan 1/2/4/5/postgrad, compound interest, pension gap
+- **Socket.io real-time dashboard** - sub-5-second latency, room-scoped events
+- **Receipt OCR → expense pre-fill** - end-to-end pipeline, not just an API call

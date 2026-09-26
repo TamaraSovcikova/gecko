@@ -6,7 +6,7 @@ Traps, invariants, and non-obvious behaviour. Read before touching a subsystem.
 
 - **Design tokens:** purples are `purple-50/100/.../700`, gold is `gold` (custom), shadows are `shadow-nav/button/pop/md/lg`. See `client/tailwind.config.js`.
 - **UI components** live in `client/src/components/ui/`: Button (CVA), Card, Input, Badge, Skeleton, Progress, Alert. Import via `../../components/ui/button` etc.
-- **`cn()` utility:** `client/src/lib/utils.ts` — always use for conditional Tailwind class merging.
+- **`cn()` utility:** `client/src/lib/utils.ts` - always use for conditional Tailwind class merging.
 - **ConceptLink** renders an inline dotted-underline purple term linking to `/learn/concepts/:slug` with hover tooltip. Import from `client/src/components/ConceptLink.tsx`. Use wherever financial jargon appears.
 
 ## Auth / Data model
@@ -29,9 +29,9 @@ Traps, invariants, and non-obvious behaviour. Read before touching a subsystem.
 - **Recurring detection** in `recurringService.js`: CV < 0.15 on amounts AND day SD < 5. Minimum 2 consecutive months.
 - **Chat history** stored in `ChatSession` (max 40 messages). SSE streaming at `POST /api/v1/chat/stream`. Groq model defaults to `llama-3.1-8b-instant` (override via `GROQ_MODEL` env).
 - **Chat agent uses tool-calling:** `server/src/routes/chat.js` runs a multi-round agentic loop (max 3 rounds). Model is `llama-3.3-70b-versatile`. Tool call SSE events: `{ tool: "get_health_score" }`; client shows "Checking your..." indicator.
-- **SavingsGoal virtuals:** `progressPct`, `remainingAmount`, `monthsToTarget` — set `toJSON/toObject: { virtuals: true }` when reading.
-- **Receipt OCR `/api/v1/expenses/scan`** uses `multer.single('image')` — field name matters.
-- **Budget preset rounding:** always `Math.floor` each intermediate slice; last category = `base - sum_of_others`. Never `Math.round` all slices — they can sum past the total due to float accumulation.
+- **SavingsGoal virtuals:** `progressPct`, `remainingAmount`, `monthsToTarget` - set `toJSON/toObject: { virtuals: true }` when reading.
+- **Receipt OCR `/api/v1/expenses/scan`** uses `multer.single('image')` - field name matters.
+- **Budget preset rounding:** always `Math.floor` each intermediate slice; last category = `base - sum_of_others`. Never `Math.round` all slices - they can sum past the total due to float accumulation.
 - **Expense form defaults:** date = today (`new Date().toISOString().slice(0, 10)`). Enter key submits when amount + category filled. Note hidden behind FileText icon toggle.
 - **Onboarding element targeting:** steps use `[data-onboarding="<step-id>"]` selector. Attribute must be on an element always in the DOM (not inside collapsed panels). `TooltipGuide.tsx` tracks via `getBoundingClientRect` + rAF.
 - **Forecast warning dismissals** are per-month via `User.forecastWarningState.monthKey`.
@@ -43,9 +43,9 @@ Traps, invariants, and non-obvious behaviour. Read before touching a subsystem.
 
 ## Financial profile
 
-- **Profile data** (studentLoan, pensionSettings, readinessCheck) stored on User, persisted via `PATCH /api/v1/user/financial-profile`. Dot-notation partial updates — any field subset works.
+- **Profile data** (studentLoan, pensionSettings, readinessCheck) stored on User, persisted via `PATCH /api/v1/user/financial-profile`. Dot-notation partial updates - any field subset works.
 - **Dashboard journey strip** reads `profile.studentLoan/pensionSettings/readinessCheck` from existing profile fetch. Renders only when: readiness check incomplete OR loan configured OR pension gap exists.
-- **Readiness check** at `/check` — 5 questions, score 0-100. Score and answers persisted. No permanent sidebar link; discovered via dashboard CTA only.
+- **Readiness check** at `/check` - 5 questions, score 0-100. Score and answers persisted. No permanent sidebar link; discovered via dashboard CTA only.
 - **Year review** at `/year-review` uses `GET /api/v1/snapshots`, filters by UK tax year (Apr 6 - Apr 5), supports year-offset nav.
 - **Learning paths progress** uses `zoar.pathProgress.{userId}.{pathSlug}` localStorage key (JSON array of completed moduleIds). Modules unlock sequentially.
 

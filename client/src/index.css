@@ -1,5 +1,5 @@
 /* ============================================================
-   G.E.C.K.O — Global styles & CSS custom properties
+   G.E.C.K.O - Global styles & CSS custom properties
    Single source of truth for the design token values.
    These mirror the constants in src/constants/theme.ts so
    both inline-style (JS) and CSS-in-JS <style> strings can

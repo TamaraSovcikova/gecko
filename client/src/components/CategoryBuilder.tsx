@@ -91,7 +91,7 @@ const CategoryBuilder: React.FC<Props> = ({
 
       <p className={cn("mt-3 text-xs font-semibold", isOverAllocated ? "text-red-600" : "text-gray-400")}>
         Allocated: £{Number(totalCategoryAmount || 0).toFixed(2)}
-        {isOverAllocated && " — exceeds gross salary"}
+        {isOverAllocated && " - exceeds gross salary"}
       </p>
     </div>
   );

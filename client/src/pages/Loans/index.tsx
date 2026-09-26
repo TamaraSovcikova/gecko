@@ -101,7 +101,7 @@ export default function LoansPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your student loan</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             Your repayments are collected automatically through{" "}
-            <ConceptLink slug="paye">the payroll system</ConceptLink>, like tax and NI — you never choose to make a
+            <ConceptLink slug="paye">the payroll system</ConceptLink>, like tax and NI - you never choose to make a
             payment. This tool shows you how much is leaving your pay and whether you'll ever clear the balance.
           </p>
         </motion.div>
@@ -118,7 +118,7 @@ export default function LoansPage() {
             <p className="text-xs font-semibold text-blue-800">Student loans are not like other debt</p>
             <p className="text-xs text-blue-700 leading-relaxed">
               You only repay what you earn above your plan's threshold. If you earn below it, you repay nothing. After
-              30 or 40 years, any remaining balance is written off — so many graduates never fully clear their loan, and
+              30 or 40 years, any remaining balance is written off - so many graduates never fully clear their loan, and
               that's intentional design, not failure.
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function LoansPage() {
         >
           <h2 className="text-sm font-bold text-gray-900 mb-1">Which plan are you on?</h2>
           <p className="text-xs text-gray-400 mb-4">
-            Check your student finance or payslip — it shows as "Student Loan Plan 2" etc.
+            Check your student finance or payslip - it shows as "Student Loan Plan 2" etc.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {PLAN_OPTIONS.map((opt) => (
@@ -255,7 +255,7 @@ export default function LoansPage() {
                 {monthly === 0 && (
                   <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mt-3">
                     Your salary is below the {planConfig?.label} threshold of {fmt(planConfig?.threshold ?? 0, 0)}/year
-                    — no repayments until you earn above this.
+                    - no repayments until you earn above this.
                   </p>
                 )}
               </div>
@@ -294,7 +294,7 @@ export default function LoansPage() {
                     <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5">
                       <p className="text-[11px] text-blue-700 leading-relaxed">
                         At your current salary, roughly <strong>{fmt(projection.writeOffBalance, 0)}</strong> would be
-                        written off when the loan expires. This is not unusual — the write-off is part of how the system
+                        written off when the loan expires. This is not unusual - the write-off is part of how the system
                         was designed for lower-earning graduates.
                       </p>
                     </div>
@@ -315,7 +315,7 @@ export default function LoansPage() {
                   <p className="text-xs text-gray-500 leading-relaxed">
                     You repay {(planConfig.rate * 100).toFixed(0)}% of everything you earn above{" "}
                     {fmt(planConfig.threshold, 0)}/year. If your salary rises to {fmt(grossAnnual * 1.2, 0)}, your
-                    repayments rise proportionally — but so does your take-home. The loan never feels more affordable
+                    repayments rise proportionally - but so does your take-home. The loan never feels more affordable
                     than when you're earning well.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">

@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend, Cell, PieChart, Pie,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 import { TrendingUp, AlertTriangle, PieChart as PieIcon, BarChart2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -23,13 +34,9 @@ interface AnalyticsData {
   topCategories: TopCategory[];
 }
 
-const PURPLE_SHADES = [
-  "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD",
-  "#DDD6FE", "#6D28D9", "#5B21B6", "#4C1D95",
-];
+const PURPLE_SHADES = ["#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE", "#6D28D9", "#5B21B6", "#4C1D95"];
 
-const fmt = (n: number) =>
-  n.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
+const fmt = (n: number) => n.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
 
 export default function AnalyticsPage() {
   const { token } = useAuth();
@@ -49,9 +56,7 @@ export default function AnalyticsPage() {
   }, [token]);
 
   // Collect all category names for the stacked bar chart
-  const allCategories = data
-    ? Array.from(new Set(data.categoryTrend.flatMap((s) => Object.keys(s.categories))))
-    : [];
+  const allCategories = data ? Array.from(new Set(data.categoryTrend.flatMap((s) => Object.keys(s.categories)))) : [];
 
   const stackedBarData = data?.categoryTrend.map((slot) => ({
     label: slot.label,
@@ -74,9 +79,7 @@ export default function AnalyticsPage() {
   }
 
   if (!data) {
-    return (
-      <div className="p-6 text-center text-gray-500">Failed to load analytics.</div>
-    );
+    return <div className="p-6 text-center text-gray-500">Failed to load analytics.</div>;
   }
 
   const hasData = data.monthlyTotals.some((m) => m.total > 0);
@@ -99,22 +102,19 @@ export default function AnalyticsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Total (12 mo)"
-          value={fmt(data.monthlyTotals.reduce((s, m) => s + m.total, 0))}
-        />
+        <StatCard label="Total (12 mo)" value={fmt(data.monthlyTotals.reduce((s, m) => s + m.total, 0))} />
         <StatCard
           label="Avg / month"
           value={fmt(
             data.monthlyTotals.filter((m) => m.total > 0).length > 0
               ? data.monthlyTotals.reduce((s, m) => s + m.total, 0) /
                   data.monthlyTotals.filter((m) => m.total > 0).length
-              : 0,
+              : 0
           )}
         />
         <StatCard
           label="Top category"
-          value={data.topCategories[0]?.name || "—"}
+          value={data.topCategories[0]?.name || "-"}
           sub={data.topCategories[0] ? `${data.topCategories[0].pct}% of spend` : undefined}
         />
         <StatCard
@@ -133,9 +133,7 @@ export default function AnalyticsPage() {
             onClick={() => setActiveTab(key)}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-              activeTab === key
-                ? "bg-white text-purple-700 shadow-sm"
-                : "text-gray-500 hover:text-gray-700",
+              activeTab === key ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-700"
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -148,7 +146,7 @@ export default function AnalyticsPage() {
       <div className="bg-white rounded-2xl shadow-md p-6">
         {activeTab === "trend" && (
           <>
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Monthly spend — last 12 months</h2>
+            <h2 className="text-base font-semibold text-gray-800 mb-4">Monthly spend - last 12 months</h2>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={data.monthlyTotals}>
                 <defs>
@@ -178,7 +176,7 @@ export default function AnalyticsPage() {
           <>
             <div className="flex gap-8">
               <div className="flex-1">
-                <h2 className="text-base font-semibold text-gray-800 mb-4">Spend by category — last 12 months</h2>
+                <h2 className="text-base font-semibold text-gray-800 mb-4">Spend by category - last 12 months</h2>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={stackedBarData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -245,9 +243,7 @@ export default function AnalyticsPage() {
                 <Tooltip formatter={(v: number) => fmt(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="expenses" name="Expenses" fill="#A78BFA" />
-                {data.netSavings.some((s) => s.income > 0) && (
-                  <Bar dataKey="income" name="Income" fill="#7C3AED" />
-                )}
+                {data.netSavings.some((s) => s.income > 0) && <Bar dataKey="income" name="Income" fill="#7C3AED" />}
                 {data.netSavings.some((s) => s.net !== null) && (
                   <Bar dataKey="net" name="Net saved" fill="#10B981">
                     {data.netSavings.map((entry, i) => (
@@ -309,15 +305,10 @@ function StatCard({
 }) {
   return (
     <div
-      className={cn(
-        "rounded-xl border p-4",
-        highlight ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-white",
-      )}
+      className={cn("rounded-xl border p-4", highlight ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-white")}
     >
       <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className={cn("text-lg font-bold", highlight ? "text-amber-700" : "text-gray-900")}>
-        {value}
-      </div>
+      <div className={cn("text-lg font-bold", highlight ? "text-amber-700" : "text-gray-900")}>{value}</div>
       {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
     </div>
   );

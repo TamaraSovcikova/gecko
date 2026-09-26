@@ -506,7 +506,7 @@ const Dashboard = () => {
               ) : (
                 <KpiCard
                   label="Budget used"
-                  value={monthlyTakeHome > 0 ? Math.round((totalSpent / monthlyTakeHome) * 100) + "%" : "—"}
+                  value={monthlyTakeHome > 0 ? Math.round((totalSpent / monthlyTakeHome) * 100) + "%" : "-"}
                   meta="of take-home pay"
                   icon={BarChart2}
                   accentColor={totalSpent > monthlyTakeHome ? "text-red-600" : "text-gray-900"}

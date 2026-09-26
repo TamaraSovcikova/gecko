@@ -3,7 +3,7 @@
  *
  * These types document the contract between the Express server and the React
  * client. When a server response shape changes, update the corresponding type
- * here — TypeScript will surface every call site that needs to be updated.
+ * here - TypeScript will surface every call site that needs to be updated.
  */
 
 // ─── Shared primitives ───────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-# Gecko — Architecture
+# Gecko - Architecture
 
 > This document explains how Gecko is built, how its key features work, and the reasoning behind each major decision.
 > Written for two audiences: someone with no technical background can read the plain-English sections and understand what the system does. A software engineer can read the technical sections and see exactly how it works.
@@ -23,7 +23,7 @@
 
 ## What Gecko is
 
-Most young adults start their first job without knowing how to read their own payslip. They do not know what National Insurance is, why the tax figure looks wrong, or how much of their salary they will actually take home. This is not laziness — it is a gap in what schools teach.
+Most young adults start their first job without knowing how to read their own payslip. They do not know what National Insurance is, why the tax figure looks wrong, or how much of their salary they will actually take home. This is not laziness - it is a gap in what schools teach.
 
 Gecko is a personal finance web application built specifically for that moment: the first payslip, the first month of rent, the first attempt at a budget. The app connects a payslip to a budget, logs expenses against that budget, forecasts next month's spending before it happens, and teaches the user the concepts behind the numbers as they go.
 
@@ -31,13 +31,13 @@ Gecko is a personal finance web application built specifically for that moment: 
 
 Four features go beyond the standard budgeting toolkit:
 
-**Student Loan Tracker** — Repayments come out of a UK graduate's payslip automatically, like tax. Most people do not know how much they are paying, and many do not know if they will ever clear the balance or have it written off. The tracker calculates the exact monthly deduction from salary, projects the total repaid over 30-40 years, and tells the user whether they will clear the balance or have it written off — which is intentional policy for lower-earning graduates, not a failure.
+**Student Loan Tracker** - Repayments come out of a UK graduate's payslip automatically, like tax. Most people do not know how much they are paying, and many do not know if they will ever clear the balance or have it written off. The tracker calculates the exact monthly deduction from salary, projects the total repaid over 30-40 years, and tells the user whether they will clear the balance or have it written off - which is intentional policy for lower-earning graduates, not a failure.
 
-**Pension Optimizer** — UK employers are legally required to contribute to an employee's pension (auto-enrolment). Many employees leave free employer contributions unclaimed by contributing less than the match threshold. The optimizer shows the 40-year compound growth difference between different contribution levels at 6% annual investment growth.
+**Pension Optimizer** - UK employers are legally required to contribute to an employee's pension (auto-enrolment). Many employees leave free employer contributions unclaimed by contributing less than the match threshold. The optimizer shows the 40-year compound growth difference between different contribution levels at 6% annual investment growth.
 
-**Financial Readiness Check** — A 5-question diagnostic that produces a prioritized list of what to do first: enrol in the pension, understand the loan, open a Cash ISA, build an emergency fund. Designed so a user who knows nothing about personal finance leaves with a concrete next step.
+**Financial Readiness Check** - A 5-question diagnostic that produces a prioritized list of what to do first: enrol in the pension, understand the loan, open a Cash ISA, build an emergency fund. Designed so a user who knows nothing about personal finance leaves with a concrete next step.
 
-**Tax Year Review** — A UK-specific annual summary aligned to the tax year (6 April to 5 April), not the calendar year. Shows total income, total expenses, top spending categories, and XP earned over the year, with navigation between tax years.
+**Tax Year Review** - A UK-specific annual summary aligned to the tax year (6 April to 5 April), not the calendar year. Shows total income, total expenses, top spending categories, and XP earned over the year, with navigation between tax years.
 
 ---
 
@@ -95,10 +95,10 @@ Four features go beyond the standard budgeting toolkit:
 Here is what happens when a user loads their dashboard:
 
 1. The browser sends `GET /api/v1/dashboard` with a `Authorization: Bearer <token>` header.
-2. The auth middleware on the server calls Firebase Admin SDK to verify the JWT. This is a cryptographic check using Google's published public keys — the server does not store sessions or passwords.
+2. The auth middleware on the server calls Firebase Admin SDK to verify the JWT. This is a cryptographic check using Google's published public keys - the server does not store sessions or passwords.
 3. The middleware attaches the verified user ID to the request object.
 4. The dashboard route handler fetches from MongoDB: the user's latest `MonthlyBudget` document (their payslip allocation), and all `Expense` documents for the current month.
-5. The `healthScoreService` computes a 0–100 score from those figures.
+5. The `healthScoreService` computes a 0-100 score from those figures.
 6. The Adzuna API is called with the user's job title and location to fetch a market salary comparison.
 7. All results are returned as a single JSON response. The client does one request and gets everything it needs.
 
@@ -110,7 +110,7 @@ Here is what happens when a user loads their dashboard:
 
 The forecast engine tries to answer: "If I keep spending the way I have been, how much will I spend in each category next month?"
 
-It does this by looking at your expense history — the same way a person would: if you spend roughly the same on food every month, it predicts roughly the same next month. If your spending has been rising, it expects it to continue rising. If last January you spent a lot on heating, it factors that in for next January.
+It does this by looking at your expense history - the same way a person would: if you spend roughly the same on food every month, it predicts roughly the same next month. If your spending has been rising, it expects it to continue rising. If last January you spent a lot on heating, it factors that in for next January.
 
 The system then merges these different perspectives into a single prediction, and flags you if any category is heading toward your budget limit.
 
@@ -120,10 +120,10 @@ The forecast runs as a four-component **ensemble model**. Each component capture
 
 | Component | Weight | What it captures |
 |---|---|---|
-| Simple linear regression | 30% | The overall trend — spending rising or falling over time |
-| Seasonal prediction | 20% | Cyclical patterns — January heating, December gifts |
+| Simple linear regression | 30% | The overall trend - spending rising or falling over time |
+| Seasonal prediction | 20% | Cyclical patterns - January heating, December gifts |
 | Rolling 3-month median | 30% | Recent behaviour, resistant to one-off outliers |
-| Current month pace | 20% | Real-time signal — spend-to-date ÷ days elapsed × days in month |
+| Current month pace | 20% | Real-time signal - spend-to-date ÷ days elapsed × days in month |
 
 ```
 finalForecast = Σ (weight_i / totalWeight) × component_i
@@ -155,7 +155,7 @@ A subscription or standing order is identified when both of the following hold a
 This correctly identifies a monthly gym payment (same amount, same day) while ignoring irregular grocery shops (variable amount, any day).
 
 **Confidence scoring**
-Each category's prediction comes with a confidence score (10–99):
+Each category's prediction comes with a confidence score (10-99):
 
 ```
 confidence = max(10, min(99, 100 - (stdDev(history) / mean(history)) × 100))
@@ -169,7 +169,7 @@ High variability → low confidence. Low variability → high confidence. Displa
 
 ### Plain English
 
-The chat assistant is not just a chatbot that knows general financial facts. It has access to tools — the same way a financial advisor would pull up your statements before giving advice. When you ask "why is my health score low?", it does not guess. It calls a tool to fetch your actual health score breakdown, sees which factor is dragging it down, then explains exactly what that means for your specific numbers.
+The chat assistant is not just a chatbot that knows general financial facts. It has access to tools - the same way a financial advisor would pull up your statements before giving advice. When you ask "why is my health score low?", it does not guess. It calls a tool to fetch your actual health score breakdown, sees which factor is dragging it down, then explains exactly what that means for your specific numbers.
 
 ### What changed: from data-dump to tool-calling agent
 
@@ -253,7 +253,7 @@ data: {"done": true}                   → client ends streaming
 
 ### Plain English
 
-Student loan repayments in the UK are not like other debt. You do not choose to make a payment — it comes out of your payslip automatically, the same way tax does. You only repay a percentage of what you earn *above* a threshold. If you earn below the threshold, you pay nothing. After 30 or 40 years (depending on your plan), any remaining balance is written off.
+Student loan repayments in the UK are not like other debt. You do not choose to make a payment - it comes out of your payslip automatically, the same way tax does. You only repay a percentage of what you earn *above* a threshold. If you earn below the threshold, you pay nothing. After 30 or 40 years (depending on your plan), any remaining balance is written off.
 
 This means many graduates will never fully clear their loan, and that is intentional policy. The calculator is honest about this: it will tell you whether you are on track to clear your balance or whether it will be written off.
 
@@ -262,11 +262,11 @@ This means many graduates will never fully clear their loan, and that is intenti
 | Plan | Who it covers | Threshold (2024/25) | Rate | Write-off |
 |---|---|---|---|---|
 | Plan 1 | Started uni before 2012 | £24,990/yr | 9% above threshold | 25 years |
-| Plan 2 | Started uni 2012–2023 (England/Wales) | £27,295/yr | 9% above threshold | 30 years |
+| Plan 2 | Started uni 2012-2023 (England/Wales) | £27,295/yr | 9% above threshold | 30 years |
 | Plan 4 | Scotland | £31,395/yr | 9% above threshold | 30 years |
 | Plan 5 | Started uni from 2023 (England/Wales) | £25,000/yr | 9% above threshold | 40 years |
 | Postgrad | Masters or PhD loan | £21,000/yr | 6% above threshold | 30 years |
-| None | No loan | — | — | — |
+| None | No loan | - | - | - |
 
 ### Monthly repayment calculation
 
@@ -306,13 +306,13 @@ Gecko ships a standalone MCP server. Any MCP-compatible client can connect to it
 | `gecko_budget_overview` | Take-home pay, budget total, budget used, budget left this month |
 | `gecko_expense_breakdown` | Spending grouped by category for a given month (defaults to current) |
 | `gecko_forecast` | Ensemble forecast for next month with confidence scores and overspend warnings |
-| `gecko_health_score` | Financial health score (0–100) with factor-by-factor breakdown |
+| `gecko_health_score` | Financial health score (0-100) with factor-by-factor breakdown |
 | `gecko_loan_summary` | Student loan plan, monthly repayment, 30/40-year projection |
 | `gecko_savings_goals` | All savings goals with current progress, target, and completion status |
 
 ### How to connect
 
-The MCP server runs as a stdio process (standard input/output) — this is the most compatible mode for MCP clients.
+The MCP server runs as a stdio process (standard input/output) - this is the most compatible mode for MCP clients.
 
 ```bash
 # Set environment variables
@@ -368,13 +368,13 @@ Browser                    Firebase                   Gecko Server
 
 **What the JWT verification does:** Firebase ID tokens are JSON Web Tokens signed with Google's private RSA key (RS256). The Firebase Admin SDK on the server downloads Google's current public keys at startup, caches them, and uses them to verify the token's cryptographic signature. This means:
 - The server never stores passwords
-- The server never issues tokens — Google does
+- The server never issues tokens - Google does
 - A tampered or forged token is rejected because the signature check fails
 - Tokens expire after 1 hour; the Firebase client SDK auto-refreshes
 
 ### Why every request carries the token
 
-There are no server-side sessions. Every HTTP request carries the JWT in the `Authorization` header. The middleware extracts the user ID from the verified token. This makes the server **stateless** — any instance can handle any request because there is nothing to look up in a session store.
+There are no server-side sessions. Every HTTP request carries the JWT in the `Authorization` header. The middleware extracts the user ID from the verified token. This makes the server **stateless** - any instance can handle any request because there is nothing to look up in a session store.
 
 ### Rate limiting
 
@@ -422,7 +422,7 @@ SavingsGoal (_id, userId, name, targetAmount, currentAmount,
 
 MongoDB normally assigns a random `ObjectId` to each document as its `_id`. For the `User` document, the Firebase UID (a string like `"xK7mP3qR..."`) is used as `_id` instead.
 
-This means all other documents can reference the user with `userId: req.user.uid` and queries never need a join or lookup — the same identifier works across both systems. There is no risk of creating two separate user identities that need to be reconciled.
+This means all other documents can reference the user with `userId: req.user.uid` and queries never need a join or lookup - the same identifier works across both systems. There is no risk of creating two separate user identities that need to be reconciled.
 
 ### Virtual fields
 
@@ -434,7 +434,7 @@ UserSchema.virtual("xpLevel").get(function () {
 });
 ```
 
-`SavingsGoal` uses virtuals for `progressPct`, `remainingAmount`, and `monthsToTarget` — computed from `currentAmount` and `targetAmount` without storing derived values. Virtuals are included in JSON output via `{ toJSON: { virtuals: true } }`.
+`SavingsGoal` uses virtuals for `progressPct`, `remainingAmount`, and `monthsToTarget` - computed from `currentAmount` and `targetAmount` without storing derived values. Virtuals are included in JSON output via `{ toJSON: { virtuals: true } }`.
 
 ### Monthly snapshots
 
@@ -455,23 +455,23 @@ In a future production version, Hono would be a strong candidate for the Cloudfl
 
 ### Why Server-Sent Events and not WebSockets for chat streaming?
 
-SSE is **unidirectional** (server → client only). For chat, the client sends one request and the server streams the response back — that is exactly what SSE is designed for.
+SSE is **unidirectional** (server → client only). For chat, the client sends one request and the server streams the response back - that is exactly what SSE is designed for.
 
 WebSockets are bidirectional and designed for two-way real-time communication (like the expense Socket.io events, where a logged expense triggers a real-time update on the dashboard). Using WebSockets for something that is naturally request-response would add unnecessary complexity.
 
-SSE also works over standard HTTP/1.1, requires no protocol upgrade, and is handled natively by the browser's `fetch` + `ReadableStream` API — which is what `groqChat.tsx` uses.
+SSE also works over standard HTTP/1.1, requires no protocol upgrade, and is handled natively by the browser's `fetch` + `ReadableStream` API - which is what `groqChat.tsx` uses.
 
 ### Why MongoDB and not PostgreSQL?
 
-The user's financial profile is **document-shaped**: the `pensionSettings`, `studentLoan`, and `readinessCheck` fields were all added to the `User` document incrementally without needing schema migrations. MongoDB's document model means adding a new nested field to the schema is a code change only — existing documents simply do not have the field yet.
+The user's financial profile is **document-shaped**: the `pensionSettings`, `studentLoan`, and `readinessCheck` fields were all added to the `User` document incrementally without needing schema migrations. MongoDB's document model means adding a new nested field to the schema is a code change only - existing documents simply do not have the field yet.
 
 If the project were to add cross-user analytics (aggregate reports across all users), a relational model would be worth reconsidering.
 
 ### Why Groq and not OpenAI?
 
-Groq runs open-weight models (Llama 3.1) on custom inference hardware (LPUs — Language Processing Units) that produce responses significantly faster than GPU-based inference. For a chat interface where streaming latency matters, Groq's `llama-3.1-8b-instant` model produces tokens quickly enough that the experience feels responsive.
+Groq runs open-weight models (Llama 3.1) on custom inference hardware (LPUs - Language Processing Units) that produce responses significantly faster than GPU-based inference. For a chat interface where streaming latency matters, Groq's `llama-3.1-8b-instant` model produces tokens quickly enough that the experience feels responsive.
 
-The API is OpenAI-compatible, meaning the tool-calling syntax, message format, and streaming protocol are identical — the only difference is the base URL.
+The API is OpenAI-compatible, meaning the tool-calling syntax, message format, and streaming protocol are identical - the only difference is the base URL.
 
 ---
 
@@ -479,7 +479,7 @@ The API is OpenAI-compatible, meaning the tool-calling syntax, message format, a
 
 ### Client: Cloudflare Workers (static asset serving)
 
-The React + TypeScript frontend is built by Vite into a static bundle (`dist/`). Cloudflare Workers can serve static assets from the edge — the user's browser fetches the app from whichever Cloudflare datacenter is nearest to them globally, rather than from a single origin server.
+The React + TypeScript frontend is built by Vite into a static bundle (`dist/`). Cloudflare Workers can serve static assets from the edge - the user's browser fetches the app from whichever Cloudflare datacenter is nearest to them globally, rather than from a single origin server.
 
 ```
 Build command:   npm run build --prefix client
@@ -495,7 +495,7 @@ All API calls proxy to the Render server via the `VITE_API_URL` environment vari
 The Express server runs on Render's free tier. Configuration in `render.yaml` sets:
 - Root directory: `server/`
 - Build: `npm install`
-- Start: `npm start` (which runs `tsx server.js` — TypeScript-aware execution)
+- Start: `npm start` (which runs `tsx server.js` - TypeScript-aware execution)
 
 **Free tier cold starts:** Render's free tier sleeps the server after 15 minutes of inactivity. The first request after sleep triggers a ~30-second cold start. For a demo or portfolio project this is acceptable. A production deployment would use Render's Starter plan ($7/month) to keep the server warm.
 
@@ -529,7 +529,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID
 VITE_FIREBASE_APP_ID
 ```
 
-> Note: Firebase client config values (`VITE_FIREBASE_*`) are designed to be public. They identify the Firebase project but do not grant access — that is controlled by Firebase Security Rules and the Admin SDK on the server.
+> Note: Firebase client config values (`VITE_FIREBASE_*`) are designed to be public. They identify the Firebase project but do not grant access - that is controlled by Firebase Security Rules and the Admin SDK on the server.
 
 ---
 

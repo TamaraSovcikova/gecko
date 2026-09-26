@@ -17,7 +17,7 @@ const QUESTIONS: Question[] = [
   {
     id: "pension",
     question: "Do you contribute to a workplace pension?",
-    sub: "UK employers must auto-enrol eligible workers — you may have opted out.",
+    sub: "UK employers must auto-enrol eligible workers - you may have opted out.",
     options: [
       { value: "yes-max", label: "Yes, and I'm maximizing the employer match", emoji: "💪" },
       { value: "yes-some", label: "Yes, but I'm not sure about the employer match", emoji: "🤔" },
@@ -28,11 +28,11 @@ const QUESTIONS: Question[] = [
   {
     id: "student-loan",
     question: "Do you have a student loan?",
-    sub: "Repayments start automatically when you earn above the threshold — check your payslip.",
+    sub: "Repayments start automatically when you earn above the threshold - check your payslip.",
     options: [
-      { value: "plan2", label: "Yes — Plan 2 (started uni 2012-2023)", emoji: "📚" },
-      { value: "plan5", label: "Yes — Plan 5 (started uni 2023+)", emoji: "📚" },
-      { value: "plan1-4", label: "Yes — Plan 1 or Plan 4", emoji: "📚" },
+      { value: "plan2", label: "Yes - Plan 2 (started uni 2012-2023)", emoji: "📚" },
+      { value: "plan5", label: "Yes - Plan 5 (started uni 2023+)", emoji: "📚" },
+      { value: "plan1-4", label: "Yes - Plan 1 or Plan 4", emoji: "📚" },
       { value: "no", label: "No student loan", emoji: "✅" },
     ],
   },
@@ -62,9 +62,9 @@ const QUESTIONS: Question[] = [
     question: "Do you actively track your spending?",
     sub: "Regularly checking where your money goes each month.",
     options: [
-      { value: "yes-gecko", label: "Yes — I use Gecko for this", emoji: "🦎" },
-      { value: "yes-other", label: "Yes — another method", emoji: "✅" },
-      { value: "sort-of", label: "Sort of — I check occasionally", emoji: "👀" },
+      { value: "yes-gecko", label: "Yes - I use Gecko for this", emoji: "🦎" },
+      { value: "yes-other", label: "Yes - another method", emoji: "✅" },
+      { value: "sort-of", label: "Sort of - I check occasionally", emoji: "👀" },
       { value: "no", label: "Not really", emoji: "😬" },
     ],
   },

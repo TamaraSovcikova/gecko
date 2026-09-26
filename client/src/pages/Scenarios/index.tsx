@@ -63,12 +63,12 @@ function SalaryScenario() {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
             <p className="font-bold text-amber-800 mb-1">Tax impact</p>
             <p className="text-amber-700 text-xs leading-relaxed">
-              Extra tax: <strong>£{fmt(taxDelta)}/yr</strong> — your effective rate goes from{" "}
+              Extra tax: <strong>£{fmt(taxDelta)}/yr</strong> - your effective rate goes from{" "}
               <strong>{cur.effectiveRate.toFixed(1)}%</strong> to <strong>{tar.effectiveRate.toFixed(1)}%</strong> (
               {effectiveDelta >= 0 ? "+" : ""}
               {effectiveDelta.toFixed(1)}pp).{" "}
               {target > 50270 && current <= 50270
-                ? "You'd cross into the 40% higher-rate band on earnings above £50,270 — you only pay 40% on the slice above that threshold, not your whole salary."
+                ? "You'd cross into the 40% higher-rate band on earnings above £50,270 - you only pay 40% on the slice above that threshold, not your whole salary."
                 : "You stay in the same tax band, so the marginal rate on the extra earnings stays the same."}
             </p>
             <p className="text-xs text-amber-600 mt-2">
@@ -183,7 +183,7 @@ function SavingsScenario() {
           <div className="bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-500 leading-relaxed">
             <p>
               You contribute <strong>£{fmt(result.contributed)}</strong> yourself over {years} years. Compound interest
-              adds another <strong>£{fmt(result.interest)}</strong> — that's{" "}
+              adds another <strong>£{fmt(result.interest)}</strong> - that's{" "}
               <strong>{((result.interest / result.contributed) * 100).toFixed(0)}%</strong> extra for free.
             </p>
             <p className="mt-1.5">
@@ -333,7 +333,7 @@ function LocationScenario() {
           {compare.disposableB < compare.disposableA && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
               {compare.b.name} leaves you <strong>£{fmt(compare.disposableA - compare.disposableB)}/mo less</strong>{" "}
-              after housing and transport — equivalent to a{" "}
+              after housing and transport - equivalent to a{" "}
               <strong>£{fmt((compare.disposableA - compare.disposableB) * 12)}/yr pay cut</strong>. You would need a
               salary of roughly <strong>£{fmt(salary + (compare.costB - compare.costA) * 12 * 1.3)}</strong> in{" "}
               {compare.b.name} to match your {compare.a.name} lifestyle.
@@ -397,7 +397,7 @@ function DebtScenario() {
         </label>
         <label className="block col-span-2">
           <span className="text-xs font-semibold text-gray-500 mb-1 block">
-            Monthly payment (£) — minimum to clear: £{minPayment}
+            Monthly payment (£) - minimum to clear: £{minPayment}
           </span>
           <input
             type="range"
@@ -415,7 +415,7 @@ function DebtScenario() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
           {result.months === Infinity ? (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 font-semibold">
-              Payment too low — interest exceeds your repayment. Increase monthly payment above £{minPayment}.
+              Payment too low - interest exceeds your repayment. Increase monthly payment above £{minPayment}.
             </div>
           ) : (
             <>
@@ -441,7 +441,7 @@ function DebtScenario() {
               <div className="bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-500 leading-relaxed">
                 <p>
                   Paying £{fmt(payment)}/mo, you&apos;ll hand the lender <strong>£{fmt(result.totalInterest)}</strong>{" "}
-                  in interest — that&apos;s <strong>{((result.totalInterest / balance) * 100).toFixed(0)}%</strong> of
+                  in interest - that&apos;s <strong>{((result.totalInterest / balance) * 100).toFixed(0)}%</strong> of
                   the original balance. Doubling your payment to £{fmt(payment * 2)}/mo would roughly halve the
                   repayment period.
                 </p>
@@ -486,7 +486,7 @@ const SCENARIOS: {
     color: "text-emerald-700",
     border: "border-emerald-300",
     bg: "bg-emerald-50",
-    description: "Compound interest in action — what saving consistently builds over time.",
+    description: "Compound interest in action - what saving consistently builds over time.",
   },
   {
     id: "location",

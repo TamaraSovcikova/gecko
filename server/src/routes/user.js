@@ -33,10 +33,10 @@ router.delete("/profile", deleteUserProfile);
 router.patch("/profile", updateUserProfile);
 router.patch("/:userId/profile", updateUserProfile);
 
-// PATCH /v1/user/path-progress  — sync learning path completions
+// PATCH /v1/user/path-progress - sync learning path completions
 router.patch("/path-progress", syncPathProgress);
 
-// PATCH /v1/user/financial-profile  — save loan, pension, readiness data
+// PATCH /v1/user/financial-profile - save loan, pension, readiness data
 router.patch("/financial-profile", saveFinancialProfile);
 
 // POST /v1/user/newsletter/send-test

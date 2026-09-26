@@ -67,7 +67,7 @@ async function main() {
     await page.waitForURL(/\/(dashboard|payslip)/, { timeout: 15000 });
     console.log("  ✓ logged in");
   } else {
-    console.warn("  ! could not find login form — skipping authenticated pages");
+    console.warn("  ! could not find login form - skipping authenticated pages");
     await browser.close();
     return;
   }
@@ -140,7 +140,7 @@ async function main() {
   }
 
   await browser.close();
-  console.log(`\nDone — screenshots saved to screenshots/`);
+  console.log(`\nDone - screenshots saved to screenshots/`);
 }
 
 main().catch((err) => {

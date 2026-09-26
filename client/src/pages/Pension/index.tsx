@@ -157,7 +157,7 @@ export default function PensionPage() {
                 Compound growth
               </ConceptLink>{" "}
               means money invested in your 20s is worth far more at retirement than money invested in your 40s. Every
-              month of missed employer match is gone permanently — it can't be made back later.
+              month of missed employer match is gone permanently - it can't be made back later.
             </p>
           </div>
         </motion.div>
@@ -239,14 +239,14 @@ export default function PensionPage() {
                   <p className="text-xs text-red-700 leading-relaxed">
                     Your employer would match up to {employerMatch}% but you're only contributing {employeeContrib}%.
                     Raising your contribution to {employerMatch}% costs you {fmt(missedMonthly)}/month now but unlocks
-                    an equal employer contribution — effectively doubling that slice of savings.
+                    an equal employer contribution - effectively doubling that slice of savings.
                   </p>
                 </div>
               ) : (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <p className="text-xs font-semibold text-emerald-800">
-                    You're maximizing your employer match — great work.
+                    You're maximizing your employer match - great work.
                   </p>
                 </div>
               )}
@@ -268,7 +268,7 @@ export default function PensionPage() {
                 </div>
                 {missedPotValue > 1000 && !isMaximized && (
                   <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    The difference is <strong className="text-amber-800">{fmt(missedPotValue, 0)}</strong> — money that
+                    The difference is <strong className="text-amber-800">{fmt(missedPotValue, 0)}</strong> - money that
                     compounds tax-free inside your pension rather than sitting unused.
                   </p>
                 )}

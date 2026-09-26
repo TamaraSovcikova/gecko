@@ -296,7 +296,7 @@ Rules:
 - When explaining payslip items (tax, NI, pension), explain what that money actually does.
 - When the user overspends somewhere, say so with the exact figure and the annualised impact.
 - Be direct and warm. Skip filler phrases like "Great question!" or "Certainly!".
-- When you fetch data, reference the real numbers in your answer — do not summarise vaguely.
+- When you fetch data, reference the real numbers in your answer - do not summarise vaguely.
 - If you do not have enough data, say what the user needs to add in the app.
 
 Remember: this user may be seeing their payslip explained for the first time. Assume no prior financial knowledge unless they demonstrate it.`;
@@ -375,7 +375,7 @@ router.delete("/history", async (req, res) => {
   }
 });
 
-// POST /api/v1/chat/stream — SSE streaming agent response
+// POST /api/v1/chat/stream - SSE streaming agent response
 router.post("/stream", validate({ body: chatMessageSchema }), async (req, res) => {
   const { message } = req.body;
   const userId = req.user?.uid;
@@ -472,7 +472,7 @@ router.post("/stream", validate({ body: chatMessageSchema }), async (req, res) =
   }
 });
 
-// POST /api/v1/chat — non-streaming fallback
+// POST /api/v1/chat - non-streaming fallback
 router.post("/", validate({ body: chatMessageSchema }), async (req, res) => {
   try {
     const { message } = req.body;

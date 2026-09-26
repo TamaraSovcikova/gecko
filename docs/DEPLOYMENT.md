@@ -19,7 +19,7 @@ The hosted demo is no longer running. This file records how it was deployed: ser
    - `GROQ_API_KEY`, `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `OCR_SPACE_API_KEY`
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `NEWSLETTER_FROM_EMAIL`
    - `CLIENT_URL` = `https://<pages-project>.pages.dev`
-4. Note the Render URL — needed for client `VITE_API_URL`
+4. Note the Render URL - needed for client `VITE_API_URL`
 
 **Health check:** `GET /healthz` returns `{ status: "ok", uptime: N }`.
 
@@ -35,7 +35,7 @@ Project: `gecko-client`. `wrangler.jsonc` + `client/public/_redirects` (SPA rout
 
 ### Manual build + deploy (current workflow)
 
-The project was created via direct upload API — GitHub auto-build is not connected yet. Build and deploy manually:
+The project was created via direct upload API - GitHub auto-build is not connected yet. Build and deploy manually:
 
 ```bash
 # 1. Create client/.env.production with all VITE_* vars (never commit this file)

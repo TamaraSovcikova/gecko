@@ -72,21 +72,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${activeToken}`,
-          },
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${activeToken}`,
         },
-      );
+      });
 
       setProfile({
         displayName: response.data?.displayName,
         email: response.data?.email,
         avatarChoice: response.data?.avatarChoice,
-        onboardingCompletedPages:
-          response.data?.financialOnboarding?.completedPages || [],
+        onboardingCompletedPages: response.data?.financialOnboarding?.completedPages || [],
         newsletterOptIn: Boolean(response.data?.newsletterOptIn),
         seenSnapshotPopupKeys: Array.isArray(response.data?.seenSnapshotPopupKeys)
           ? response.data.seenSnapshotPopupKeys
@@ -98,29 +94,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        error.response?.status === 401 &&
-        auth.currentUser
-      ) {
+      if (axios.isAxiosError(error) && error.response?.status === 401 && auth.currentUser) {
         try {
           const refreshedToken = await auth.currentUser.getIdToken(true);
-          const retryResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
-            {
-              headers: {
-                Authorization: `Bearer ${refreshedToken}`,
-              },
+          const retryResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/profile`, {
+            headers: {
+              Authorization: `Bearer ${refreshedToken}`,
             },
-          );
+          });
 
           setToken(refreshedToken);
           setProfile({
             displayName: retryResponse.data?.displayName,
             email: retryResponse.data?.email,
             avatarChoice: retryResponse.data?.avatarChoice,
-            onboardingCompletedPages:
-              retryResponse.data?.financialOnboarding?.completedPages || [],
+            onboardingCompletedPages: retryResponse.data?.financialOnboarding?.completedPages || [],
             newsletterOptIn: Boolean(retryResponse.data?.newsletterOptIn),
             seenSnapshotPopupKeys: Array.isArray(retryResponse.data?.seenSnapshotPopupKeys)
               ? retryResponse.data.seenSnapshotPopupKeys
@@ -218,5 +206,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Custom hook — import this in any component that needs auth state
+// Custom hook - import this in any component that needs auth state
 export const useAuth = () => useContext(AuthContext);

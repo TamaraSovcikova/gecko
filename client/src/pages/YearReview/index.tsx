@@ -151,7 +151,7 @@ export default function YearReviewPage() {
           </div>
           <p className="text-sm text-gray-400 mt-1">
             6 April {taxYear.start.getFullYear()} to 5 April {taxYear.end.getFullYear()}
-            {monthsOfData > 0 && ` — ${monthsOfData} month${monthsOfData !== 1 ? "s" : ""} of data`}
+            {monthsOfData > 0 && ` - ${monthsOfData} month${monthsOfData !== 1 ? "s" : ""} of data`}
           </p>
         </motion.div>
 
@@ -180,7 +180,7 @@ export default function YearReviewPage() {
               <StatCard label="Total take-home" value={fmt(totalTakeHome, 0)} sub={`across ${monthsOfData} months`} />
               <StatCard label="Total spent" value={fmt(totalExpenses, 0)} sub="tracked expenses" />
               <StatCard label="Total saved" value={fmt(totalSavings, 0)} accent={totalSavings > 0} />
-              <StatCard label="Avg health score" value={avgHealth ? `${avgHealth}/100` : "—"} sub="financial health" />
+              <StatCard label="Avg health score" value={avgHealth ? `${avgHealth}/100` : "-"} sub="financial health" />
             </div>
 
             {/* Tax insight */}
@@ -193,7 +193,7 @@ export default function YearReviewPage() {
                 <p className="text-sm text-gray-500 leading-relaxed">
                   Based on your gross salary of {fmt(grossAnnual, 0)}/year, approximately{" "}
                   <strong className="text-gray-900">{fmt(estimatedTaxTotal, 0)}</strong> went to income tax and National
-                  Insurance in the months tracked. That money funds public services — the NHS alone handles around 1
+                  Insurance in the months tracked. That money funds public services - the NHS alone handles around 1
                   million patients every 36 hours.
                 </p>
               </div>
@@ -295,9 +295,9 @@ export default function YearReviewPage() {
                   Your average health score across these {monthsOfData} months was{" "}
                   <strong className="text-gray-900">{avgHealth}/100</strong>.{" "}
                   {avgHealth >= 70
-                    ? "That's solid — keep building those habits."
+                    ? "That's solid - keep building those habits."
                     : avgHealth >= 40
-                      ? "There's room to improve — the Scenarios page can help you model changes."
+                      ? "There's room to improve - the Scenarios page can help you model changes."
                       : "Small consistent improvements compound over time."}
                 </p>
               </div>

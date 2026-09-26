@@ -197,12 +197,12 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar — always visible on lg+ */}
+      {/* Desktop sidebar - always visible on lg+ */}
       <aside className="hidden lg:flex w-60 flex-shrink-0 flex-col bg-gray-900 h-screen sticky top-0 z-30">
         <SidebarContents />
       </aside>
 
-      {/* Mobile hamburger button — rendered into the page header via portal-like approach;
+      {/* Mobile hamburger button - rendered into the page header via portal-like approach;
           MainLayout renders this button in the top bar on small screens */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 gap-3 bg-gray-900">
         <button

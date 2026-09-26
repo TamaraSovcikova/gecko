@@ -69,10 +69,7 @@ function renderDetail(text: string) {
   const flush = (key: string) => {
     if (bullets.length > 0) {
       elements.push(
-        <ul
-          key={key}
-          style={{ paddingLeft: "1.2rem", marginBottom: 12, marginTop: 0 }}
-        >
+        <ul key={key} style={{ paddingLeft: "1.2rem", marginBottom: 12, marginTop: 0 }}>
           {bullets.map((b, i) => (
             <li
               key={i}
@@ -86,7 +83,7 @@ function renderDetail(text: string) {
               {b.replace(/^[•-]\s*/, "")}
             </li>
           ))}
-        </ul>,
+        </ul>
       );
       bullets = [];
     }
@@ -114,7 +111,7 @@ function renderDetail(text: string) {
           >
             <strong style={{ color: "#111827" }}>{label}</strong>
             {rest}
-          </p>,
+          </p>
         );
       } else {
         elements.push(
@@ -128,7 +125,7 @@ function renderDetail(text: string) {
             }}
           >
             {line}
-          </p>,
+          </p>
         );
       }
     }
@@ -143,11 +140,7 @@ interface TopicModalProps {
   onQuiz?: (quizId: string) => void;
 }
 
-export default function TopicModal({
-  topic,
-  onClose,
-  onQuiz,
-}: TopicModalProps) {
+export default function TopicModal({ topic, onClose, onQuiz }: TopicModalProps) {
   const style = CATEGORY_STYLES[topic.category] ?? FALLBACK;
   const Widget = INTERACTIVE_WIDGETS[topic.id] ?? null;
 
@@ -220,10 +213,7 @@ export default function TopicModal({
               flexShrink: 0,
             }}
           >
-            <i
-              className={`${topic.icon} fs-5`}
-              style={{ color: style.iconColor }}
-            />
+            <i className={`${topic.icon} fs-5`} style={{ color: style.iconColor }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
@@ -338,7 +328,7 @@ export default function TopicModal({
           </div>
         </div>
 
-        {/* Footer — quiz CTA */}
+        {/* Footer - quiz CTA */}
         {topic.linkedQuizId && topic.linkedQuizLabel && (
           <div
             style={{
@@ -374,6 +364,6 @@ export default function TopicModal({
         )}
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }

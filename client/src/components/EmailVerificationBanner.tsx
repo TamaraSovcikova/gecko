@@ -16,7 +16,7 @@ export default function EmailVerificationBanner() {
       await sendEmailVerification(currentUser);
       setSent(true);
     } catch {
-      // ignore — likely rate-limited
+      // ignore - likely rate-limited
     } finally {
       setLoading(false);
     }
@@ -25,9 +25,7 @@ export default function EmailVerificationBanner() {
   return (
     <div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-3 text-sm text-amber-800">
       <span className="font-medium">Verify your email</span>
-      <span className="text-amber-600">
-        Check your inbox for a verification link to unlock all features.
-      </span>
+      <span className="text-amber-600">Check your inbox for a verification link to unlock all features.</span>
       {sent ? (
         <span className="ml-auto text-green-700 font-medium">Email sent!</span>
       ) : (

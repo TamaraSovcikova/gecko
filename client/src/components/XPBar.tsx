@@ -16,14 +16,10 @@ export default function XPBar() {
   const xpIntoLevel = data.xpIntoLevel;
   const xpNeeded = data.xpNeeded;
 
-  const progress =
-    xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
+  const progress = xpNeeded > 0 ? Math.min((xpIntoLevel / xpNeeded) * 100, 100) : 0;
 
   const unlockedBadges = BADGES.filter((b) => level >= b.level);
-  const highestBadge =
-    unlockedBadges.length > 0
-      ? unlockedBadges[unlockedBadges.length - 1]
-      : null;
+  const highestBadge = unlockedBadges.length > 0 ? unlockedBadges[unlockedBadges.length - 1] : null;
   const badgeNames = unlockedBadges.map((badge) => badge.label).join(" • ");
 
   const CIRCLE_SIZE = 52;
@@ -52,7 +48,7 @@ export default function XPBar() {
         fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
       }}
     >
-      {/* BADGE CIRCLE — centered on top edge */}
+      {/* BADGE CIRCLE - centered on top edge */}
       {highestBadge && (
         <div
           style={{
@@ -171,4 +167,3 @@ export default function XPBar() {
     </div>
   );
 }
-

@@ -10,25 +10,204 @@
  * Falls back to null when confidence < THRESHOLD.
  */
 
-const Expense = require('../models/Expense');
+const Expense = require("../models/Expense");
 
 const THRESHOLD = 0.35;
 
-// Layer 1 – keyword rules (UK-focused merchants + generic terms)
+// Layer 1 - keyword rules (UK-focused merchants + generic terms)
 const KEYWORD_RULES = [
-  { category: 'Food & Drink', terms: ['tesco', 'sainsbury', 'asda', 'waitrose', 'morrisons', 'lidl', 'aldi', 'co-op', 'coop', 'marks spencer', 'm&s', 'food', 'grocery', 'supermarket', 'restaurant', 'cafe', 'coffee', 'starbucks', 'costa', 'mcdonalds', 'kfc', 'subway', 'pizza', 'uber eats', 'deliveroo', 'just eat', 'takeaway', 'pub', 'bar', 'burger', 'lunch', 'dinner', 'breakfast'] },
-  { category: 'Transport', terms: ['tfl', 'oyster', 'tube', 'bus', 'train', 'rail', 'uber', 'bolt', 'taxi', 'petrol', 'fuel', 'bp', 'shell', 'esso', 'parking', 'national rail', 'gwr', 'avanti', 'southern rail', 'thameslink'] },
-  { category: 'Housing', terms: ['rent', 'mortgage', 'landlord', 'estate agent', 'letting', 'council tax', 'utility', 'utilities', 'gas', 'electricity', 'water', 'broadband', 'wifi', 'internet', 'bt internet', 'virgin media', 'sky broadband'] },
-  { category: 'Entertainment', terms: ['netflix', 'spotify', 'disney', 'amazon prime', 'cinema', 'vue', 'odeon', 'cineworld', 'theatre', 'concert', 'ticketmaster', 'eventbrite', 'steam', 'playstation', 'xbox', 'game', 'apple tv', 'youtube premium'] },
-  { category: 'Shopping', terms: ['amazon', 'ebay', 'asos', 'primark', 'h&m', 'zara', 'next', 'topshop', 'john lewis', 'boots', 'superdrug', 'clothing', 'shoes', 'fashion', 'clothes', 'delivery'] },
-  { category: 'Health', terms: ['gym', 'pharmacy', 'dentist', 'doctor', 'nhs', 'prescription', 'optician', 'health', 'medical', 'physio', 'yoga', 'fitness', 'anytime fitness', 'pure gym', 'david lloyd'] },
-  { category: 'Education', terms: ['udemy', 'coursera', 'skillshare', 'pluralsight', 'book', 'kindle', 'course', 'tuition', 'university', 'college', 'student'] },
-  { category: 'Savings', terms: ['savings', 'transfer to savings', 'isa', 'investment', 'vanguard', 'monzo pot', 'moneybox'] },
-  { category: 'Subscriptions', terms: ['subscription', 'monthly fee', 'annual fee', 'membership', 'premium', 'pro plan', 'apple', 'google one', 'icloud', 'microsoft 365'] },
+  {
+    category: "Food & Drink",
+    terms: [
+      "tesco",
+      "sainsbury",
+      "asda",
+      "waitrose",
+      "morrisons",
+      "lidl",
+      "aldi",
+      "co-op",
+      "coop",
+      "marks spencer",
+      "m&s",
+      "food",
+      "grocery",
+      "supermarket",
+      "restaurant",
+      "cafe",
+      "coffee",
+      "starbucks",
+      "costa",
+      "mcdonalds",
+      "kfc",
+      "subway",
+      "pizza",
+      "uber eats",
+      "deliveroo",
+      "just eat",
+      "takeaway",
+      "pub",
+      "bar",
+      "burger",
+      "lunch",
+      "dinner",
+      "breakfast",
+    ],
+  },
+  {
+    category: "Transport",
+    terms: [
+      "tfl",
+      "oyster",
+      "tube",
+      "bus",
+      "train",
+      "rail",
+      "uber",
+      "bolt",
+      "taxi",
+      "petrol",
+      "fuel",
+      "bp",
+      "shell",
+      "esso",
+      "parking",
+      "national rail",
+      "gwr",
+      "avanti",
+      "southern rail",
+      "thameslink",
+    ],
+  },
+  {
+    category: "Housing",
+    terms: [
+      "rent",
+      "mortgage",
+      "landlord",
+      "estate agent",
+      "letting",
+      "council tax",
+      "utility",
+      "utilities",
+      "gas",
+      "electricity",
+      "water",
+      "broadband",
+      "wifi",
+      "internet",
+      "bt internet",
+      "virgin media",
+      "sky broadband",
+    ],
+  },
+  {
+    category: "Entertainment",
+    terms: [
+      "netflix",
+      "spotify",
+      "disney",
+      "amazon prime",
+      "cinema",
+      "vue",
+      "odeon",
+      "cineworld",
+      "theatre",
+      "concert",
+      "ticketmaster",
+      "eventbrite",
+      "steam",
+      "playstation",
+      "xbox",
+      "game",
+      "apple tv",
+      "youtube premium",
+    ],
+  },
+  {
+    category: "Shopping",
+    terms: [
+      "amazon",
+      "ebay",
+      "asos",
+      "primark",
+      "h&m",
+      "zara",
+      "next",
+      "topshop",
+      "john lewis",
+      "boots",
+      "superdrug",
+      "clothing",
+      "shoes",
+      "fashion",
+      "clothes",
+      "delivery",
+    ],
+  },
+  {
+    category: "Health",
+    terms: [
+      "gym",
+      "pharmacy",
+      "dentist",
+      "doctor",
+      "nhs",
+      "prescription",
+      "optician",
+      "health",
+      "medical",
+      "physio",
+      "yoga",
+      "fitness",
+      "anytime fitness",
+      "pure gym",
+      "david lloyd",
+    ],
+  },
+  {
+    category: "Education",
+    terms: [
+      "udemy",
+      "coursera",
+      "skillshare",
+      "pluralsight",
+      "book",
+      "kindle",
+      "course",
+      "tuition",
+      "university",
+      "college",
+      "student",
+    ],
+  },
+  {
+    category: "Savings",
+    terms: ["savings", "transfer to savings", "isa", "investment", "vanguard", "monzo pot", "moneybox"],
+  },
+  {
+    category: "Subscriptions",
+    terms: [
+      "subscription",
+      "monthly fee",
+      "annual fee",
+      "membership",
+      "premium",
+      "pro plan",
+      "apple",
+      "google one",
+      "icloud",
+      "microsoft 365",
+    ],
+  },
 ];
 
 function tokenise(text) {
-  return String(text || '').toLowerCase().replace(/[^a-z0-9\s&]/g, ' ').split(/\s+/).filter(Boolean);
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s&]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
 function keywordMatch(description) {
@@ -53,7 +232,9 @@ function keywordMatch(description) {
     }
   }
 
-  return bestScore >= 2 ? { category: best, confidence: Math.min(0.95, 0.5 + bestScore * 0.05), method: 'keyword' } : null;
+  return bestScore >= 2
+    ? { category: best, confidence: Math.min(0.95, 0.5 + bestScore * 0.05), method: "keyword" }
+    : null;
 }
 
 function cosineSimilarity(tokensA, tokensB) {
@@ -65,8 +246,8 @@ function cosineSimilarity(tokensA, tokensB) {
 }
 
 async function historyMatch(userId, description) {
-  const expenses = await Expense.find({ userId, note: { $exists: true, $ne: '' } })
-    .select('category note')
+  const expenses = await Expense.find({ userId, note: { $exists: true, $ne: "" } })
+    .select("category note")
     .limit(300)
     .lean();
 
@@ -92,7 +273,9 @@ async function historyMatch(userId, description) {
     }
   }
 
-  return bestScore >= THRESHOLD ? { category: bestCat, confidence: Math.round(bestScore * 100) / 100, method: 'history' } : null;
+  return bestScore >= THRESHOLD
+    ? { category: bestCat, confidence: Math.round(bestScore * 100) / 100, method: "history" }
+    : null;
 }
 
 /**

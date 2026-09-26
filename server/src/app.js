@@ -26,11 +26,16 @@ const analyticsRoutes = require("./routes/analytics");
 
 const app = express();
 
-app.use(pinoHttp({ logger, customLogLevel: (_req, res, err) => {
-  if (err || res.statusCode >= 500) return "error";
-  if (res.statusCode >= 400) return "warn";
-  return "info";
-}}));
+app.use(
+  pinoHttp({
+    logger,
+    customLogLevel: (_req, res, err) => {
+      if (err || res.statusCode >= 500) return "error";
+      if (res.statusCode >= 400) return "warn";
+      return "info";
+    },
+  })
+);
 
 app.use(
   helmet({
@@ -52,7 +57,7 @@ app.get("/healthz", (_req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
 
-// OpenAPI docs — public, no auth required.
+// OpenAPI docs - public, no auth required.
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/api/docs.json", (_req, res) => {
   res.setHeader("Content-Type", "application/json");

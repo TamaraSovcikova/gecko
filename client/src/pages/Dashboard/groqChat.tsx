@@ -16,7 +16,7 @@ type Message = {
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "Hi! I'm your Gecko finance tutor. I can see your real spending, budget, and health score — ask me anything about your money, or use one of the prompts below to get started.",
+    "Hi! I'm your Gecko finance tutor. I can see your real spending, budget, and health score - ask me anything about your money, or use one of the prompts below to get started.",
 };
 
 const SUGGESTED_PROMPTS = [
