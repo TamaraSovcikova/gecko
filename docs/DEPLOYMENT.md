@@ -1,9 +1,8 @@
 # Deployment
 
-## Live URLs
+## Status
 
-- **Server:** https://gecko-uhqc.onrender.com
-- **Client:** https://gecko-client.pages.dev
+The hosted demo is no longer running. This file records how it was deployed: server on Render, client on Cloudflare Pages.
 
 ---
 
@@ -15,11 +14,11 @@
 1. Render dashboard > New > Web Service > Connect GitHub > gecko repo
 2. Render reads `render.yaml` automatically (`rootDir=server`, `buildCommand=npm install`, `startCommand=npm start`)
 3. Set all `sync: false` env vars in Render dashboard (never commit secrets):
-   - `MONGODB_URI` (rotated Atlas URI — old creds were in git history)
+   - `MONGODB_URI`
    - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
    - `GROQ_API_KEY`, `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `OCR_SPACE_API_KEY`
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `NEWSLETTER_FROM_EMAIL`
-   - `CLIENT_URL` = `https://gecko-client.pages.dev`
+   - `CLIENT_URL` = `https://<pages-project>.pages.dev`
 4. Note the Render URL — needed for client `VITE_API_URL`
 
 **Health check:** `GET /healthz` returns `{ status: "ok", uptime: N }`.
@@ -40,7 +39,7 @@ The project was created via direct upload API — GitHub auto-build is not conne
 
 ```bash
 # 1. Create client/.env.production with all VITE_* vars (never commit this file)
-# VITE_API_URL=https://gecko-uhqc.onrender.com
+# VITE_API_URL=https://<render-service>.onrender.com
 # VITE_FIREBASE_API_KEY=...
 # VITE_FIREBASE_AUTH_DOMAIN=zoar-eed92.firebaseapp.com
 # VITE_FIREBASE_PROJECT_ID=zoar-eed92
@@ -68,7 +67,7 @@ cd "X:\path\to\gecko"
 npx wrangler pages deploy client/dist --project-name gecko-client --branch main
 ```
 
-Token location: `~/devhub/credentials_reference.md` (gecko-pages-deploy token, Account: Cloudflare Pages Edit).
+The token needs the Cloudflare Pages Edit permission.
 
 ### Connect GitHub for auto-build (optional, eliminates manual workflow)
 
