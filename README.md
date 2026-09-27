@@ -4,8 +4,6 @@
 
 GECKO stands for Goals, Earnings, Capital, Knowledge, Outcomes.
 
-It began as a six-person University of Surrey group project (2025-26), where I was Scrum Master and Backend / Tech Lead. I have kept building it solo since, adding the planning tools, the AI agent, a TypeScript migration and a redesigned interface.
-
 ## Screenshots
 
 | Home | Dashboard |
@@ -75,3 +73,7 @@ It began as a six-person University of Surrey group project (2025-26), where I w
 | Delivery | GitHub Actions CI, Docker; hosted on Cloudflare Pages and Render during the project |
 
 More detail on the design is in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Background
+
+Gecko started as a six-person group project at the University of Surrey (2025-26), where I was Scrum Master and backend/tech lead. I have kept building it solo since: the planning tools, the AI agent, the TypeScript migration and the redesigned interface.
